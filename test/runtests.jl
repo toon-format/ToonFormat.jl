@@ -22,6 +22,7 @@ using TOON
     include("test_array_format_selection.jl")
     include("test_tabular_arrays.jl")
     include("test_objects_as_list_items.jl")
+    include("test_options.jl")
 end
 
 @testset "TOON.jl - Basic Tests" begin

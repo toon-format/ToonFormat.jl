@@ -155,7 +155,7 @@
   - Add test cases for path expansion scenarios and conflicts
   - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
 
-- [ ] 15. Validate and fix encoding/decoding options
+- [x] 15. Validate and fix encoding/decoding options
   - Review `EncodeOptions` and `DecodeOptions` in `src/types.jl`
   - Verify indent option (default 2)
   - Verify delimiter option for encoder (default comma)

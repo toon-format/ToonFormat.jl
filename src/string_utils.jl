@@ -117,9 +117,11 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
         return true
     end
 
-    # Contains control characters
-    if occursin('\n', s) || occursin('\r', s) || occursin('\t', s)
-        return true
+    # Contains control characters (any character with code < 32 or == 127)
+    for char in s
+        if Int(char) < 32 || Int(char) == 127
+            return true
+        end
     end
 
     # Contains the active delimiter
@@ -166,4 +168,32 @@ function is_safe_identifier(s::AbstractString)::Bool
     end
     # Must be a valid identifier segment
     return is_identifier_segment(String(s))
+end
+
+"""
+    find_first_unquoted(s::String, target::Char) -> Union{Int, Nothing}
+
+Find the first occurrence of a character outside of quoted strings.
+Returns the index (1-based) or nothing if not found.
+"""
+function find_first_unquoted(s::String, target::Char)::Union{Int, Nothing}
+    in_quotes = false
+    i = 1
+    while i <= length(s)
+        char = s[i]
+        
+        if char == '\\'
+            # Skip escaped character
+            i += 2
+            continue
+        elseif char == '"'
+            in_quotes = !in_quotes
+        elseif char == target && !in_quotes
+            return i
+        end
+        
+        i += 1
+    end
+    
+    return nothing
 end

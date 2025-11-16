@@ -15,20 +15,36 @@ function encode_number(n::Number)::String
         return string(n)
     end
 
-    # For floats, use minimal representation
-    s = string(Float64(n))
-
-    # Remove exponent notation if present
-    if occursin('e', lowercase(s)) || occursin('E', s)
-        # Convert to decimal form
-        val = Float64(n)
-        # Format with enough precision
-        s = @sprintf("%.17g", val)
+    val = Float64(n)
+    
+    # Check if the value is effectively an integer
+    if isinteger(val)
+        # Return as integer (no decimal point)
+        return string(Int64(val))
     end
-
+    
+    # Use %g format which automatically chooses between %f and %e
+    # But we need to ensure no exponent notation, so we'll use a different approach
+    # First, try to format with reasonable precision
+    s = @sprintf("%.15g", val)
+    
+    # If it contains exponent notation, convert to decimal form
+    if occursin('e', lowercase(s)) || occursin('E', s)
+        # Determine how many decimal places we need
+        # For very small numbers, we need more precision
+        if abs(val) < 1.0
+            # Count leading zeros after decimal point
+            s = @sprintf("%.17f", val)
+        else
+            # For large numbers, use fixed format
+            s = @sprintf("%.0f", val)
+        end
+    end
+    
     # Remove trailing zeros after decimal point
     if occursin('.', s)
         s = rstrip(s, '0')
+        # If we stripped all fractional digits, remove the decimal point too
         s = rstrip(s, '.')
     end
 

@@ -196,7 +196,9 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
 
     # Check for colon
     if !startswith(remainder, COLON)
-        error("Array header must end with colon")
+        # If we got this far, it looks like an array header but is missing the colon
+        # This is a syntax error, not just "not an array header"
+        error("Array header must end with colon (line contains bracket syntax but no colon)")
     end
 
     return ArrayHeaderInfo(key, arr_length, delimiter, fields)

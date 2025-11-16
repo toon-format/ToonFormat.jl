@@ -28,6 +28,18 @@ using TOON
 
         # Test strict mode is default
         @test_throws Exception TOON.decode("items[5]: a,b,c")
+        
+        # Test invalid escape sequences are rejected (Requirement 3.2)
+        @test_throws ArgumentError TOON.decode("text: \"test\\x41\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\u0041\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\a\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\b\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\f\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\v\"")
+        @test_throws ArgumentError TOON.decode("text: \"test\\0\"")
+        
+        # Test unterminated escape sequence
+        @test_throws ArgumentError TOON.decode("text: \"test\\\"")
     end
 
     @testset "Spec Edge Cases" begin
@@ -108,5 +120,37 @@ using TOON
         # Whitespace-only string needs quotes
         result = TOON.decode("text: \"  \"")
         @test result["text"] == "  "
+    end
+    
+    @testset "Escape Sequence Handling (Requirements 3.1, 3.2)" begin
+        # Test all five valid escape sequences in decoded strings
+        @test TOON.decode("text: \"hello\\nworld\"")["text"] == "hello\nworld"
+        @test TOON.decode("text: \"col1\\tcol2\"")["text"] == "col1\tcol2"
+        @test TOON.decode("text: \"line1\\rline2\"")["text"] == "line1\rline2"
+        @test TOON.decode("text: \"path\\\\to\\\\file\"")["text"] == "path\\to\\file"
+        @test TOON.decode("text: \"say \\\"hello\\\"\"")["text"] == "say \"hello\""
+        
+        # Test multiple escape sequences
+        @test TOON.decode("text: \"test\\n\\r\\t\\\\\\\"value\\\"\"")["text"] == "test\n\r\t\\\"value\""
+        
+        # Test escape sequences in arrays
+        result = TOON.decode("[3]: \"a\\nb\",\"c\\td\",\"e\\\\f\"")
+        @test result[1] == "a\nb"
+        @test result[2] == "c\td"
+        @test result[3] == "e\\f"
+        
+        # Test escape sequences in nested objects
+        input = "user:\n  name: \"Alice\\nSmith\"\n  path: \"C:\\\\Users\\\\Alice\""
+        result = TOON.decode(input)
+        @test result["user"]["name"] == "Alice\nSmith"
+        @test result["user"]["path"] == "C:\\Users\\Alice"
+        
+        # Test escape sequences in tabular arrays
+        input = "items[2]{name,desc}:\n  \"Item\\n1\",\"First\\titem\"\n  \"Item\\n2\",\"Second\\titem\""
+        result = TOON.decode(input)
+        @test result["items"][1]["name"] == "Item\n1"
+        @test result["items"][1]["desc"] == "First\titem"
+        @test result["items"][2]["name"] == "Item\n2"
+        @test result["items"][2]["desc"] == "Second\titem"
     end
 end

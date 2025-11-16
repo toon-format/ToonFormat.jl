@@ -12,6 +12,7 @@ using TOON
     include("test_scanner.jl")
     include("test_security.jl")
     include("test_folding.jl")
+    include("test_array_headers.jl")
 end
 
 @testset "TOON.jl - Basic Tests" begin

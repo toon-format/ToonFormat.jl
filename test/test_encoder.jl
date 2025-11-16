@@ -38,6 +38,79 @@ using TOON
         @test !occursin("-0", result) || !occursin("-0.0", result)
     end
 
+    @testset "Number Formatting Compliance" begin
+        # Requirement 2.1: No exponent notation for large numbers
+        @test TOON.encode(1000000) == "1000000"
+        @test TOON.encode(1e6) == "1000000"
+        @test !occursin("e", TOON.encode(1000000))
+        @test !occursin("E", TOON.encode(1000000))
+        
+        # Requirement 2.1: No exponent notation for small decimals
+        @test TOON.encode(0.000001) == "0.000001"
+        @test TOON.encode(1e-6) == "0.000001"
+        @test !occursin("e", TOON.encode(0.000001))
+        @test !occursin("E", TOON.encode(0.000001))
+        
+        # Requirement 2.2: No leading zeros except "0"
+        @test TOON.encode(0) == "0"
+        @test TOON.encode(0.0) == "0"
+        @test !startswith(TOON.encode(123), "0")
+        @test !startswith(TOON.encode(0.5), "00")
+        
+        # Requirement 2.3: No trailing fractional zeros
+        @test TOON.encode(1.5) == "1.5"
+        @test TOON.encode(1.5000) == "1.5"
+        @test !occursin("1.5000", TOON.encode(1.5))
+        @test !occursin("1.50", TOON.encode(1.5))
+        
+        # Requirement 2.4: Integer form when fractional part is zero
+        @test TOON.encode(1.0) == "1"
+        @test TOON.encode(42.0) == "42"
+        @test TOON.encode(100.0) == "100"
+        @test !occursin(".", TOON.encode(1.0))
+        @test !occursin(".", TOON.encode(42.0))
+        
+        # Requirement 1.5: Normalize -0 to 0
+        @test TOON.encode(-0.0) == "0"
+        @test !occursin("-", TOON.encode(-0.0))
+        
+        # Edge cases: Very large numbers
+        @test TOON.encode(999999999999) == "999999999999"
+        @test !occursin("e", TOON.encode(999999999999))
+        
+        # Edge cases: Very small decimals
+        @test TOON.encode(0.00000001) == "0.00000001"
+        @test !occursin("e", TOON.encode(0.00000001))
+        
+        # Edge cases: Numbers with many decimal places (check no exponent)
+        result = TOON.encode(3.14159265359)
+        @test !occursin("e", result)
+        @test !occursin("E", result)
+        @test startswith(result, "3.14159")
+        
+        # Edge cases: Trailing zeros should be removed
+        result = TOON.encode(2.5000000)
+        @test result == "2.5"
+        @test !occursin("2.50", result)
+        
+        # Edge cases: Mixed array with -0
+        result = TOON.encode([-0.0, 1.0, 2.5])
+        @test occursin("0,1,2.5", result) || occursin("0, 1, 2.5", result)
+        @test !occursin("-0", result)
+        
+        # Edge cases: Negative numbers should keep sign
+        @test TOON.encode(-42) == "-42"
+        result = TOON.encode(-3.14)
+        @test startswith(result, "-3.14")
+        @test !occursin("e", result)
+        @test !occursin("E", result)
+        
+        # Edge cases: Integer boundaries
+        @test TOON.encode(0) == "0"
+        @test TOON.encode(1) == "1"
+        @test TOON.encode(-1) == "-1"
+    end
+
     @testset "String Quoting" begin
         # Reserved literals must be quoted
         @test TOON.encode("true") == "\"true\""

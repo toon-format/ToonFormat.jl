@@ -65,14 +65,15 @@ end
 
 Normalize a number according to TOON specification.
 NaN and Infinity map to null.
+-0.0 is normalized to 0.0.
 """
 function normalize_number(n::Number)::Union{Number, Nothing}
     if isa(n, AbstractFloat)
         if isnan(n) || isinf(n)
             return nothing
         end
-        # Normalize -0 to 0
-        if n == -0.0
+        # Normalize -0 to 0 (check sign bit to distinguish -0.0 from 0.0)
+        if n == 0.0 && signbit(n)
             return 0.0
         end
     end

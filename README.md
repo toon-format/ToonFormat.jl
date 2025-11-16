@@ -11,8 +11,6 @@
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
 
-**✅ Fully compliant with TOON Specification v2.0** - All 1750 tests passing
-
 ## What is TOON?
 
 TOON is a line-oriented, indentation-based text format that encodes the JSON data model with explicit structure and minimal quoting. It achieves 30-60% token reduction compared to JSON while maintaining readability and deterministic structure.

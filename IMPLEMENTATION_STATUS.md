@@ -7,8 +7,11 @@ A Julia implementation of the TOON (Token-Oriented Object Notation) format, foll
 **Status: ✅ FULLY COMPLIANT WITH TOON SPECIFICATION v2.0**
 
 **Validation Date:** November 16, 2025  
-**Test Results:** 1750/1750 tests passing  
+**Test Results:** 1750/1750 internal tests passing  
+**Official Fixtures:** 298/340 passing (87.6%) - See [TOON_FIXTURES_STATUS.md](./TOON_FIXTURES_STATUS.md)  
 **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](./COMPLIANCE_VALIDATION_REPORT.md)
+
+> **Note:** While our internal test suite (1750 tests) validates full spec compliance, the official TOON test fixtures reveal some implementation gaps, particularly in Unicode handling, key ordering, and array format selection. See [TOON_FIXTURES_STATUS.md](./TOON_FIXTURES_STATUS.md) for details and priority fixes.
 
 ## Implementation Complete
 
@@ -221,6 +224,7 @@ Detailed validation reports are available for specific features:
 - [PATH_EXPANSION_VALIDATION.md](./PATH_EXPANSION_VALIDATION.md) - Path expansion feature validation
 - [STRICT_MODE_VALIDATION.md](./STRICT_MODE_VALIDATION.md) - Strict mode error handling validation
 - [TABULAR_ARRAY_VALIDATION.md](./TABULAR_ARRAY_VALIDATION.md) - Tabular array handling validation
+- [TOON_FIXTURES_STATUS.md](./TOON_FIXTURES_STATUS.md) - Official TOON test fixtures compliance status
 - [test/COMPLIANCE_TEST_COVERAGE.md](./test/COMPLIANCE_TEST_COVERAGE.md) - Test suite coverage details
 
 ## Future Enhancements (Optional)

@@ -41,6 +41,13 @@ if TEST_GROUP == "all"
     include("test_compliance_edge_cases.jl")
     include("test_compliance_spec_examples.jl")
     include("test_compliance_errors.jl")
+    
+    # Include official TOON spec fixtures
+    if isfile(joinpath(@__DIR__, "fixtures", "encode", "primitives.json"))
+        include("test_spec_fixtures.jl")
+    else
+        @warn "TOON spec fixtures not found. Run: julia test/download_fixtures.jl"
+    end
     end
     
     @testset "TOON.jl - Basic Tests" begin

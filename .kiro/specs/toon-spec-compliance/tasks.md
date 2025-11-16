@@ -131,7 +131,7 @@
   - Add test cases for all object-as-list-item scenarios
   - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-- [ ] 13. Validate and fix key folding implementation
+- [x] 13. Validate and fix key folding implementation
   - Review `encode_key_value_pair()` in `src/encoder.jl`
   - Verify folding only occurs when keyFolding="safe"
   - Verify only IdentifierSegments are folded (no dots, valid identifiers)

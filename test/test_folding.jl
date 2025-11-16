@@ -6,14 +6,17 @@ using TOON
 
 @testset "Key Folding and Path Expansion Tests" begin
     @testset "Key Folding - Basic" begin
-        # Simple nested object
+        # Multi-key object should NOT be folded
         data = Dict("user" => Dict("name" => "Alice", "age" => 30))
         opts = TOON.EncodeOptions(keyFolding="safe")
         result = TOON.encode(data, options=opts)
-        @test occursin("user.name: Alice", result)
-        @test occursin("user.age: 30", result)
+        @test occursin("user:", result)
+        @test occursin("  name: Alice", result)
+        @test occursin("  age: 30", result)
+        @test !occursin("user.name", result)
+        @test !occursin("user.age", result)
 
-        # Three levels deep
+        # Single-key chain should be folded
         data = Dict("a" => Dict("b" => Dict("c" => "value")))
         result = TOON.encode(data, options=opts)
         @test occursin("a.b.c: value", result)
@@ -71,6 +74,97 @@ using TOON
         data = Dict("user-name" => Dict("first" => "Alice"))
         result = TOON.encode(data, options=opts)
         @test !occursin("user-name.first", result)
+    end
+
+    @testset "Key Folding - Quoting Prevention" begin
+        # Keys that require quoting should not be folded
+        opts = TOON.EncodeOptions(keyFolding="safe")
+        
+        # Key with space
+        data = Dict("user name" => Dict("value" => 123))
+        result = TOON.encode(data, options=opts)
+        @test occursin("\"user name\":", result)
+        @test occursin("  value: 123", result)
+        @test !occursin("user name.value", result)
+        
+        # Key with special characters
+        data = Dict("user:id" => Dict("value" => 123))
+        result = TOON.encode(data, options=opts)
+        @test occursin("\"user:id\":", result)
+        @test occursin("  value: 123", result)
+        
+        # Numeric-like key
+        data = Dict("123" => Dict("value" => "test"))
+        result = TOON.encode(data, options=opts)
+        @test occursin("\"123\":", result)
+        @test occursin("  value: test", result)
+    end
+
+    @testset "Key Folding - Collision Detection" begin
+        opts = TOON.EncodeOptions(keyFolding="safe")
+        
+        # No collision: "a" has a sibling "c", but folding "a.b" is still safe
+        # because there's no literal key "a.b" at the top level
+        data = Dict("a" => Dict("b" => 1), "c" => 2)
+        result = TOON.encode(data, options=opts)
+        @test occursin("a.b: 1", result)
+        @test occursin("c: 2", result)
+        
+        # No collision: only "a" exists, so folding is safe
+        data = Dict("a" => Dict("b" => Dict("c" => 1)))
+        result = TOON.encode(data, options=opts)
+        @test occursin("a.b.c: 1", result)
+        
+        # Collision with literal dotted key: if we have "a.b" as a literal key
+        # and "a" as another key, we can't fold "a.c" because it would be ambiguous
+        # However, this is actually OK in TOON - "a.b" is a literal key (possibly quoted)
+        # and "a.c" is a folded key. They don't collide.
+        data = Dict("a.b" => 1, "a" => Dict("c" => 2))
+        result = TOON.encode(data, options=opts)
+        # "a.b" is a literal key (may be quoted because it contains a dot)
+        # "a" can still be folded to "a.c"
+        @test occursin("a.b: 1", result) || occursin("\"a.b\": 1", result)
+        # "a" is a single-key object, so it should be folded
+        @test occursin("a.c: 2", result)
+    end
+
+    @testset "Key Folding - Single-Key Object Requirement" begin
+        opts = TOON.EncodeOptions(keyFolding="safe")
+        
+        # Multi-key object should stop folding
+        data = Dict("a" => Dict("b" => 1, "c" => 2))
+        result = TOON.encode(data, options=opts)
+        @test occursin("a:", result)
+        @test occursin("  b: 1", result)
+        @test occursin("  c: 2", result)
+        @test !occursin("a.b:", result)
+        @test !occursin("a.c:", result)
+        
+        # Single-key chain ending in multi-key object
+        data = Dict("a" => Dict("b" => Dict("c" => 1, "d" => 2)))
+        result = TOON.encode(data, options=opts)
+        @test occursin("a.b:", result)
+        @test occursin("  c: 1", result)
+        @test occursin("  d: 2", result)
+        @test !occursin("a.b.c:", result)
+    end
+
+    @testset "Key Folding - Partial Folding" begin
+        opts = TOON.EncodeOptions(keyFolding="safe", flattenDepth=2)
+        
+        # Should fold "a.b" but stop there
+        data = Dict("a" => Dict("b" => Dict("c" => Dict("d" => 1))))
+        result = TOON.encode(data, options=opts)
+        @test occursin("a.b:", result)
+        @test occursin("  c:", result)
+        @test occursin("    d: 1", result)
+        @test !occursin("a.b.c", result)
+        
+        # Verify the nested object after partial fold doesn't re-fold
+        lines = split(result, '\n')
+        @test any(line -> occursin("a.b:", line), lines)
+        @test any(line -> occursin("  c:", line), lines)
+        @test any(line -> occursin("    d: 1", line), lines)
     end
 
     @testset "Key Folding - Off Mode" begin

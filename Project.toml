@@ -1,0 +1,16 @@
+name = "TOON"
+uuid = "7e1e1c4e-8b9a-4f3d-9c1e-2f3a4b5c6d7e"
+authors = ["TOON Format Organization"]
+version = "0.1.0"
+
+[deps]
+Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[compat]
+julia = "1.6"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

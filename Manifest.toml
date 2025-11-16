@@ -1,0 +1,20 @@
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.12.1"
+manifest_format = "2.0"
+project_hash = "a8867077ccdb7f9d746cb0af17c310c0dd396aa2"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
+
+[[deps.TOON]]
+deps = ["Printf"]
+path = "."
+uuid = "7e1e1c4e-8b9a-4f3d-9c1e-2f3a4b5c6d7e"
+version = "0.1.0"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+version = "1.11.0"

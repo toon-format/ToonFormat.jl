@@ -4,9 +4,19 @@
 using Test
 using TOON
 
-@testset "TOON.jl - All Tests" begin
-    # Include comprehensive test suites
-    include("test_decoder.jl")
+# Check if we should run only specific test suites
+const TEST_GROUP = get(ENV, "TEST_GROUP", "all")
+
+if TEST_GROUP == "aqua" || TEST_GROUP == "all"
+    @testset "Aqua.jl Quality Assurance" begin
+        include("test_aqua.jl")
+    end
+end
+
+if TEST_GROUP == "all"
+    @testset "TOON.jl - All Tests" begin
+        # Include comprehensive test suites
+        include("test_decoder.jl")
     include("test_encoder.jl")
     include("test_string_utils.jl")
     include("test_scanner.jl")
@@ -31,10 +41,10 @@ using TOON
     include("test_compliance_edge_cases.jl")
     include("test_compliance_spec_examples.jl")
     include("test_compliance_errors.jl")
-end
-
-@testset "TOON.jl - Basic Tests" begin
-    @testset "Primitive Encoding" begin
+    end
+    
+    @testset "TOON.jl - Basic Tests" begin
+        @testset "Primitive Encoding" begin
         # Null
         @test TOON.encode(nothing) == "null"
 
@@ -162,5 +172,6 @@ end
         options = TOON.EncodeOptions(delimiter=TOON.PIPE)
         result = TOON.encode(arr, options=options)
         @test occursin("[3|]:", result)
+    end
     end
 end

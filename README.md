@@ -1,5 +1,9 @@
 # TOON.jl
 
+[![CI](https://github.com/s-celles/TOON.jl/workflows/CI/badge.svg)](https://github.com/s-celles/TOON.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/s-celles/TOON.jl/workflows/Documentation/badge.svg)](https://github.com/s-celles/TOON.jl/actions/workflows/Documentation.yml)
+[![codecov](https://codecov.io/gh/s-celles/TOON.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/TOON.jl)
+[![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
 [![Compliance](https://img.shields.io/badge/compliance-100%25-brightgreen)](./COMPLIANCE_VALIDATION_REPORT.md)
 [![Tests](https://img.shields.io/badge/tests-1750%20passing-brightgreen)](./test/COMPLIANCE_TEST_COVERAGE.md)

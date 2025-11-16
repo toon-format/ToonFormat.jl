@@ -422,3 +422,4 @@ julia --project=. test/test_encoder.jl
 - **Specification:** [SPEC.md](https://github.com/toon-format/spec/blob/main/SPEC.md)
 - **Test Fixtures:** [Spec test suite](https://github.com/toon-format/spec/tree/main/tests/fixtures)
 - **Benchmarks:** [Token efficiency results](https://github.com/toon-format/toon/tree/main/benchmarks)
+

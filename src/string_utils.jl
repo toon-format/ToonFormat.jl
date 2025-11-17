@@ -178,22 +178,24 @@ Returns the index (1-based) or nothing if not found.
 """
 function find_first_unquoted(s::String, target::Char)::Union{Int, Nothing}
     in_quotes = false
-    i = 1
-    while i <= length(s)
-        char = s[i]
-        
+    skip_next = false
+
+    for (idx, char) in pairs(s)
+        if skip_next
+            skip_next = false
+            continue
+        end
+
         if char == '\\'
-            # Skip escaped character
-            i += 2
+            # Skip next character
+            skip_next = true
             continue
         elseif char == '"'
             in_quotes = !in_quotes
         elseif char == target && !in_quotes
-            return i
+            return idx
         end
-        
-        i += 1
     end
-    
+
     return nothing
 end

@@ -302,9 +302,20 @@ function encode_list_item(value::JsonValue, writer::LineWriter, depth::Int,
                         push!(writer, depth, "$(LIST_ITEM_MARKER)$(header) $(values_str)")
                     end
                 else
-                    # Complex array - put hyphen alone, then encode array below
-                    push!(writer, depth, LIST_ITEM_MARKER[1:end-1])
-                    encode_key_value_pair(first_key, first_value, writer, depth + 1, options)
+                    # Complex array - put array header on hyphen line (Requirement 12.5)
+                    header = format_header(first_key, length(first_value), options.delimiter)
+                    push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
+                    # Encode array contents
+                    if is_array_of_objects(first_value)
+                        for item in first_value
+                            encode_list_item(item, writer, depth + 1, options)
+                        end
+                    else
+                        # Array of arrays or mixed content
+                        for item in first_value
+                            encode_list_item(item, writer, depth + 1, options)
+                        end
+                    end
                 end
             elseif is_json_object(first_value)
                 # Nested object

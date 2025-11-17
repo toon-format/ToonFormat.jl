@@ -17,8 +17,8 @@ using Aqua
         undefined_exports = true,
         # Check project structure (Project.toml, test setup, etc.)
         project_extras = true,
-        # Check for stale dependencies
-        stale_deps = true,
+        # Check for stale dependencies - ignore JSON3 which is used only in tests
+        stale_deps = (ignore=[:JSON3],),
         # Check for missing dependencies
         deps_compat = true,
         # Check for piracies (type piracy is bad practice)
@@ -49,8 +49,8 @@ using Aqua
     end
     
     @testset "Stale Dependencies" begin
-        # Check for dependencies listed but not used
-        Aqua.test_stale_deps(TOON)
+        # Check for dependencies listed but not used - ignore JSON3 which is used only in tests
+        Aqua.test_stale_deps(TOON; ignore=[:JSON3])
     end
     
     @testset "Dependency Compatibility" begin

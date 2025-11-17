@@ -153,6 +153,10 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
     if key !== nothing && isempty(key)
         key = nothing
     end
+    # Unquote the key if quoted
+    if key !== nothing
+        key = parse_key(key)
+    end
 
     # Extract bracket content
     bracket_content = content[bracket_start+1:bracket_end-1]

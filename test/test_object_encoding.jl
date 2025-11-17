@@ -143,7 +143,7 @@ using TOON
         input = "user:\n  name: Alice\n  age: 30"
         result = TOON.decode(input)
         @test haskey(result, "user")
-        @test isa(result["user"], Dict)
+        @test isa(result["user"], AbstractDict)
         @test result["user"]["name"] == "Alice"
         @test result["user"]["age"] == 30
         
@@ -151,7 +151,7 @@ using TOON
         input = "empty:"
         result = TOON.decode(input)
         @test haskey(result, "empty")
-        @test isa(result["empty"], Dict)
+        @test isa(result["empty"], AbstractDict)
         @test isempty(result["empty"])
         
         # Multiple nested levels
@@ -181,7 +181,7 @@ using TOON
         @test result == ""
         
         decoded = TOON.decode(result)
-        @test isa(decoded, Dict)
+        @test isa(decoded, AbstractDict)
         @test isempty(decoded)
         
         # Nested empty objects

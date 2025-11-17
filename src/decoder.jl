@@ -73,13 +73,13 @@ Root form detection (§5):
 """
 function decode_value_from_lines(cursor::LineCursor, options::DecodeOptions)::JsonValue
     if !has_more_lines(cursor)
-        return Dict{String, Any}()  # Empty object
+        return JsonObject()  # Empty object
     end
 
     # Check for root form
     first_line = peek_line(cursor)
     if first_line === nothing
-        return Dict{String, Any}()
+        return JsonObject()
     end
 
     # Root array detection: first depth-0 line is valid array header with colon
@@ -321,7 +321,7 @@ function decode_object(cursor::LineCursor, parent_depth::Int, options::DecodeOpt
                     value = decode_object(cursor, line.depth, options)
                 else
                     # Empty object or value
-                    value = Dict{String, Any}()
+                    value = JsonObject()
                 end
             end
         end
@@ -616,7 +616,7 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                 push!(result, obj)
             else
                 # Empty object
-                push!(result, Dict{String, Any}())
+                push!(result, JsonObject())
             end
         else
             # Try to parse as array header
@@ -678,7 +678,7 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                             obj[first_key] = decode_object(cursor, hyphen_line_depth + 1, options)
                         else
                             # Empty value
-                            obj[first_key] = Dict{String, Any}()
+                            obj[first_key] = JsonObject()
                         end
                     end
                     
@@ -757,7 +757,7 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                     end
                                 else
                                     # Empty value
-                                    obj[field_key] = Dict{String, Any}()
+                                    obj[field_key] = JsonObject()
                                 end
                             end
                         end
@@ -833,7 +833,7 @@ function decode(input::String; options::DecodeOptions=DecodeOptions())::JsonValu
     scan_result = to_parsed_lines(input, options.indent, options.strict)
 
     if isempty(scan_result.lines)
-        return Dict{String, Any}()
+        return JsonObject()
     end
 
     cursor = LineCursor(scan_result.lines, scan_result.blankLines)

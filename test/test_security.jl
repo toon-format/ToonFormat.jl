@@ -14,7 +14,7 @@ using TOON
         encoded = TOON.encode(nested)
         @test occursin("level: \"0\"", encoded)  # String values are quoted
         decoded = TOON.decode(encoded)
-        @test isa(decoded, Dict)
+        @test isa(decoded, AbstractDict)
 
         # Very long string
         long_str = "x" ^ 100000

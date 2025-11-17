@@ -137,7 +137,7 @@ using TOON
         result = TOON.decode(input, options=TOON.DecodeOptions(expandPaths="safe", strict=false))
         @test haskey(result, "a")
         # The second assignment (a.b: 2) should create an object, overwriting the primitive
-        @test isa(result["a"], Dict)
+        @test isa(result["a"], AbstractDict)
         @test result["a"]["b"] == 2
         
         # Reverse order

@@ -21,10 +21,10 @@ using TOON
         decoded = TOON.decode(result)
         @test length(decoded) == 4
         @test decoded[1] == 1
-        @test isa(decoded[2], Dict)
+        @test isa(decoded[2], AbstractDict)
         @test isempty(decoded[2])
         @test decoded[3] == 2
-        @test isa(decoded[4], Dict)
+        @test isa(decoded[4], AbstractDict)
         @test isempty(decoded[4])
     end
     

@@ -13,9 +13,9 @@ using TOON
         result = TOON.decode(input, options=TOON.DecodeOptions(indent=4))
         @test result["parent"]["child"]["value"] == 42
 
-        # Test decode returns native Dict
+        # Test decode returns native Dict (OrderedDict to preserve key order)
         result = TOON.decode("id: 123")
-        @test isa(result, Dict{String, Any})
+        @test isa(result, AbstractDict)
 
         # Test decode returns native Array
         result = TOON.decode("[3]: 1,2,3")

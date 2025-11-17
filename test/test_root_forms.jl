@@ -82,7 +82,7 @@ using TOON
         # Simple object with one key-value pair
         result = TOON.decode("name: Alice")
         @test result == Dict("name" => "Alice")
-        @test isa(result, Dict{String, Any})
+        @test isa(result, AbstractDict)
         
         # Object with multiple key-value pairs
         result = TOON.decode("name: Alice\nage: 30")
@@ -103,7 +103,7 @@ using TOON
         # Completely empty string
         result = TOON.decode("")
         @test result == Dict{String, Any}()
-        @test isa(result, Dict{String, Any})
+        @test isa(result, AbstractDict)
         
         # Only whitespace
         result = TOON.decode("   ")
@@ -146,7 +146,7 @@ using TOON
         
         # Single line with colon is object, not primitive
         result = TOON.decode("key: value")
-        @test isa(result, Dict{String, Any})
+        @test isa(result, AbstractDict)
         @test result["key"] == "value"
         
         # Array header at depth 0 with colon is root array

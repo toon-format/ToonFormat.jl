@@ -179,7 +179,7 @@ using TOON
         # Object (default)
         input = "name: Alice\nage: 30"
         result = TOON.decode(input)
-        @test isa(result, Dict)
+        @test isa(result, AbstractDict)
         @test result["name"] == "Alice"
         
         # Empty document

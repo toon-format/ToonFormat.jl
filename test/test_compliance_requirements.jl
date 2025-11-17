@@ -11,7 +11,7 @@ using TOON
         @test TOON.decode(TOON.encode(42)) == 42
         @test TOON.decode(TOON.encode(true)) === true
         @test TOON.decode(TOON.encode(nothing)) === nothing
-        @test isa(TOON.decode(TOON.encode(Dict("a" => 1))), Dict)
+        @test isa(TOON.decode(TOON.encode(Dict("a" => 1))), AbstractDict)
         @test isa(TOON.decode(TOON.encode([1, 2, 3])), Vector)
         
         # 1.2: Preserve array element order
@@ -322,7 +322,7 @@ using TOON
         
         # 11.3: Object detection (default)
         result = TOON.decode("name: Alice")
-        @test isa(result, Dict)
+        @test isa(result, AbstractDict)
         
         # 11.4: Empty document returns empty object
         @test TOON.decode("") == Dict{String, Any}()

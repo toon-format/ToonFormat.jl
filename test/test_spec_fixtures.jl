@@ -21,7 +21,7 @@ end
 # Helper to convert JSON3 objects to native Julia types for comparison
 function normalize_json(val)
     if val isa JSON3.Object
-        return Dict(string(k) => normalize_json(v) for (k, v) in pairs(val))
+        return TOON.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(val))
     elseif val isa JSON3.Array || val isa Vector
         return [normalize_json(v) for v in val]
     else

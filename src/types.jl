@@ -5,9 +5,11 @@
 Type definitions for TOON format.
 """
 
+using OrderedCollections
+
 # JSON-compatible types
 const JsonPrimitive = Union{String, Number, Bool, Nothing}
-const JsonObject = Dict{String, Any}
+const JsonObject = OrderedDict{String, Any}
 const JsonArray = Vector{Any}
 const JsonValue = Union{JsonPrimitive, JsonObject, JsonArray}
 

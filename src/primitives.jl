@@ -16,31 +16,34 @@ function encode_number(n::Number)::String
     end
 
     val = Float64(n)
-    
+
     # Check if the value is effectively an integer
     if isinteger(val)
-        # Return as integer (no decimal point)
-        return string(Int64(val))
+        # Check if it fits in Int64 range before converting
+        if val >= typemin(Int64) && val <= typemax(Int64)
+            return string(Int64(val))
+        else
+            # For large integers outside Int64 range, format as decimal with no fraction
+            return @sprintf("%.0f", val)
+        end
     end
-    
-    # Use %g format which automatically chooses between %f and %e
-    # But we need to ensure no exponent notation, so we'll use a different approach
-    # First, try to format with reasonable precision
-    s = @sprintf("%.15g", val)
-    
+
+    # Use %.16g for good precision without excess digits
+    s = @sprintf("%.16g", val)
+
     # If it contains exponent notation, convert to decimal form
     if occursin('e', lowercase(s)) || occursin('E', s)
         # Determine how many decimal places we need
         # For very small numbers, we need more precision
         if abs(val) < 1.0
-            # Count leading zeros after decimal point
+            # Use %.17f to get all precision, will strip trailing zeros later
             s = @sprintf("%.17f", val)
         else
             # For large numbers, use fixed format
             s = @sprintf("%.0f", val)
         end
     end
-    
+
     # Remove trailing zeros after decimal point
     if occursin('.', s)
         s = rstrip(s, '0')

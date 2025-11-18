@@ -1,14 +1,14 @@
 using Documenter
-using TOON
+using TokenOrientedObjectNotation
 
 makedocs(
-    sitename = "TOON.jl",
+    sitename = "TokenOrientedObjectNotation.jl",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
-        canonical = "https://s-celles.github.io/TOON.jl",
+        canonical = "https://s-celles.github.io/TokenOrientedObjectNotation.jl",
         assets = String[],
     ),
-    modules = [TOON],
+    modules = [TokenOrientedObjectNotation],
     checkdocs = :none,  # Don't require all functions to be documented
     pages = [
         "Home" => "index.md",
@@ -27,6 +27,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/s-celles/TOON.jl.git",
+    repo = "github.com/s-celles/TokenOrientedObjectNotation.jl.git",
     devbranch = "main",
 )

@@ -1,6 +1,6 @@
-# TOON.jl Compliance Test Coverage
+# TokenOrientedObjectNotation.jl Compliance Test Coverage
 
-This document summarizes the comprehensive compliance test suite created for TOON.jl v2.0 specification compliance.
+This document summarizes the comprehensive compliance test suite created for TokenOrientedObjectNotation.jl v2.0 specification compliance.
 
 ## Test Files Created
 
@@ -177,4 +177,4 @@ The comprehensive test suite has been updated and improved:
 
 ## Conclusion
 
-TOON.jl is **production-ready** with **100% test coverage** and **full compliance** with the TOON v2.0 specification. The library successfully implements all core requirements, handles all edge cases correctly, and passes all 2089 tests including advanced features like safe mode collision detection.
+TokenOrientedObjectNotation.jl is **production-ready** with **100% test coverage** and **full compliance** with the TOON v2.0 specification. The library successfully implements all core requirements, handles all edge cases correctly, and passes all 2089 tests including advanced features like safe mode collision detection.

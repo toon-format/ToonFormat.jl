@@ -1,13 +1,13 @@
 # Examples
 
-Real-world examples demonstrating TOON.jl usage.
+Real-world examples demonstrating TokenOrientedObjectNotation.jl usage.
 
 ## Configuration Files
 
 ### Application Config
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 config = Dict(
     "app" => Dict(
@@ -47,7 +47,7 @@ println(toon_str)
 ### User Records
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 users = [
     Dict("id" => 1, "name" => "Alice", "email" => "alice@example.com", "active" => true),
@@ -74,7 +74,7 @@ data = TOON.decode(loaded_str)
 ### Time Series Data
 
 ```julia
-using TOON, Dates
+using TokenOrientedObjectNotation, Dates
 
 # Generate time series data
 timestamps = [DateTime(2024, 1, 1) + Hour(i) for i in 0:23]
@@ -96,7 +96,7 @@ println(toon_str)
 ### REST API Response
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 response = Dict(
     "status" => "success",
@@ -135,7 +135,7 @@ println("Reduction: $(round((1 - length(toon_str)/length(json_str)) * 100, digit
 ### Paginated Results
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 results = Dict(
     "page" => 1,
@@ -161,7 +161,7 @@ println(toon_str)
 ### Training Data
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Training examples
 training_data = [
@@ -183,7 +183,7 @@ y = [d["label"] for d in loaded["training"]]
 ### Model Metadata
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 metadata = Dict(
     "model" => Dict(
@@ -219,7 +219,7 @@ println(toon_str)
 ### Query Results
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Simulated database query results
 query_results = [
@@ -243,7 +243,7 @@ println(toon_str)
 ### Prompt with Data
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Prepare data for LLM prompt
 context_data = Dict(
@@ -279,7 +279,7 @@ println(prompt)
 ### Test Fixtures
 
 ```julia
-using TOON, Test
+using TokenOrientedObjectNotation, Test
 
 # Define test fixtures in TOON format
 fixtures_toon = """
@@ -309,7 +309,7 @@ end
 ### Format Conversion
 
 ```julia
-using TOON, JSON
+using TokenOrientedObjectNotation, JSON
 
 # Convert JSON to TOON
 function json_to_toon(json_file, toon_file; options=TOON.EncodeOptions())

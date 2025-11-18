@@ -2,7 +2,7 @@
 
 ## Overview
 
-This design document outlines the approach to ensure TOON.jl achieves full compliance with the TOON Specification v2.0. The current implementation (v0.1.0) already has substantial functionality implemented, including core encoding/decoding, key folding, and path expansion. This design focuses on identifying gaps, validating compliance, and implementing any missing features or fixes needed to meet all normative requirements.
+This design document outlines the approach to ensure TokenOrientedObjectNotation.jl achieves full compliance with the TOON Specification v2.0. The current implementation (v0.1.0) already has substantial functionality implemented, including core encoding/decoding, key folding, and path expansion. This design focuses on identifying gaps, validating compliance, and implementing any missing features or fixes needed to meet all normative requirements.
 
 Based on analysis of the current codebase and the official specification, the implementation is largely complete but requires:
 1. Validation against the official test suite
@@ -14,12 +14,12 @@ Based on analysis of the current codebase and the official specification, the im
 
 ### Component Structure
 
-The TOON.jl package follows a modular architecture:
+The TokenOrientedObjectNotation.jl package follows a modular architecture:
 
 ```
-TOON.jl/
+TokenOrientedObjectNotation.jl/
 ├── src/
-│   ├── TOON.jl           # Main module, exports public API
+│   ├── TokenOrientedObjectNotation.jl           # Main module, exports public API
 │   ├── types.jl          # Type definitions (JsonValue, Options, etc.)
 │   ├── constants.jl      # Constants (delimiters, escape sequences, patterns)
 │   ├── normalize.jl      # Value normalization to JSON model

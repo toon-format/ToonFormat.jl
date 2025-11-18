@@ -1,6 +1,6 @@
 # Advanced Features
 
-This guide covers advanced features and use cases for TOON.jl.
+This guide covers advanced features and use cases for TokenOrientedObjectNotation.jl.
 
 ## Key Folding and Path Expansion
 
@@ -213,7 +213,7 @@ end
 
 ### Memory Efficiency
 
-TOON.jl is designed for correctness over performance, but you can optimize:
+TokenOrientedObjectNotation.jl is designed for correctness over performance, but you can optimize:
 
 ```julia
 # Use tabular format for uniform data (most compact)

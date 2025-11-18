@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TOON
+using TokenOrientedObjectNotation
 
 @testset "Objects as List Items (Requirements 12.1-12.5)" begin
     # Note: Uniform objects with primitive values use tabular format (Requirement 6.2)
@@ -11,14 +11,14 @@ using TOON
     @testset "Requirement 12.1: Empty object emits single '-'" begin
         # Mixed array with empty objects
         arr = [1, Dict{String, Any}(), 2, Dict{String, Any}()]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         lines = split(result, '\n')
         @test lines[1] == "[4]:"
         @test any(l -> strip(l) == "-", lines)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test length(decoded) == 4
         @test decoded[1] == 1
         @test isa(decoded[2], AbstractDict)
@@ -31,27 +31,27 @@ using TOON
     @testset "Requirement 12.2: Primitive first field uses '- key: value'" begin
         # Mixed array with object - first field is primitive
         arr = [42, Dict("name" => "Alice")]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         @test occursin("- 42", result)
         @test occursin("- name: Alice", result)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test length(decoded) == 2
         @test decoded[1] == 42
         @test decoded[2]["name"] == "Alice"
         
         # Multiple fields - first is primitive
         arr = [1, Dict("id" => 1, "name" => "Alice", "age" => 30)]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         lines = split(result, '\n')
         # First field on hyphen line
         @test any(l -> occursin("- id: 1", l) || occursin("- name: Alice", l) || occursin("- age: 30", l), lines)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["id"] == 1
         @test decoded[2]["name"] == "Alice"
@@ -61,7 +61,7 @@ using TOON
     @testset "Requirement 12.3: Nested object first field uses '- key:' with fields at depth +2" begin
         # Mixed array with object that has nested object as first field
         arr = [1, Dict("user" => Dict("name" => "Alice", "age" => 30))]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         lines = split(result, '\n')
         @test lines[1] == "[2]:"
@@ -72,7 +72,7 @@ using TOON
         @test any(l -> startswith(l, "    ") && occursin("age: 30", l), lines)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["user"]["name"] == "Alice"
         @test decoded[2]["user"]["age"] == 30
@@ -81,10 +81,10 @@ using TOON
     @testset "Requirement 12.4: Remaining fields appear at depth +1" begin
         # Object with multiple fields in mixed array
         arr = [1, Dict("a" => 1, "b" => 2, "c" => 3)]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["a"] == 1
         @test decoded[2]["b"] == 2
@@ -92,10 +92,10 @@ using TOON
         
         # Object with nested objects in remaining fields
         arr = [true, Dict("id" => 1, "user" => Dict("name" => "Alice"), "meta" => Dict("created" => "2025-01-01"))]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1] == true
         @test decoded[2]["id"] == 1
         @test decoded[2]["user"]["name"] == "Alice"
@@ -105,7 +105,7 @@ using TOON
     @testset "Requirement 12.5: Array first field is supported" begin
         # Object with array as first field in mixed array
         arr = [1, Dict("items" => [1, 2, 3], "count" => 3)]
-        result = TOON.encode(arr)
+        result = TokenOrientedObjectNotation.encode(arr)
 
         lines = split(result, '\n')
         # Array on first field - inline array on the hyphen line (per spec fixtures)
@@ -114,7 +114,7 @@ using TOON
         @test any(l -> occursin("count: 3", l), lines)
 
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["items"] == [1, 2, 3]
         @test decoded[2]["count"] == 3
@@ -148,8 +148,8 @@ using TOON
             )
         ]
         
-        encoded = TOON.encode(arr)
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(arr)
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         
         # Verify structure
         @test length(decoded) == 3
@@ -177,8 +177,8 @@ using TOON
             true
         ]
         
-        encoded = TOON.encode(arr)
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(arr)
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         
         @test length(decoded) == 6
         @test decoded[1] == 42
@@ -193,7 +193,7 @@ using TOON
     @testset "Round-trip with various object configurations" begin
         # Mixed arrays with objects
         arr = [1, Dict("x" => 1), 2, Dict("y" => 2), 3, Dict("z" => 3)]
-        @test TOON.decode(TOON.encode(arr)) == arr
+        @test TokenOrientedObjectNotation.decode(TokenOrientedObjectNotation.encode(arr)) == arr
         
         # Objects with nested objects
         arr = [
@@ -202,7 +202,7 @@ using TOON
             "b",
             Dict("outer" => Dict("inner" => 2))
         ]
-        @test TOON.decode(TOON.encode(arr)) == arr
+        @test TokenOrientedObjectNotation.decode(TokenOrientedObjectNotation.encode(arr)) == arr
         
         # Objects with arrays
         arr = [
@@ -210,10 +210,10 @@ using TOON
             Dict("items" => [1, 2], "count" => 2),
             Dict("items" => [3, 4, 5], "count" => 3)
         ]
-        @test TOON.decode(TOON.encode(arr)) == arr
+        @test TokenOrientedObjectNotation.decode(TokenOrientedObjectNotation.encode(arr)) == arr
         
         # Empty objects in mixed array
         arr = [1, Dict{String, Any}(), 2, Dict{String, Any}(), 3, Dict{String, Any}()]
-        @test TOON.decode(TOON.encode(arr)) == arr
+        @test TokenOrientedObjectNotation.decode(TokenOrientedObjectNotation.encode(arr)) == arr
     end
 end

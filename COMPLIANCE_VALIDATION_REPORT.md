@@ -1,10 +1,10 @@
-# TOON.jl Compliance Validation Report
+# TokenOrientedObjectNotation.jl Compliance Validation Report
 
 ## Date: 2025-11-16
 
 ## Summary
 
-Full compliance validation was performed on TOON.jl against the TOON Specification v2.0. The test suite consists of 1750 tests covering all normative requirements.
+Full compliance validation was performed on TokenOrientedObjectNotation.jl against the TOON Specification v2.0. The test suite consists of 1750 tests covering all normative requirements.
 
 **Final Result: ✅ ALL TESTS PASSING (1750/1750)**
 
@@ -125,7 +125,7 @@ Additional test categories:
 
 ## Specification Compliance
 
-TOON.jl v0.1.0 is now **fully compliant** with the TOON Specification v2.0. All normative requirements are implemented and tested:
+TokenOrientedObjectNotation.jl v0.1.0 is now **fully compliant** with the TOON Specification v2.0. All normative requirements are implemented and tested:
 
 - ✅ Canonical number formatting (no exponents, no trailing zeros)
 - ✅ Proper string quoting and escaping
@@ -160,4 +160,4 @@ No specification ambiguities were encountered during validation. All edge cases 
 
 ## Conclusion
 
-TOON.jl has successfully passed all 1750 compliance tests and is fully compliant with the TOON Specification v2.0. The implementation correctly handles all normative requirements, edge cases, and error conditions specified in the standard.
+TokenOrientedObjectNotation.jl has successfully passed all 1750 compliance tests and is fully compliant with the TOON Specification v2.0. The implementation correctly handles all normative requirements, edge cases, and error conditions specified in the standard.

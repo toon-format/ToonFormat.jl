@@ -1,19 +1,19 @@
 # Getting Started
 
-This guide will help you get up and running with TOON.jl.
+This guide will help you get up and running with TokenOrientedObjectNotation.jl.
 
 ## Installation
 
-Add TOON.jl to your Julia environment:
+Add TokenOrientedObjectNotation.jl to your Julia environment:
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/s-celles/TOON.jl")
+Pkg.add(url="https://github.com/s-celles/TokenOrientedObjectNotation.jl")
 ```
 
 Or using the package manager:
 ```julia-repl
-pkg> add https://github.com/s-celles/TOON.jl
+pkg> add https://github.com/s-celles/TokenOrientedObjectNotation.jl
 ```
 
 ## Basic Usage
@@ -23,7 +23,7 @@ pkg> add https://github.com/s-celles/TOON.jl
 Convert Julia data structures to TOON format:
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Simple object
 data = Dict("name" => "Alice", "age" => 30)
@@ -39,7 +39,7 @@ println(toon_str)
 Parse TOON format strings back to Julia data:
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 input = """
 name: Alice
@@ -91,7 +91,7 @@ println(toon_str)
 ### Encoding Options
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Custom indentation (4 spaces instead of 2)
 options = TOON.EncodeOptions(indent=4)
@@ -109,7 +109,7 @@ toon_str = TOON.encode(data, options=options)
 ### Decoding Options
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Disable strict mode (lenient parsing)
 options = TOON.DecodeOptions(strict=false)
@@ -166,10 +166,10 @@ toon_str = TOON.encode(data)
 
 ## Error Handling
 
-TOON.jl provides clear error messages for invalid input:
+TokenOrientedObjectNotation.jl provides clear error messages for invalid input:
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Array count mismatch (strict mode)
 try

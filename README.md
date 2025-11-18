@@ -1,8 +1,8 @@
-# TOON.jl
+# TokenOrientedObjectNotation.jl
 
-[![CI](https://github.com/s-celles/TOON.jl/workflows/CI/badge.svg)](https://github.com/s-celles/TOON.jl/actions/workflows/CI.yml)
-[![Documentation](https://github.com/s-celles/TOON.jl/workflows/Documentation/badge.svg)](https://github.com/s-celles/TOON.jl/actions/workflows/Documentation.yml)
-[![codecov](https://codecov.io/gh/s-celles/TOON.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/TOON.jl)
+[![CI](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/CI/badge.svg)](https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/Documentation/badge.svg)](https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions/workflows/Documentation.yml)
+[![codecov](https://codecov.io/gh/s-celles/TokenOrientedObjectNotation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/TokenOrientedObjectNotation.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
 [![Compliance](https://img.shields.io/badge/compliance-100%25-brightgreen)](./COMPLIANCE_VALIDATION_REPORT.md)
@@ -27,12 +27,12 @@ TOON is a line-oriented, indentation-based text format that encodes the JSON dat
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/s-celles/TOON.jl")
+Pkg.add(url="https://github.com/s-celles/TokenOrientedObjectNotation.jl")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/s-celles/TOON.jl
+pkg> add https://github.com/s-celles/TokenOrientedObjectNotation.jl
 ```
 
 ## Quick Start
@@ -40,7 +40,7 @@ pkg> add https://github.com/s-celles/TOON.jl
 ### Encoding
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Simple object
 data = Dict("name" => "Alice", "age" => 30)
@@ -64,7 +64,7 @@ println(toon_str)
 ### Decoding
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Decode a simple object
 input = "name: Alice\nage: 30"
@@ -80,7 +80,7 @@ data = TOON.decode(input)
 ### Options
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Encoding with custom options
 options = TOON.EncodeOptions(
@@ -131,7 +131,7 @@ Token savings: ~45% reduction
 ### Complex Nested Structures
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 data = Dict(
     "server" => Dict(
@@ -158,7 +158,7 @@ println(TOON.encode(data))
 ### Key Folding (Compact Nested Objects)
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Deep nesting with key folding
 data = Dict("api" => Dict("v1" => Dict("users" => Dict("endpoint" => "/api/v1/users"))))
@@ -179,7 +179,7 @@ println(TOON.encode(data, options=options))
 ### Path Expansion (Round-trip with Key Folding)
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Decode with path expansion
 input = "api.v1.users.endpoint: /api/v1/users"
@@ -198,7 +198,7 @@ decoded = TOON.decode(encoded, options=decode_opts)   # Reconstructs original st
 ### Different Delimiters
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 users = [
     Dict("name" => "Alice", "role" => "admin"),
@@ -229,7 +229,7 @@ println(TOON.encode(Dict("users" => users), options=options))
 ### Strict Mode Validation
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Strict mode catches errors (default)
 input = "[3]: 1,2"  # Declares 3 items but only has 2
@@ -395,8 +395,8 @@ Contributions are welcome! See [CONTRIBUTING.md](docs/src/contributing.md) for g
 
 ```julia
 # Clone the repository
-git clone https://github.com/s-celles/TOON.jl.git
-cd TOON.jl
+git clone https://github.com/s-celles/TokenOrientedObjectNotation.jl.git
+cd TokenOrientedObjectNotation.jl
 
 # Run tests
 julia --project=. -e 'using Pkg; Pkg.test()'

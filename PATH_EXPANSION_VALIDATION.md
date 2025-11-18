@@ -1,7 +1,7 @@
 # Path Expansion Implementation Validation
 
 ## Overview
-This document summarizes the validation of the path expansion implementation in TOON.jl against the requirements specified in the TOON Specification v2.0.
+This document summarizes the validation of the path expansion implementation in TokenOrientedObjectNotation.jl against the requirements specified in the TOON Specification v2.0.
 
 ## Requirements Validation
 
@@ -151,7 +151,7 @@ Also validated in `test/test_folding.jl`:
 
 ## Full Test Suite Results
 
-All 1243 tests in the TOON.jl test suite pass, including:
+All 1243 tests in the TokenOrientedObjectNotation.jl test suite pass, including:
 - Core decoder/encoder tests
 - String utilities tests
 - Scanner tests
@@ -184,7 +184,7 @@ All 1243 tests in the TOON.jl test suite pass, including:
 
 ## Conclusion
 
-The path expansion implementation in TOON.jl is **fully compliant** with TOON Specification v2.0 requirements 14.1-14.5. All functionality has been validated through comprehensive testing, including:
+The path expansion implementation in TokenOrientedObjectNotation.jl is **fully compliant** with TOON Specification v2.0 requirements 14.1-14.5. All functionality has been validated through comprehensive testing, including:
 
 - Basic expansion scenarios
 - Safe mode validation (IdentifierSegment checking)

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TOON
+using TokenOrientedObjectNotation
 
 @testset "Tabular Array Handling" begin
     @testset "Requirement 7.1: Field names from first object's key order" begin
@@ -11,7 +11,7 @@ using TOON
             Dict("name" => "Alice", "age" => 30),
             Dict("name" => "Bob", "age" => 25)
         ]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         
         # Should have header with fields
         @test occursin("[2]{name,age}:", result) || occursin("[2]{age,name}:", result)
@@ -27,7 +27,7 @@ using TOON
         end
         
         # Decode and verify field order is preserved
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1]["name"] == "Alice"
         @test decoded[1]["age"] == 30
         @test decoded[2]["name"] == "Bob"
@@ -40,7 +40,7 @@ using TOON
             Dict("id" => 1, "name" => "Alice"),
             Dict("id" => 2, "name" => "Bob")
         ])
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         
         lines = split(result, '\n')
         @test length(lines) == 3  # Header + 2 rows
@@ -51,23 +51,23 @@ using TOON
         @test startswith(lines[3], "  ")  # Row 2 at depth 1 (2 spaces)
         
         # Decode and verify
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test length(decoded["users"]) == 2
     end
     
     @testset "Requirement 7.3: Rows use active delimiter" begin
         # Comma delimiter (default)
         data = [Dict("a" => 1, "b" => 2), Dict("a" => 3, "b" => 4)]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("1,2", result) || occursin("2,1", result)
         
         # Tab delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.TAB))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
         @test occursin("[2\t]{", result)
         @test occursin("\t", result)  # Rows should use tab
         
         # Pipe delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.PIPE))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
         @test occursin("[2|]{", result)
         @test occursin("|", result)  # Rows should use pipe
     end
@@ -75,7 +75,7 @@ using TOON
     @testset "Requirement 7.4: Decoder splits rows using only active delimiter" begin
         # Comma delimiter
         input = "users[2]{name,age}:\n  Alice,30\n  Bob,25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         @test result["users"][2]["name"] == "Bob"
@@ -83,19 +83,19 @@ using TOON
         
         # Tab delimiter
         input = "users[2\t]{name\tage}:\n  Alice\t30\n  Bob\t25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         
         # Pipe delimiter
         input = "users[2|]{name|age}:\n  Alice|30\n  Bob|25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         
         # Values containing other delimiters should not be split
         input = "items[2]{name,desc}:\n  \"a,b\",\"c|d\"\n  \"e\tf\",\"g-h\""
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["items"][1]["name"] == "a,b"
         @test result["items"][1]["desc"] == "c|d"
         @test result["items"][2]["name"] == "e\tf"
@@ -105,23 +105,23 @@ using TOON
     @testset "Requirement 7.5: Strict mode errors on row width mismatch" begin
         # Too many values in row
         input = "users[2]{name,age}:\n  Alice,30,extra\n  Bob,25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Too few values in row
         input = "users[2]{name,age}:\n  Alice\n  Bob,25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Tab delimiter with width mismatch
         input = "users[2\t]{name\tage}:\n  Alice\t30\textra\n  Bob\t25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Pipe delimiter with width mismatch
         input = "users[2|]{name|age}:\n  Alice|30|extra\n  Bob|25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Non-strict mode should handle gracefully
         input = "users[2]{name,age}:\n  Alice,30,extra\n  Bob"
-        result = TOON.decode(input, options=TOON.DecodeOptions(strict=false))
+        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
         @test haskey(result["users"][1], "name")
         @test haskey(result["users"][2], "name")
     end
@@ -129,20 +129,20 @@ using TOON
     @testset "Requirement 7.6: Strict mode errors on row count mismatch" begin
         # Too few rows
         input = "users[3]{name,age}:\n  Alice,30\n  Bob,25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Too many rows
         input = "users[2]{name,age}:\n  Alice,30\n  Bob,25\n  Charlie,35"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Exact count should work
         input = "users[2]{name,age}:\n  Alice,30\n  Bob,25"
-        result = TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         @test length(result["users"]) == 2
         
         # Non-strict mode should accept actual count
         input = "users[3]{name,age}:\n  Alice,30\n  Bob,25"
-        result = TOON.decode(input, options=TOON.DecodeOptions(strict=false))
+        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
         @test length(result["users"]) == 2  # Actual count, not declared
     end
     
@@ -155,28 +155,28 @@ using TOON
         ])
         
         # Comma delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.COMMA))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.COMMA))
         @test occursin("[3]{", result)
         @test occursin(",", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded["users"][1]["name"] == "Alice"
         @test decoded["users"][2]["age"] == 25
         @test decoded["users"][3]["city"] == "SF"
         
         # Tab delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.TAB))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
         @test occursin("[3\t]{", result)
         @test occursin("\t", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded["users"][1]["name"] == "Alice"
         @test decoded["users"][2]["age"] == 25
         @test decoded["users"][3]["city"] == "SF"
         
         # Pipe delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.PIPE))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
         @test occursin("[3|]{", result)
         @test occursin("|", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded["users"][1]["name"] == "Alice"
         @test decoded["users"][2]["age"] == 25
         @test decoded["users"][3]["city"] == "SF"
@@ -185,14 +185,14 @@ using TOON
     @testset "Edge cases for tabular arrays" begin
         # Empty tabular array
         input = "users[0]{name,age}:"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test length(result["users"]) == 0
         
         # Single row tabular array
         data = [Dict("x" => 1, "y" => 2)]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("[1]{", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1]["x"] == 1
         
         # Tabular array with many fields
@@ -200,9 +200,9 @@ using TOON
             Dict("a" => 1, "b" => 2, "c" => 3, "d" => 4, "e" => 5),
             Dict("a" => 6, "b" => 7, "c" => 8, "d" => 9, "e" => 10)
         ]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("[2]{", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1]["a"] == 1
         @test decoded[2]["e"] == 10
         
@@ -211,15 +211,15 @@ using TOON
             Dict("first name" => "Alice", "last name" => "Smith"),
             Dict("first name" => "Bob", "last name" => "Jones")
         ]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("{", result) && occursin("}", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1]["first name"] == "Alice"
         @test decoded[2]["last name"] == "Jones"
         
         # Tabular array with empty string values
         input = "data[2]{a,b,c}:\n  1,,3\n  ,2,"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["data"][1]["a"] == 1
         @test result["data"][1]["b"] == ""
         @test result["data"][1]["c"] == 3
@@ -232,9 +232,9 @@ using TOON
             Dict("a" => 1, "b" => nothing),
             Dict("a" => nothing, "b" => 2)
         ]
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("null", result)
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test decoded[1]["a"] == 1
         @test decoded[1]["b"] === nothing
         @test decoded[2]["a"] === nothing
@@ -247,8 +247,8 @@ using TOON
             Dict("id" => 1, "name" => "Alice", "active" => true),
             Dict("id" => 2, "name" => "Bob", "active" => false)
         ]
-        encoded = TOON.encode(original)
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(original)
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         @test decoded[1]["id"] == 1
         @test decoded[1]["name"] == "Alice"
         @test decoded[1]["active"] == true
@@ -257,9 +257,9 @@ using TOON
         @test decoded[2]["active"] == false
         
         # Round-trip with different delimiters
-        for delim in [TOON.COMMA, TOON.TAB, TOON.PIPE]
-            encoded = TOON.encode(original, options=TOON.EncodeOptions(delimiter=delim))
-            decoded = TOON.decode(encoded)
+        for delim in [TokenOrientedObjectNotation.COMMA, TokenOrientedObjectNotation.TAB, TokenOrientedObjectNotation.PIPE]
+            encoded = TokenOrientedObjectNotation.encode(original, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=delim))
+            decoded = TokenOrientedObjectNotation.decode(encoded)
             @test decoded[1]["id"] == 1
             @test decoded[2]["name"] == "Bob"
         end
@@ -268,7 +268,7 @@ using TOON
     @testset "Inline tabular arrays" begin
         # Inline tabular array (all on one line)
         input = "users[2]{name,age}: Alice,30,Bob,25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         @test result["users"][2]["name"] == "Bob"
@@ -276,18 +276,18 @@ using TOON
         
         # Inline with tab delimiter
         input = "users[2\t]{name\tage}: Alice\t30\tBob\t25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][2]["age"] == 25
         
         # Inline with pipe delimiter
         input = "users[2|]{name|age}: Alice|30|Bob|25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][2]["age"] == 25
         
         # Inline count mismatch in strict mode
         input = "users[3]{name,age}: Alice,30,Bob,25"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
     end
 end

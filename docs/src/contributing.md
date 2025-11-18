@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to TOON.jl!
+Thank you for your interest in contributing to TokenOrientedObjectNotation.jl!
 
 ## Getting Started
 
@@ -8,8 +8,8 @@ Thank you for your interest in contributing to TOON.jl!
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/s-celles/TOON.jl.git
-cd TOON.jl
+git clone https://github.com/s-celles/TokenOrientedObjectNotation.jl.git
+cd TokenOrientedObjectNotation.jl
 ```
 
 2. Install dependencies:
@@ -27,9 +27,9 @@ Pkg.test()
 ### Project Structure
 
 ```
-TOON.jl/
+TokenOrientedObjectNotation.jl/
 ├── src/
-│   ├── TOON.jl              # Main module
+│   ├── TokenOrientedObjectNotation.jl              # Main module
 │   ├── constants.jl          # Constants and delimiters
 │   ├── types.jl              # Type definitions
 │   ├── string_utils.jl       # String utilities
@@ -182,7 +182,7 @@ Types: `Add`, `Fix`, `Update`, `Remove`, `Refactor`, `Docs`, `Test`
 
 ## Specification Compliance
 
-TOON.jl follows the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+TokenOrientedObjectNotation.jl follows the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 When making changes:
 
@@ -240,7 +240,7 @@ include("test/test_compliance_requirements.jl")
 
 ## License
 
-By contributing to TOON.jl, you agree that your contributions will be licensed under the MIT License.
+By contributing to TokenOrientedObjectNotation.jl, you agree that your contributions will be licensed under the MIT License.
 
 ## Recognition
 
@@ -249,4 +249,4 @@ Contributors will be recognized in:
 - Release notes
 - Documentation credits
 
-Thank you for contributing to TOON.jl!
+Thank you for contributing to TokenOrientedObjectNotation.jl!

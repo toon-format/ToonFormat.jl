@@ -1,6 +1,6 @@
 # CI/CD Setup Complete ✅
 
-GitHub Actions workflows have been successfully configured for TOON.jl.
+GitHub Actions workflows have been successfully configured for TokenOrientedObjectNotation.jl.
 
 ## What Was Set Up
 
@@ -46,7 +46,7 @@ Generate SSH keys for documentation:
 using Pkg
 Pkg.add("DocumenterTools")
 using DocumenterTools
-DocumenterTools.genkeys(user="s-celles", repo="TOON.jl")
+DocumenterTools.genkeys(user="s-celles", repo="TokenOrientedObjectNotation.jl")
 ```
 
 Then follow the instructions to:
@@ -103,9 +103,9 @@ Check the Actions tab to see workflows running.
 
 The following badges were added to README.md:
 
-- ![CI](https://github.com/s-celles/TOON.jl/workflows/CI/badge.svg)
-- ![Documentation](https://github.com/s-celles/TOON.jl/workflows/Documentation/badge.svg)
-- ![codecov](https://codecov.io/gh/s-celles/TOON.jl/branch/main/graph/badge.svg)
+- ![CI](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/CI/badge.svg)
+- ![Documentation](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/Documentation/badge.svg)
+- ![codecov](https://codecov.io/gh/s-celles/TokenOrientedObjectNotation.jl/branch/main/graph/badge.svg)
 - ![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)
 
 ## Configuration

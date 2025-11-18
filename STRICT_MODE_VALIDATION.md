@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document summarizes the validation and improvements made to TOON.jl's strict mode error handling to ensure full compliance with the TOON Specification v2.0, Section 14.
+This document summarizes the validation and improvements made to TokenOrientedObjectNotation.jl's strict mode error handling to ensure full compliance with the TOON Specification v2.0, Section 14.
 
 ## Validation Summary
 
@@ -229,4 +229,4 @@ Example error messages:
 
 ## Conclusion
 
-The TOON.jl decoder now has comprehensive strict mode error handling that fully complies with the TOON Specification v2.0. All error conditions are properly detected, reported with clear messages including line numbers, and thoroughly tested.
+The TokenOrientedObjectNotation.jl decoder now has comprehensive strict mode error handling that fully complies with the TOON Specification v2.0. All error conditions are properly detected, reported with clear messages including line numbers, and thoroughly tested.

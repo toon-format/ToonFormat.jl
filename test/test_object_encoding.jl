@@ -2,12 +2,12 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TOON
+using TokenOrientedObjectNotation
 
 @testset "Object Encoding and Decoding (Requirements 5.1-5.5)" begin
     @testset "Requirement 5.1: Primitive fields with exactly one space after colon" begin
         # Simple primitive fields
-        result = TOON.encode(Dict("name" => "Alice", "age" => 30))
+        result = TokenOrientedObjectNotation.encode(Dict("name" => "Alice", "age" => 30))
         @test occursin("name: Alice", result)
         @test occursin("age: 30", result)
         @test !occursin("name:  Alice", result)  # No double space
@@ -21,7 +21,7 @@ using TOON
             "bool" => true,
             "null" => nothing
         )
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         @test occursin("str: hello", result)
         @test occursin("num: 42", result)
         @test occursin("float: 3.14", result)
@@ -47,7 +47,7 @@ using TOON
     @testset "Requirement 5.2: Nested/empty objects use 'key:' on its own line" begin
         # Nested object
         obj = Dict("user" => Dict("name" => "Bob"))
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         lines = split(result, '\n')
         
         # Find the "user:" line
@@ -57,12 +57,12 @@ using TOON
         
         # Empty object
         obj = Dict("empty" => Dict{String, Any}())
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         @test occursin("empty:", result)
         
         # Multiple nested levels
         obj = Dict("a" => Dict("b" => Dict("c" => 1)))
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         @test occursin("a:", result)
         @test occursin("b:", result)
         @test occursin("c: 1", result)
@@ -71,7 +71,7 @@ using TOON
     @testset "Requirement 5.3: Nested fields appear at depth +1" begin
         # Single level nesting
         obj = Dict("parent" => Dict("child" => "value"))
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         lines = split(result, '\n')
         
         # parent: should be at depth 0 (no indent)
@@ -87,7 +87,7 @@ using TOON
         
         # Multiple levels
         obj = Dict("a" => Dict("b" => Dict("c" => Dict("d" => 1))))
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         lines = split(result, '\n')
         
         # Check indentation increases by 2 spaces per level
@@ -102,7 +102,7 @@ using TOON
         @test startswith(lines[d_line], "      ")    # 6 spaces
         
         # Custom indent
-        result = TOON.encode(obj, options=TOON.EncodeOptions(indent=4))
+        result = TokenOrientedObjectNotation.encode(obj, options=TokenOrientedObjectNotation.EncodeOptions(indent=4))
         lines = split(result, '\n')
         
         a_line = findfirst(l -> occursin("a:", l), lines)
@@ -118,30 +118,30 @@ using TOON
     
     @testset "Requirement 5.4: Decoder requires colon after each key" begin
         # Valid key-value pairs
-        @test_nowarn TOON.decode("name: Alice")
-        @test_nowarn TOON.decode("age: 30")
-        @test_nowarn TOON.decode("nested:\n  value: 1")
+        @test_nowarn TokenOrientedObjectNotation.decode("name: Alice")
+        @test_nowarn TokenOrientedObjectNotation.decode("age: 30")
+        @test_nowarn TokenOrientedObjectNotation.decode("nested:\n  value: 1")
         
         # Missing colon in strict mode should error
-        @test_throws Exception TOON.decode("name Alice", options=TOON.DecodeOptions(strict=true))
-        @test_throws Exception TOON.decode("age 30", options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode("name Alice", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode("age 30", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Missing colon in nested object
-        @test_throws Exception TOON.decode("parent:\n  child value", options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode("parent:\n  child value", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
         
         # Non-strict mode treats single line without colon as primitive
-        result = TOON.decode("name Alice", options=TOON.DecodeOptions(strict=false))
+        result = TokenOrientedObjectNotation.decode("name Alice", options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
         @test result == "name Alice"  # Single primitive value
         
         # Multiple keys, one missing colon
         input = "valid: 1\ninvalid no colon\nother: 2"
-        @test_throws Exception TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
     end
     
     @testset "Requirement 5.5: Decoder opens nested object at depth +1 for 'key:' lines" begin
         # Simple nested object
         input = "user:\n  name: Alice\n  age: 30"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test haskey(result, "user")
         @test isa(result["user"], AbstractDict)
         @test result["user"]["name"] == "Alice"
@@ -149,19 +149,19 @@ using TOON
         
         # Empty nested object (key: with nothing after)
         input = "empty:"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test haskey(result, "empty")
         @test isa(result["empty"], AbstractDict)
         @test isempty(result["empty"])
         
         # Multiple nested levels
         input = "a:\n  b:\n    c:\n      d: value"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["a"]["b"]["c"]["d"] == "value"
         
         # Mixed primitive and nested
         input = "name: Alice\naddress:\n  city: NYC\n  zip: 10001\nage: 30"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["name"] == "Alice"
         @test result["age"] == 30
         @test result["address"]["city"] == "NYC"
@@ -169,7 +169,7 @@ using TOON
         
         # Nested object at correct depth
         input = "parent:\n  child1: value1\n  child2:\n    grandchild: value2"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["parent"]["child1"] == "value1"
         @test result["parent"]["child2"]["grandchild"] == "value2"
     end
@@ -177,20 +177,20 @@ using TOON
     @testset "Empty object encoding and decoding" begin
         # Empty root object
         obj = Dict{String, Any}()
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         @test result == ""
         
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test isa(decoded, AbstractDict)
         @test isempty(decoded)
         
         # Nested empty objects
         obj = Dict("a" => Dict{String, Any}(), "b" => Dict{String, Any}())
-        result = TOON.encode(obj)
+        result = TokenOrientedObjectNotation.encode(obj)
         @test occursin("a:", result)
         @test occursin("b:", result)
         
-        decoded = TOON.decode(result)
+        decoded = TokenOrientedObjectNotation.decode(result)
         @test haskey(decoded, "a")
         @test haskey(decoded, "b")
         @test isempty(decoded["a"])
@@ -216,8 +216,8 @@ using TOON
             )
         )
         
-        encoded = TOON.encode(obj)
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(obj)
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         
         # Verify structure
         @test decoded["user"]["name"] == "Alice"

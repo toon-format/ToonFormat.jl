@@ -2,52 +2,52 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TOON
+using TokenOrientedObjectNotation
 
 @testset "Array Header Syntax Tests (Task 4)" begin
     @testset "Header Format - Encoding (Requirement 4.1)" begin
         # Root array with comma delimiter (default)
-        result = TOON.encode([1, 2, 3])
+        result = TokenOrientedObjectNotation.encode([1, 2, 3])
         @test occursin("[3]:", result)
         @test startswith(result, "[3]:")
         
         # Named array with comma delimiter
-        result = TOON.encode(Dict("items" => [1, 2, 3]))
+        result = TokenOrientedObjectNotation.encode(Dict("items" => [1, 2, 3]))
         @test occursin("items[3]:", result)
         
         # Empty array
-        result = TOON.encode([])
+        result = TokenOrientedObjectNotation.encode([])
         @test occursin("[0]:", result)
         
         # Named empty array
-        result = TOON.encode(Dict("items" => []))
+        result = TokenOrientedObjectNotation.encode(Dict("items" => []))
         @test occursin("items[0]:", result)
     end
     
     @testset "Delimiter Symbol Encoding (Requirements 4.2, 4.3)" begin
         # Comma delimiter (absent symbol)
-        result = TOON.encode([1, 2, 3], options=TOON.EncodeOptions(delimiter=TOON.COMMA))
+        result = TokenOrientedObjectNotation.encode([1, 2, 3], options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.COMMA))
         @test occursin("[3]:", result)
         @test !occursin("[3\t]:", result)
         @test !occursin("[3|]:", result)
         
         # Tab delimiter (HTAB symbol)
-        result = TOON.encode([1, 2, 3], options=TOON.EncodeOptions(delimiter=TOON.TAB))
+        result = TokenOrientedObjectNotation.encode([1, 2, 3], options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
         @test occursin("[3\t]:", result)
         @test occursin("1\t2\t3", result)
         
         # Pipe delimiter ("|" symbol)
-        result = TOON.encode([1, 2, 3], options=TOON.EncodeOptions(delimiter=TOON.PIPE))
+        result = TokenOrientedObjectNotation.encode([1, 2, 3], options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
         @test occursin("[3|]:", result)
         @test occursin("1|2|3", result)
         
         # Named array with tab delimiter
-        result = TOON.encode(Dict("data" => [10, 20, 30]), options=TOON.EncodeOptions(delimiter=TOON.TAB))
+        result = TokenOrientedObjectNotation.encode(Dict("data" => [10, 20, 30]), options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
         @test occursin("data[3\t]:", result)
         @test occursin("10\t20\t30", result)
         
         # Named array with pipe delimiter
-        result = TOON.encode(Dict("data" => [10, 20, 30]), options=TOON.EncodeOptions(delimiter=TOON.PIPE))
+        result = TokenOrientedObjectNotation.encode(Dict("data" => [10, 20, 30]), options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
         @test occursin("data[3|]:", result)
         @test occursin("10|20|30", result)
     end
@@ -58,19 +58,19 @@ using TOON
             Dict("name" => "Alice", "age" => 30),
             Dict("name" => "Bob", "age" => 25)
         ])
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("users[2]{name,age}:", result)
         @test occursin("Alice,30", result)
         @test occursin("Bob,25", result)
         
         # Tabular array with tab delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.TAB))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
         @test occursin("users[2\t]{name\tage}:", result)
         @test occursin("Alice\t30", result)
         @test occursin("Bob\t25", result)
         
         # Tabular array with pipe delimiter
-        result = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.PIPE))
+        result = TokenOrientedObjectNotation.encode(data, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
         @test occursin("users[2|]{name|age}:", result)
         @test occursin("Alice|30", result)
         @test occursin("Bob|25", result)
@@ -80,67 +80,67 @@ using TOON
             Dict("item name" => "Widget", "price" => 10),
             Dict("item name" => "Gadget", "price" => 20)
         ])
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         # Dict doesn't guarantee key order, so check for both possibilities
         @test occursin("items[2]{\"item name\",price}:", result) || occursin("items[2]{price,\"item name\"}:", result)
     end
     
     @testset "Colon Requirement (Requirement 4.7)" begin
         # All array headers must end with colon
-        result = TOON.encode([1, 2, 3])
+        result = TokenOrientedObjectNotation.encode([1, 2, 3])
         @test occursin("[3]:", result)
         
-        result = TOON.encode(Dict("items" => [1, 2, 3]))
+        result = TokenOrientedObjectNotation.encode(Dict("items" => [1, 2, 3]))
         @test occursin("items[3]:", result)
         
         # Tabular arrays
         data = Dict("users" => [Dict("name" => "Alice")])
-        result = TOON.encode(data)
+        result = TokenOrientedObjectNotation.encode(data)
         @test occursin("users[1]{name}:", result)
         
         # Empty arrays
-        result = TOON.encode([])
+        result = TokenOrientedObjectNotation.encode([])
         @test occursin("[0]:", result)
     end
     
     @testset "Header Parsing - Decoding (Requirement 4.5)" begin
         # Parse root array with comma delimiter
-        result = TOON.decode("[3]: 1,2,3")
+        result = TokenOrientedObjectNotation.decode("[3]: 1,2,3")
         @test result == [1, 2, 3]
         
         # Parse named array with comma delimiter
-        result = TOON.decode("items[3]: 1,2,3")
+        result = TokenOrientedObjectNotation.decode("items[3]: 1,2,3")
         @test result["items"] == [1, 2, 3]
         
         # Parse array with tab delimiter
-        result = TOON.decode("[3\t]: 1\t2\t3")
+        result = TokenOrientedObjectNotation.decode("[3\t]: 1\t2\t3")
         @test result == [1, 2, 3]
         
         # Parse array with pipe delimiter
-        result = TOON.decode("[3|]: 1|2|3")
+        result = TokenOrientedObjectNotation.decode("[3|]: 1|2|3")
         @test result == [1, 2, 3]
         
         # Parse named array with tab delimiter
-        result = TOON.decode("data[3\t]: 10\t20\t30")
+        result = TokenOrientedObjectNotation.decode("data[3\t]: 10\t20\t30")
         @test result["data"] == [10, 20, 30]
         
         # Parse named array with pipe delimiter
-        result = TOON.decode("data[3|]: 10|20|30")
+        result = TokenOrientedObjectNotation.decode("data[3|]: 10|20|30")
         @test result["data"] == [10, 20, 30]
         
         # Parse empty array
-        result = TOON.decode("[0]:")
+        result = TokenOrientedObjectNotation.decode("[0]:")
         @test result == []
         
         # Parse named empty array
-        result = TOON.decode("items[0]:")
+        result = TokenOrientedObjectNotation.decode("items[0]:")
         @test result["items"] == []
     end
     
     @testset "Field List Parsing (Requirement 4.4)" begin
         # Parse tabular array with comma delimiter
         input = "users[2]{name,age}:\n  Alice,30\n  Bob,25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test length(result["users"]) == 2
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
@@ -149,39 +149,39 @@ using TOON
         
         # Parse tabular array with tab delimiter
         input = "users[2\t]{name\tage}:\n  Alice\t30\n  Bob\t25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test length(result["users"]) == 2
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         
         # Parse tabular array with pipe delimiter
         input = "users[2|]{name|age}:\n  Alice|30\n  Bob|25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test length(result["users"]) == 2
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         
         # Parse tabular array with quoted field names
         input = "items[2]{\"item name\",price}:\n  Widget,10\n  Gadget,20"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["items"][1]["item name"] == "Widget"
         @test result["items"][1]["price"] == 10
     end
     
     @testset "Delimiter Absence Means Comma (Requirement 4.6)" begin
         # No delimiter symbol = comma
-        result = TOON.decode("[3]: 1,2,3")
+        result = TokenOrientedObjectNotation.decode("[3]: 1,2,3")
         @test result == [1, 2, 3]
         
         # Tabular array without delimiter symbol uses comma
         input = "users[2]{name,age}:\n  Alice,30\n  Bob,25"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["users"][1]["name"] == "Alice"
         @test result["users"][1]["age"] == 30
         
         # Multiple arrays in same document, each with explicit delimiter
         input = "arr1[2]: 1,2\narr2[2]: 3,4"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["arr1"] == [1, 2]
         @test result["arr2"] == [3, 4]
     end
@@ -189,25 +189,25 @@ using TOON
     @testset "Colon Requirement Validation (Requirement 4.7)" begin
         # All valid array headers must have colons
         # These should parse successfully
-        @test TOON.decode("[0]:") == []
-        @test TOON.decode("items[0]:") == Dict("items" => [])
-        @test TOON.decode("users[2]{name,age}:\n  Alice,30\n  Bob,25")["users"][1]["name"] == "Alice"
+        @test TokenOrientedObjectNotation.decode("[0]:") == []
+        @test TokenOrientedObjectNotation.decode("items[0]:") == Dict("items" => [])
+        @test TokenOrientedObjectNotation.decode("users[2]{name,age}:\n  Alice,30\n  Bob,25")["users"][1]["name"] == "Alice"
         
         # Array headers with inline data
-        @test TOON.decode("[3]: 1,2,3") == [1, 2, 3]
-        @test TOON.decode("items[2]: a,b")["items"] == ["a", "b"]
+        @test TokenOrientedObjectNotation.decode("[3]: 1,2,3") == [1, 2, 3]
+        @test TokenOrientedObjectNotation.decode("items[2]: a,b")["items"] == ["a", "b"]
     end
     
     @testset "Complex Header Scenarios" begin
         # Array with special characters in values
-        result = TOON.decode("[3]: \"a,b\",\"c|d\",\"e\tf\"")
+        result = TokenOrientedObjectNotation.decode("[3]: \"a,b\",\"c|d\",\"e\tf\"")
         @test result[1] == "a,b"
         @test result[2] == "c|d"
         @test result[3] == "e\tf"
         
         # Tabular array with empty values
         input = "data[2]{a,b,c}:\n  1,,3\n  ,2,"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["data"][1]["a"] == 1
         @test result["data"][1]["b"] == ""
         @test result["data"][1]["c"] == 3
@@ -217,7 +217,7 @@ using TOON
         
         # Multiple arrays with different delimiters in same document
         input = "arr1[2]: 1,2\narr2[2\t]: 3\t4\narr3[2|]: 5|6"
-        result = TOON.decode(input)
+        result = TokenOrientedObjectNotation.decode(input)
         @test result["arr1"] == [1, 2]
         @test result["arr2"] == [3, 4]
         @test result["arr3"] == [5, 6]
@@ -226,18 +226,18 @@ using TOON
     @testset "Round-trip with Different Delimiters" begin
         # Comma delimiter
         original = [1, 2, 3, 4, 5]
-        encoded = TOON.encode(original)
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(original)
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         @test decoded == original
         
         # Tab delimiter
-        encoded = TOON.encode(original, options=TOON.EncodeOptions(delimiter=TOON.TAB))
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(original, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB))
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         @test decoded == original
         
         # Pipe delimiter
-        encoded = TOON.encode(original, options=TOON.EncodeOptions(delimiter=TOON.PIPE))
-        decoded = TOON.decode(encoded)
+        encoded = TokenOrientedObjectNotation.encode(original, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE))
+        decoded = TokenOrientedObjectNotation.decode(encoded)
         @test decoded == original
         
         # Tabular arrays with different delimiters
@@ -246,9 +246,9 @@ using TOON
             Dict("name" => "Bob", "age" => 25)
         ])
         
-        for delim in [TOON.COMMA, TOON.TAB, TOON.PIPE]
-            encoded = TOON.encode(original, options=TOON.EncodeOptions(delimiter=delim))
-            decoded = TOON.decode(encoded)
+        for delim in [TokenOrientedObjectNotation.COMMA, TokenOrientedObjectNotation.TAB, TokenOrientedObjectNotation.PIPE]
+            encoded = TokenOrientedObjectNotation.encode(original, options=TokenOrientedObjectNotation.EncodeOptions(delimiter=delim))
+            decoded = TokenOrientedObjectNotation.decode(encoded)
             @test decoded["users"][1]["name"] == "Alice"
             @test decoded["users"][1]["age"] == 30
             @test decoded["users"][2]["name"] == "Bob"

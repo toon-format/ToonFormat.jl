@@ -4,7 +4,7 @@
 
 ## Overview
 
-This document tracks the compliance status of TOON.jl against the official TOON specification test fixtures from https://github.com/toon-format/spec/tree/main/tests.
+This document tracks the compliance status of TokenOrientedObjectNotation.jl against the official TOON specification test fixtures from https://github.com/toon-format/spec/tree/main/tests.
 
 ## Current Status
 
@@ -218,4 +218,4 @@ julia --project=. test/download_fixtures.jl
 
 - TOON Specification: https://github.com/toon-format/spec
 - Test Fixtures: https://github.com/toon-format/spec/tree/main/tests
-- TOON.jl Implementation: https://github.com/your-org/TOON.jl
+- TokenOrientedObjectNotation.jl Implementation: https://github.com/your-org/TokenOrientedObjectNotation.jl

@@ -2,41 +2,41 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TOON
+using TokenOrientedObjectNotation
 
 @testset "Compliance: Determinism Tests" begin
     @testset "Primitive Determinism" begin
         # Same input should always produce same output
-        @test TOON.encode(42) == TOON.encode(42)
-        @test TOON.encode("hello") == TOON.encode("hello")
-        @test TOON.encode(true) == TOON.encode(true)
-        @test TOON.encode(nothing) == TOON.encode(nothing)
+        @test TokenOrientedObjectNotation.encode(42) == TokenOrientedObjectNotation.encode(42)
+        @test TokenOrientedObjectNotation.encode("hello") == TokenOrientedObjectNotation.encode("hello")
+        @test TokenOrientedObjectNotation.encode(true) == TokenOrientedObjectNotation.encode(true)
+        @test TokenOrientedObjectNotation.encode(nothing) == TokenOrientedObjectNotation.encode(nothing)
         
         # Multiple encodings should be identical
         for _ in 1:10
-            @test TOON.encode(3.14) == "3.14"
+            @test TokenOrientedObjectNotation.encode(3.14) == "3.14"
         end
     end
     
     @testset "Object Determinism" begin
         obj = Dict("name" => "Alice", "age" => 30)
-        encoded1 = TOON.encode(obj)
-        encoded2 = TOON.encode(obj)
+        encoded1 = TokenOrientedObjectNotation.encode(obj)
+        encoded2 = TokenOrientedObjectNotation.encode(obj)
         @test encoded1 == encoded2
         
         # Multiple encodings
-        results = [TOON.encode(obj) for _ in 1:5]
+        results = [TokenOrientedObjectNotation.encode(obj) for _ in 1:5]
         @test all(r == results[1] for r in results)
     end
     
     @testset "Array Determinism" begin
         arr = [1, 2, 3, 4, 5]
-        encoded1 = TOON.encode(arr)
-        encoded2 = TOON.encode(arr)
+        encoded1 = TokenOrientedObjectNotation.encode(arr)
+        encoded2 = TokenOrientedObjectNotation.encode(arr)
         @test encoded1 == encoded2
         
         # Multiple encodings
-        results = [TOON.encode(arr) for _ in 1:5]
+        results = [TokenOrientedObjectNotation.encode(arr) for _ in 1:5]
         @test all(r == results[1] for r in results)
     end
     
@@ -49,42 +49,42 @@ using TOON
             "config" => Dict("timeout" => 30)
         )
         
-        encoded1 = TOON.encode(obj)
-        encoded2 = TOON.encode(obj)
+        encoded1 = TokenOrientedObjectNotation.encode(obj)
+        encoded2 = TokenOrientedObjectNotation.encode(obj)
         @test encoded1 == encoded2
         
         # Multiple encodings
-        results = [TOON.encode(obj) for _ in 1:5]
+        results = [TokenOrientedObjectNotation.encode(obj) for _ in 1:5]
         @test all(r == results[1] for r in results)
     end
     
     @testset "Idempotence" begin
         # encode(decode(encode(x))) == encode(x)
         obj = Dict("name" => "Alice", "values" => [1, 2, 3])
-        encoded1 = TOON.encode(obj)
-        decoded = TOON.decode(encoded1)
-        encoded2 = TOON.encode(decoded)
+        encoded1 = TokenOrientedObjectNotation.encode(obj)
+        decoded = TokenOrientedObjectNotation.decode(encoded1)
+        encoded2 = TokenOrientedObjectNotation.encode(decoded)
         @test encoded1 == encoded2
         
         # Multiple round-trips
         current = obj
         for _ in 1:3
-            encoded = TOON.encode(current)
-            current = TOON.decode(encoded)
+            encoded = TokenOrientedObjectNotation.encode(current)
+            current = TokenOrientedObjectNotation.decode(encoded)
         end
-        @test TOON.encode(current) == TOON.encode(obj)
+        @test TokenOrientedObjectNotation.encode(current) == TokenOrientedObjectNotation.encode(obj)
     end
     
     @testset "Options Determinism" begin
         arr = [1, 2, 3]
         
         # Same options should produce same output
-        opts = TOON.EncodeOptions(indent=4, delimiter=TOON.TAB)
-        @test TOON.encode(arr, options=opts) == TOON.encode(arr, options=opts)
+        opts = TokenOrientedObjectNotation.EncodeOptions(indent=4, delimiter=TokenOrientedObjectNotation.TAB)
+        @test TokenOrientedObjectNotation.encode(arr, options=opts) == TokenOrientedObjectNotation.encode(arr, options=opts)
         
         # Different options should produce different output
-        opts1 = TOON.EncodeOptions(delimiter=TOON.COMMA)
-        opts2 = TOON.EncodeOptions(delimiter=TOON.TAB)
-        @test TOON.encode(arr, options=opts1) != TOON.encode(arr, options=opts2)
+        opts1 = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.COMMA)
+        opts2 = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB)
+        @test TokenOrientedObjectNotation.encode(arr, options=opts1) != TokenOrientedObjectNotation.encode(arr, options=opts2)
     end
 end

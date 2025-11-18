@@ -7,7 +7,7 @@ This guide covers how to encode Julia data structures into TOON format.
 The `encode` function converts Julia values to TOON format strings:
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 result = TOON.encode(value)
 ```

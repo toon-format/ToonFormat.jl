@@ -1,4 +1,4 @@
-# TOON.jl Implementation Status
+# TokenOrientedObjectNotation.jl Implementation Status
 
 ## Overview
 
@@ -56,7 +56,7 @@ A Julia implementation of the TOON (Token-Oriented Object Notation) format, foll
 
 - **Package Structure** ✅
   - Project.toml with metadata
-  - Main module file (src/TOON.jl)
+  - Main module file (src/TokenOrientedObjectNotation.jl)
   - Test suite (test/runtests.jl)
   - README.md with documentation
   - LICENSE (MIT)
@@ -187,7 +187,7 @@ A Julia implementation of the TOON (Token-Oriented Object Notation) format, foll
 ### Working Examples
 
 ```julia
-using TOON
+using TokenOrientedObjectNotation
 
 # Encode primitives
 TOON.encode(42)          # "42"
@@ -287,13 +287,13 @@ These are potential improvements beyond the v2.0 specification:
 ## File Structure
 
 ```
-TOON.jl/
+TokenOrientedObjectNotation.jl/
 ├── Project.toml              # Package metadata
 ├── README.md                 # User documentation
 ├── LICENSE                   # MIT License
 ├── IMPLEMENTATION_STATUS.md  # This file
 ├── src/
-│   ├── TOON.jl              # Main module
+│   ├── TokenOrientedObjectNotation.jl              # Main module
 │   ├── constants.jl          # Constants and delimiters
 │   ├── types.jl              # Type definitions
 │   ├── string_utils.jl       # String utilities
@@ -311,7 +311,7 @@ TOON.jl/
 1. **Number Precision**
    - Limited to Float64 precision (~15-17 decimal digits)
    - Very large or very small numbers may lose precision
-   - This is a Julia Float64 limitation, not a TOON.jl issue
+   - This is a Julia Float64 limitation, not a TokenOrientedObjectNotation.jl issue
 
 2. **Dict Key Order**
    - Relies on Julia Dict preserving insertion order (Julia 1.0+)

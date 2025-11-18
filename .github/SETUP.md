@@ -1,6 +1,6 @@
 # CI/CD Setup Guide
 
-Quick guide to set up GitHub Actions for TOON.jl.
+Quick guide to set up GitHub Actions for TokenOrientedObjectNotation.jl.
 
 ## Step 1: Enable GitHub Actions
 
@@ -19,14 +19,14 @@ using Pkg
 Pkg.add("DocumenterTools")
 
 using DocumenterTools
-DocumenterTools.genkeys(user="s-celles", repo="TOON.jl")
+DocumenterTools.genkeys(user="s-celles", repo="TokenOrientedObjectNotation.jl")
 ```
 
 This will generate two keys and provide instructions.
 
 ### Add Public Key as Deploy Key
 
-1. Go to: https://github.com/s-celles/TOON.jl/settings/keys
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/settings/keys
 2. Click "Add deploy key"
 3. Title: `documenter-key`
 4. Key: Paste the **public key** from the output above
@@ -35,7 +35,7 @@ This will generate two keys and provide instructions.
 
 ### Add Private Key as Secret
 
-1. Go to: https://github.com/s-celles/TOON.jl/settings/secrets/actions
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/settings/secrets/actions
 2. Click "New repository secret"
 3. Name: `DOCUMENTER_KEY`
 4. Value: Paste the **private key** from the output above
@@ -52,7 +52,7 @@ This will generate two keys and provide instructions.
 
 ### Add Codecov Secret
 
-1. Go to: https://github.com/s-celles/TOON.jl/settings/secrets/actions
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/settings/secrets/actions
 2. Click "New repository secret"
 3. Name: `CODECOV_TOKEN`
 4. Value: Paste your Codecov token
@@ -60,7 +60,7 @@ This will generate two keys and provide instructions.
 
 ## Step 4: Enable GitHub Pages
 
-1. Go to: https://github.com/s-celles/TOON.jl/settings/pages
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/settings/pages
 2. Source: Deploy from a branch
 3. Branch: `gh-pages` / `root`
 4. Click "Save"
@@ -69,7 +69,7 @@ This will generate two keys and provide instructions.
 
 ## Step 5: Configure Branch Protection (Recommended)
 
-1. Go to: https://github.com/s-celles/TOON.jl/settings/branches
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/settings/branches
 2. Click "Add rule"
 3. Branch name pattern: `main`
 4. Enable:
@@ -91,7 +91,7 @@ git push
 
 ### Check Workflow Status
 
-1. Go to: https://github.com/s-celles/TOON.jl/actions
+1. Go to: https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions
 2. You should see workflows running:
    - ✅ CI
    - ✅ Documentation
@@ -100,7 +100,7 @@ git push
 ### Verify Documentation
 
 After the Documentation workflow completes:
-1. Go to: https://s-celles.github.io/TOON.jl/
+1. Go to: https://s-celles.github.io/TokenOrientedObjectNotation.jl/
 2. Your documentation should be live!
 
 ## Troubleshooting
@@ -176,7 +176,7 @@ Workflows are in `.github/workflows/`:
 ### Monitor Actions
 
 Check regularly:
-- https://github.com/s-celles/TOON.jl/actions
+- https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions
 - Review failed workflows
 - Update dependencies via CompatHelper PRs
 

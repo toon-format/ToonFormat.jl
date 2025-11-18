@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This specification defines the requirements for ensuring TOON.jl is fully compliant with the official TOON Specification v2.0 (https://github.com/toon-format/spec/blob/main/SPEC.md). TOON (Token-Oriented Object Notation) is a line-oriented, indentation-based text format that encodes the JSON data model with explicit structure and minimal quoting. The implementation must conform to all normative requirements in the specification to ensure interoperability with other TOON implementations.
+This specification defines the requirements for ensuring TokenOrientedObjectNotation.jl is fully compliant with the official TOON Specification v2.0 (https://github.com/toon-format/spec/blob/main/SPEC.md). TOON (Token-Oriented Object Notation) is a line-oriented, indentation-based text format that encodes the JSON data model with explicit structure and minimal quoting. The implementation must conform to all normative requirements in the specification to ensure interoperability with other TOON implementations.
 
 ## Glossary
 

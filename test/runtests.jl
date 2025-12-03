@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Check if we should run only specific test suites
 const TEST_GROUP = get(ENV, "TEST_GROUP", "all")
@@ -14,7 +14,7 @@ if TEST_GROUP == "aqua" || TEST_GROUP == "all"
 end
 
 if TEST_GROUP == "all"
-    @testset "TokenOrientedObjectNotation.jl - All Tests" begin
+    @testset "ToonFormat.jl - All Tests" begin
         # Include comprehensive test suites
         include("test_decoder.jl")
     include("test_encoder.jl")
@@ -50,37 +50,37 @@ if TEST_GROUP == "all"
     end
     end
     
-    @testset "TokenOrientedObjectNotation.jl - Basic Tests" begin
+    @testset "ToonFormat.jl - Basic Tests" begin
         @testset "Primitive Encoding" begin
         # Null
-        @test TokenOrientedObjectNotation.encode(nothing) == "null"
+        @test ToonFormat.encode(nothing) == "null"
 
         # Booleans
-        @test TokenOrientedObjectNotation.encode(true) == "true"
-        @test TokenOrientedObjectNotation.encode(false) == "false"
+        @test ToonFormat.encode(true) == "true"
+        @test ToonFormat.encode(false) == "false"
 
         # Numbers
-        @test TokenOrientedObjectNotation.encode(42) == "42"
-        @test TokenOrientedObjectNotation.encode(3.14) == "3.14"
-        @test TokenOrientedObjectNotation.encode(-0.0) == "0"
+        @test ToonFormat.encode(42) == "42"
+        @test ToonFormat.encode(3.14) == "3.14"
+        @test ToonFormat.encode(-0.0) == "0"
 
         # Strings
-        @test TokenOrientedObjectNotation.encode("hello") == "hello"
-        @test TokenOrientedObjectNotation.encode("") == "\"\""
-        @test TokenOrientedObjectNotation.encode("hello world") == "hello world"
-        @test TokenOrientedObjectNotation.encode("true") == "\"true\""
+        @test ToonFormat.encode("hello") == "hello"
+        @test ToonFormat.encode("") == "\"\""
+        @test ToonFormat.encode("hello world") == "hello world"
+        @test ToonFormat.encode("true") == "\"true\""
     end
 
     @testset "Object Encoding" begin
         # Simple object
         obj = Dict("name" => "Alice", "age" => 30)
-        result = TokenOrientedObjectNotation.encode(obj)
+        result = ToonFormat.encode(obj)
         @test occursin("name: Alice", result)
         @test occursin("age: 30", result)
 
         # Nested object
         nested = Dict("user" => Dict("name" => "Bob"))
-        result = TokenOrientedObjectNotation.encode(nested)
+        result = ToonFormat.encode(nested)
         @test occursin("user:", result)
         @test occursin("name: Bob", result)
     end
@@ -88,96 +88,96 @@ if TEST_GROUP == "all"
     @testset "Array Encoding" begin
         # Primitive array
         arr = [1, 2, 3]
-        @test TokenOrientedObjectNotation.encode(arr) == "[3]: 1,2,3"
+        @test ToonFormat.encode(arr) == "[3]: 1,2,3"
 
         # Empty array
-        @test TokenOrientedObjectNotation.encode([]) == "[0]:"
+        @test ToonFormat.encode([]) == "[0]:"
 
         # Array of objects (tabular)
         tabular = [
             Dict("id" => 1, "name" => "Alice"),
             Dict("id" => 2, "name" => "Bob")
         ]
-        result = TokenOrientedObjectNotation.encode(tabular)
+        result = ToonFormat.encode(tabular)
         # Dict doesn't preserve order in Julia, so check for both possibilities
         @test occursin("[2]{id,name}:", result) || occursin("[2]{name,id}:", result)
     end
 
     @testset "Primitive Decoding" begin
         # Null
-        @test TokenOrientedObjectNotation.decode("null") === nothing
+        @test ToonFormat.decode("null") === nothing
 
         # Booleans
-        @test TokenOrientedObjectNotation.decode("true") === true
-        @test TokenOrientedObjectNotation.decode("false") === false
+        @test ToonFormat.decode("true") === true
+        @test ToonFormat.decode("false") === false
 
         # Numbers
-        @test TokenOrientedObjectNotation.decode("42") == 42
-        @test TokenOrientedObjectNotation.decode("3.14") == 3.14
+        @test ToonFormat.decode("42") == 42
+        @test ToonFormat.decode("3.14") == 3.14
 
         # Strings
-        @test TokenOrientedObjectNotation.decode("hello") == "hello"
-        @test TokenOrientedObjectNotation.decode("\"\"") == ""
-        @test TokenOrientedObjectNotation.decode("\"true\"") == "true"
+        @test ToonFormat.decode("hello") == "hello"
+        @test ToonFormat.decode("\"\"") == ""
+        @test ToonFormat.decode("\"true\"") == "true"
     end
 
     @testset "Object Decoding" begin
         # Simple object
         input = "name: Alice\nage: 30"
-        result = TokenOrientedObjectNotation.decode(input)
+        result = ToonFormat.decode(input)
         @test result["name"] == "Alice"
         @test result["age"] == 30
 
         # Empty object
-        @test TokenOrientedObjectNotation.decode("") == Dict{String, Any}()
+        @test ToonFormat.decode("") == Dict{String, Any}()
     end
 
     @testset "Array Decoding" begin
         # Primitive array
-        result = TokenOrientedObjectNotation.decode("[3]: 1,2,3")
+        result = ToonFormat.decode("[3]: 1,2,3")
         @test result == [1, 2, 3]
 
         # Empty array
-        result = TokenOrientedObjectNotation.decode("[0]:")
+        result = ToonFormat.decode("[0]:")
         @test result == []
     end
 
     @testset "Round-trip" begin
         # Object round-trip
         original = Dict("name" => "Alice", "age" => 30, "active" => true)
-        encoded = TokenOrientedObjectNotation.encode(original)
-        decoded = TokenOrientedObjectNotation.decode(encoded)
+        encoded = ToonFormat.encode(original)
+        decoded = ToonFormat.decode(encoded)
         @test decoded["name"] == original["name"]
         @test decoded["age"] == original["age"]
         @test decoded["active"] == original["active"]
 
         # Array round-trip
         original = [1, 2, 3, 4, 5]
-        encoded = TokenOrientedObjectNotation.encode(original)
-        decoded = TokenOrientedObjectNotation.decode(encoded)
+        encoded = ToonFormat.encode(original)
+        decoded = ToonFormat.decode(encoded)
         @test decoded == original
     end
 
     @testset "String Escaping" begin
         # Test escape sequences
-        @test TokenOrientedObjectNotation.encode("hello\nworld") == "\"hello\\nworld\""
-        @test TokenOrientedObjectNotation.encode("quote: \"yes\"") == "\"quote: \\\"yes\\\"\""
+        @test ToonFormat.encode("hello\nworld") == "\"hello\\nworld\""
+        @test ToonFormat.encode("quote: \"yes\"") == "\"quote: \\\"yes\\\"\""
 
         # Test unescape
-        @test TokenOrientedObjectNotation.decode("\"hello\\nworld\"") == "hello\nworld"
-        @test TokenOrientedObjectNotation.decode("\"quote: \\\"yes\\\"\"") == "quote: \"yes\""
+        @test ToonFormat.decode("\"hello\\nworld\"") == "hello\nworld"
+        @test ToonFormat.decode("\"quote: \\\"yes\\\"\"") == "quote: \"yes\""
     end
 
     @testset "Delimiter Options" begin
         # Tab delimiter
         arr = [1, 2, 3]
-        options = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB)
-        result = TokenOrientedObjectNotation.encode(arr, options=options)
+        options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+        result = ToonFormat.encode(arr, options=options)
         @test occursin("[3\t]:", result)
 
         # Pipe delimiter
-        options = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE)
-        result = TokenOrientedObjectNotation.encode(arr, options=options)
+        options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
+        result = ToonFormat.encode(arr, options=options)
         @test occursin("[3|]:", result)
     end
     end

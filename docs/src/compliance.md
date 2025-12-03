@@ -1,6 +1,6 @@
 # Specification Compliance
 
-TokenOrientedObjectNotation.jl is **fully compliant** with the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+ToonFormat.jl is **fully compliant** with the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 ## Validation Status
 
@@ -8,7 +8,7 @@ TokenOrientedObjectNotation.jl is **fully compliant** with the [TOON Specificati
 
 - **Validation Date:** November 16, 2025
 - **Test Suite:** 1750 comprehensive tests
-- **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md)
+- **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/toon-format/toon-julia.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md)
 
 ## Requirements Coverage
 
@@ -243,7 +243,7 @@ All §14 error scenarios:
 
 - Limited to Float64 precision (~15-17 decimal digits)
 - Very large or very small numbers may lose precision
-- This is a Julia Float64 limitation, not a TokenOrientedObjectNotation.jl issue
+- This is a Julia Float64 limitation, not a ToonFormat.jl issue
 
 **Impact:** Minimal for most use cases
 
@@ -270,16 +270,6 @@ All §14 error scenarios:
 - No Unicode normalization (not required by spec)
 
 **Impact:** Minimal - works correctly for standard UTF-8
-
-## Validation Reports
-
-Detailed validation reports are available:
-
-- [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md) - Overall compliance
-- [PATH_EXPANSION_VALIDATION.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/PATH_EXPANSION_VALIDATION.md) - Path expansion feature
-- [STRICT_MODE_VALIDATION.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/STRICT_MODE_VALIDATION.md) - Strict mode errors
-- [TABULAR_ARRAY_VALIDATION.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/TABULAR_ARRAY_VALIDATION.md) - Tabular arrays
-- [test/COMPLIANCE_TEST_COVERAGE.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/test/COMPLIANCE_TEST_COVERAGE.md) - Test coverage details
 
 ## Specification Links
 

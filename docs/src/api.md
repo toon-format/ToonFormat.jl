@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for TokenOrientedObjectNotation.jl.
+Complete API documentation for ToonFormat.jl.
 
 ## Main Functions
 
@@ -294,7 +294,7 @@ TOON.needs_quoting("true", TOON.COMMA)  # true
 
 ## Error Types
 
-TokenOrientedObjectNotation.jl throws `ErrorException` with descriptive messages for various error conditions:
+ToonFormat.jl throws `ErrorException` with descriptive messages for various error conditions:
 
 - **Array count mismatch:** `"Array length mismatch: expected X, got Y"`
 - **Row width mismatch:** `"Row width mismatch at line X: expected Y fields, got Z"`
@@ -312,7 +312,7 @@ TokenOrientedObjectNotation.jl throws `ErrorException` with descriptive messages
 TOON.version  # Package version
 ```
 
-Get the current version of TokenOrientedObjectNotation.jl.
+Get the current version of ToonFormat.jl.
 
 ## Next Steps
 

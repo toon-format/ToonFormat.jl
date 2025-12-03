@@ -1,10 +1,10 @@
 """
-Test TokenOrientedObjectNotation.jl against official TOON specification test fixtures
+Test ToonFormat.jl against official TOON specification test fixtures
 https://github.com/toon-format/spec/tree/main/tests
 """
 
 using Test
-using TokenOrientedObjectNotation
+using ToonFormat
 using JSON3
 
 const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
@@ -21,7 +21,7 @@ end
 # Helper to convert JSON3 objects to native Julia types for comparison
 function normalize_json(val)
     if val isa JSON3.Object
-        return TokenOrientedObjectNotation.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(val))
+        return ToonFormat.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(val))
     elseif val isa JSON3.Array || val isa Vector
         return [normalize_json(v) for v in val]
     else
@@ -83,9 +83,9 @@ end
                         options = parse_encode_options(get(test, :options, nothing))
                         
                         if get(test, :shouldError, false)
-                            @test_throws Exception TokenOrientedObjectNotation.encode(input; options=options)
+                            @test_throws Exception ToonFormat.encode(input; options=options)
                         else
-                            result = TokenOrientedObjectNotation.encode(input; options=options)
+                            result = ToonFormat.encode(input; options=options)
                             @test result == expected
                         end
                     end
@@ -122,9 +122,9 @@ end
                         options = parse_decode_options(get(test, :options, nothing))
                         
                         if get(test, :shouldError, false)
-                            @test_throws Exception TokenOrientedObjectNotation.decode(input; options=options)
+                            @test_throws Exception ToonFormat.decode(input; options=options)
                         else
-                            result = TokenOrientedObjectNotation.decode(input; options=options)
+                            result = ToonFormat.decode(input; options=options)
                             @test result == expected
                         end
                     end

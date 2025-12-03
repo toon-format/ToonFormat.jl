@@ -8,7 +8,6 @@ ToonFormat.jl is **fully compliant** with the [TOON Specification v2.0](https://
 
 - **Validation Date:** November 16, 2025
 - **Test Suite:** 1750 comprehensive tests
-- **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/toon-format/toon-julia.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md)
 
 ## Requirements Coverage
 

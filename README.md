@@ -1,11 +1,11 @@
 # ToonFormat.jl
 
-[![CI](https://github.com/toon-format/toon-julia.jl/workflows/CI/badge.svg)](https://github.com/toon-format/toon-julia.jl/actions/workflows/CI.yml)
-[![Documentation](https://github.com/toon-format/toon-julia.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/toon-julia.jl/actions/workflows/Documentation.yml)
+[![CI](https://github.com/toon-format/ToonFormat.jl/workflows/CI/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/toon-format/ToonFormat.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/Documentation.yml)
 [![codecov](https://codecov.io/gh/s-celles/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/ToonFormat.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
-[![Compliance](https://img.shields.io/badge/compliance-87.6%25-yellow)](https://github.com/toon-format/toon-julia.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
+[![Compliance](https://img.shields.io/badge/compliance-87.6%25-yellow)](https://github.com/toon-format/ToonFormat.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
@@ -26,12 +26,12 @@ TOON is a line-oriented, indentation-based text format that encodes the JSON dat
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/toon-format/toon-julia.jl")
+Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/toon-format/toon-julia.jl
+pkg> add https://github.com/toon-format/ToonFormat.jl
 ```
 
 ## Quick Start
@@ -402,7 +402,7 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 
 ```julia
 # Clone the repository
-git clone https://github.com/toon-format/toon-julia.jl.git
+git clone https://github.com/toon-format/ToonFormat.jl.git
 cd ToonFormat.jl
 
 # Run tests

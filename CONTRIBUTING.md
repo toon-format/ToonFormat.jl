@@ -8,7 +8,7 @@ Thank you for your interest in contributing to ToonFormat.jl!
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/toon-format/toon-julia.jl.git
+git clone https://github.com/toon-format/ToonFormat.jl.git
 cd ToonFormat.jl
 ```
 

@@ -53,12 +53,12 @@ count: 2
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/toon-format/toon-julia.jl")
+Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/toon-format/toon-julia.jl
+pkg> add https://github.com/toon-format/ToonFormat.jl
 ```
 
 ## Quick Start

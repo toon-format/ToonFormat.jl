@@ -1,6 +1,6 @@
 # Specification Compliance
 
-TokenOrientedObjectNotation.jl is **fully compliant** with the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+ToonFormat.jl is **fully compliant** with the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 ## Validation Status
 
@@ -8,7 +8,7 @@ TokenOrientedObjectNotation.jl is **fully compliant** with the [TOON Specificati
 
 - **Validation Date:** November 16, 2025
 - **Test Suite:** 1750 comprehensive tests
-- **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/s-celles/TokenOrientedObjectNotation.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md)
+- **Compliance Report:** [COMPLIANCE_VALIDATION_REPORT.md](https://github.com/toon-format/toon-julia.jl/blob/main/COMPLIANCE_VALIDATION_REPORT.md)
 
 ## Requirements Coverage
 
@@ -243,7 +243,7 @@ All §14 error scenarios:
 
 - Limited to Float64 precision (~15-17 decimal digits)
 - Very large or very small numbers may lose precision
-- This is a Julia Float64 limitation, not a TokenOrientedObjectNotation.jl issue
+- This is a Julia Float64 limitation, not a ToonFormat.jl issue
 
 **Impact:** Minimal for most use cases
 

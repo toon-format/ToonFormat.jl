@@ -1,11 +1,11 @@
-# TokenOrientedObjectNotation.jl
+# ToonFormat.jl
 
-[![CI](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/CI/badge.svg)](https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions/workflows/CI.yml)
-[![Documentation](https://github.com/s-celles/TokenOrientedObjectNotation.jl/workflows/Documentation/badge.svg)](https://github.com/s-celles/TokenOrientedObjectNotation.jl/actions/workflows/Documentation.yml)
-[![codecov](https://codecov.io/gh/s-celles/TokenOrientedObjectNotation.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/TokenOrientedObjectNotation.jl)
+[![CI](https://github.com/toon-format/toon-julia.jl/workflows/CI/badge.svg)](https://github.com/toon-format/toon-julia.jl/actions/workflows/CI.yml)
+[![Documentation](https://github.com/toon-format/toon-julia.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/toon-julia.jl/actions/workflows/Documentation.yml)
+[![codecov](https://codecov.io/gh/s-celles/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/ToonFormat.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
-[![Compliance](https://img.shields.io/badge/compliance-87.6%25-yellow)](https://github.com/s-celles/TokenOrientedObjectNotation.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
+[![Compliance](https://img.shields.io/badge/compliance-87.6%25-yellow)](https://github.com/toon-format/toon-julia.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
@@ -26,12 +26,12 @@ TOON is a line-oriented, indentation-based text format that encodes the JSON dat
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/s-celles/TokenOrientedObjectNotation.jl")
+Pkg.add(url="https://github.com/toon-format/toon-julia.jl")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/s-celles/TokenOrientedObjectNotation.jl
+pkg> add https://github.com/toon-format/toon-julia.jl
 ```
 
 ## Quick Start
@@ -39,11 +39,11 @@ pkg> add https://github.com/s-celles/TokenOrientedObjectNotation.jl
 ### Encoding
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Simple object
 data = Dict("name" => "Alice", "age" => 30)
-toon_str = TokenOrientedObjectNotation.encode(data)
+toon_str = ToonFormat.encode(data)
 println(toon_str)
 # name: Alice
 # age: 30
@@ -53,7 +53,7 @@ users = [
     Dict("id" => 1, "name" => "Alice", "role" => "admin"),
     Dict("id" => 2, "name" => "Bob", "role" => "user")
 ]
-toon_str = TokenOrientedObjectNotation.encode(Dict("users" => users))
+toon_str = ToonFormat.encode(Dict("users" => users))
 println(toon_str)
 # users[2]{id,name,role}:
 #   1,Alice,admin
@@ -63,43 +63,43 @@ println(toon_str)
 ### Decoding
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Decode a simple object
 input = "name: Alice\nage: 30"
-data = TokenOrientedObjectNotation.decode(input)
+data = ToonFormat.decode(input)
 # Dict("name" => "Alice", "age" => 30)
 
 # Decode an array
 input = "[3]: 1,2,3"
-data = TokenOrientedObjectNotation.decode(input)
+data = ToonFormat.decode(input)
 # [1, 2, 3]
 ```
 
 ### Options
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Encoding with custom options
-options = TokenOrientedObjectNotation.EncodeOptions(
+options = ToonFormat.EncodeOptions(
     indent = 4,                    # Use 4 spaces per indentation level
-    delimiter = TokenOrientedObjectNotation.TAB,          # Use tab as delimiter
+    delimiter = ToonFormat.TAB,          # Use tab as delimiter
     keyFolding = "safe",           # Enable key folding
     flattenDepth = 2               # Limit folding depth
 )
 
 data = Dict("user" => Dict("name" => "Alice"))
-toon_str = TokenOrientedObjectNotation.encode(data, options=options)
+toon_str = ToonFormat.encode(data, options=options)
 
 # Decoding with custom options
-options = TokenOrientedObjectNotation.DecodeOptions(
+options = ToonFormat.DecodeOptions(
     indent = 4,                    # Expect 4 spaces per level
     strict = true,                 # Enable strict validation
     expandPaths = "safe"           # Enable path expansion
 )
 
-data = TokenOrientedObjectNotation.decode(toon_str, options=options)
+data = ToonFormat.decode(toon_str, options=options)
 ```
 
 ## Examples
@@ -130,7 +130,7 @@ Token savings: ~45% reduction
 ### Complex Nested Structures
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 data = Dict(
     "server" => Dict(
@@ -144,7 +144,7 @@ data = Dict(
     )
 )
 
-println(TokenOrientedObjectNotation.encode(data))
+println(ToonFormat.encode(data))
 # server:
 #   host: localhost
 #   port: 8080
@@ -157,47 +157,47 @@ println(TokenOrientedObjectNotation.encode(data))
 ### Key Folding (Compact Nested Objects)
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Deep nesting with key folding
 data = Dict("api" => Dict("v1" => Dict("users" => Dict("endpoint" => "/api/v1/users"))))
 
 # Without key folding (default)
-println(TokenOrientedObjectNotation.encode(data))
+println(ToonFormat.encode(data))
 # api:
 #   v1:
 #     users:
 #       endpoint: /api/v1/users
 
 # With key folding
-options = TokenOrientedObjectNotation.EncodeOptions(keyFolding="safe")
-println(TokenOrientedObjectNotation.encode(data, options=options))
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+println(ToonFormat.encode(data, options=options))
 # api.v1.users.endpoint: /api/v1/users
 ```
 
 ### Path Expansion (Round-trip with Key Folding)
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Decode with path expansion
 input = "api.v1.users.endpoint: /api/v1/users"
-options = TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe")
-data = TokenOrientedObjectNotation.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe")
+data = ToonFormat.decode(input, options=options)
 # Dict("api" => Dict("v1" => Dict("users" => Dict("endpoint" => "/api/v1/users"))))
 
 # Round-trip: folding + expansion
-encode_opts = TokenOrientedObjectNotation.EncodeOptions(keyFolding="safe")
-decode_opts = TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe")
+encode_opts = ToonFormat.EncodeOptions(keyFolding="safe")
+decode_opts = ToonFormat.DecodeOptions(expandPaths="safe")
 original = Dict("a" => Dict("b" => Dict("c" => 42)))
-encoded = TokenOrientedObjectNotation.encode(original, options=encode_opts)  # "a.b.c: 42"
-decoded = TokenOrientedObjectNotation.decode(encoded, options=decode_opts)   # Reconstructs original structure
+encoded = ToonFormat.encode(original, options=encode_opts)  # "a.b.c: 42"
+decoded = ToonFormat.decode(encoded, options=decode_opts)   # Reconstructs original structure
 ```
 
 ### Different Delimiters
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 users = [
     Dict("name" => "Alice", "role" => "admin"),
@@ -205,21 +205,21 @@ users = [
 ]
 
 # Comma delimiter (default)
-println(TokenOrientedObjectNotation.encode(Dict("users" => users)))
+println(ToonFormat.encode(Dict("users" => users)))
 # users[2]{name,role}:
 #   Alice,admin
 #   Bob,user
 
 # Tab delimiter
-options = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.TAB)
-println(TokenOrientedObjectNotation.encode(Dict("users" => users), options=options))
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+println(ToonFormat.encode(Dict("users" => users), options=options))
 # users[2	]{name	role}:
 #   Alice	admin
 #   Bob	user
 
 # Pipe delimiter
-options = TokenOrientedObjectNotation.EncodeOptions(delimiter=TokenOrientedObjectNotation.PIPE)
-println(TokenOrientedObjectNotation.encode(Dict("users" => users), options=options))
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
+println(ToonFormat.encode(Dict("users" => users), options=options))
 # users[2|]{name|role}:
 #   Alice|admin
 #   Bob|user
@@ -228,19 +228,19 @@ println(TokenOrientedObjectNotation.encode(Dict("users" => users), options=optio
 ### Strict Mode Validation
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Strict mode catches errors (default)
 input = "[3]: 1,2"  # Declares 3 items but only has 2
 try
-    TokenOrientedObjectNotation.decode(input)  # strict=true by default
+    ToonFormat.decode(input)  # strict=true by default
 catch e
     println(e)  # "Array length mismatch: expected 3, got 2"
 end
 
 # Non-strict mode is lenient
-options = TokenOrientedObjectNotation.DecodeOptions(strict=false)
-result = TokenOrientedObjectNotation.decode(input, options=options)  # [1, 2] - accepts actual count
+options = ToonFormat.DecodeOptions(strict=false)
+result = ToonFormat.decode(input, options=options)  # [1, 2] - accepts actual count
 ```
 
 ## API Reference
@@ -402,8 +402,8 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 
 ```julia
 # Clone the repository
-git clone https://github.com/s-celles/TokenOrientedObjectNotation.jl.git
-cd TokenOrientedObjectNotation.jl
+git clone https://github.com/toon-format/toon-julia.jl.git
+cd ToonFormat.jl
 
 # Run tests
 julia --project=. -e 'using Pkg; Pkg.test()'

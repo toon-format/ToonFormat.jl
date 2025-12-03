@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in contributing to TokenOrientedObjectNotation.jl!
+Thank you for your interest in contributing to ToonFormat.jl!
 
 ## Getting Started
 
@@ -8,8 +8,8 @@ Thank you for your interest in contributing to TokenOrientedObjectNotation.jl!
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/s-celles/TokenOrientedObjectNotation.jl.git
-cd TokenOrientedObjectNotation.jl
+git clone https://github.com/toon-format/toon-julia.jl.git
+cd ToonFormat.jl
 ```
 
 2. Install dependencies:
@@ -27,9 +27,9 @@ Pkg.test()
 ### Project Structure
 
 ```
-TokenOrientedObjectNotation.jl/
+ToonFormat.jl/
 ├── src/
-│   ├── TokenOrientedObjectNotation.jl  # Main module
+│   ├── ToonFormat.jl  # Main module
 │   ├── constants.jl          # Constants and delimiters
 │   ├── types.jl              # Type definitions
 │   ├── string_utils.jl       # String utilities
@@ -237,7 +237,7 @@ Types: `Add`, `Fix`, `Update`, `Remove`, `Refactor`, `Docs`, `Test`
 
 ## Specification Compliance
 
-TokenOrientedObjectNotation.jl follows the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+ToonFormat.jl follows the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 When making changes:
 
@@ -318,7 +318,7 @@ All maintainers have equal and consensual decision-making power. For major archi
 
 ## License
 
-By contributing to TokenOrientedObjectNotation.jl, you agree that your contributions will be licensed under the MIT License.
+By contributing to ToonFormat.jl, you agree that your contributions will be licensed under the MIT License.
 
 ## Recognition
 
@@ -327,4 +327,4 @@ Contributors will be recognized in:
 - Release notes (CHANGELOG.md)
 - Documentation credits
 
-Thank you for contributing to TokenOrientedObjectNotation.jl!
+Thank you for contributing to ToonFormat.jl!

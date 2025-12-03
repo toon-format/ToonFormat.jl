@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 """
-TokenOrientedObjectNotation - Token-Oriented Object Notation (TOON)
+ToonFormat - Token-Oriented Object Notation (TOON)
 
 A compact, human-readable serialization format optimized for LLM contexts.
 Achieves 30-60% token reduction vs JSON while maintaining readability and structure.
@@ -13,22 +13,22 @@ with the official TOON specification (v2.0).
 # Examples
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 # Encoding
 data = Dict("name" => "Alice", "age" => 30)
-toon_str = TokenOrientedObjectNotation.encode(data)
+toon_str = ToonFormat.encode(data)
 println(toon_str)
 # name: Alice
 # age: 30
 
 # Decoding
-decoded = TokenOrientedObjectNotation.decode(toon_str)
+decoded = ToonFormat.decode(toon_str)
 # Dict("name" => "Alice", "age" => 30)
 
 # With options
-options = TokenOrientedObjectNotation.EncodeOptions(indent=4, delimiter=TokenOrientedObjectNotation.TAB)
-toon_str = TokenOrientedObjectNotation.encode(data, options=options)
+options = ToonFormat.EncodeOptions(indent=4, delimiter=ToonFormat.TAB)
+toon_str = ToonFormat.encode(data, options=options)
 ```
 
 # Main Functions
@@ -39,7 +39,7 @@ toon_str = TokenOrientedObjectNotation.encode(data, options=options)
 - `EncodeOptions`: Configuration for encoding (indent, delimiter, keyFolding, flattenDepth)
 - `DecodeOptions`: Configuration for decoding (indent, strict, expandPaths)
 """
-module TokenOrientedObjectNotation
+module ToonFormat
 
 using Printf
 

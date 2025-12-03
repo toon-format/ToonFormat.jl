@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 using Test
-using TokenOrientedObjectNotation
+using ToonFormat
 
 @testset "Strict Mode Error Handling" begin
     @testset "Array Count Mismatch Errors" begin
         # Inline array count mismatch - declared more than actual
-        @test_throws Exception TokenOrientedObjectNotation.decode("[5]: 1,2,3", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("[5]: 1,2,3", options=ToonFormat.DecodeOptions(strict=true))
         
         # Inline array count mismatch - declared less than actual
-        @test_throws Exception TokenOrientedObjectNotation.decode("[2]: 1,2,3,4", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("[2]: 1,2,3,4", options=ToonFormat.DecodeOptions(strict=true))
         
         # List array count mismatch - too few items
         input = """
@@ -18,7 +18,7 @@ using TokenOrientedObjectNotation
         - 1
         - 2
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # List array count mismatch - too many items
         input = """
@@ -27,7 +27,7 @@ using TokenOrientedObjectNotation
         - 2
         - 3
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Tabular array count mismatch - too few rows
         input = """
@@ -35,7 +35,7 @@ using TokenOrientedObjectNotation
           Alice,30
           Bob,25
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Tabular array count mismatch - too many rows
         input = """
@@ -44,17 +44,17 @@ using TokenOrientedObjectNotation
           Bob,25
           Charlie,35
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Inline tabular array count mismatch
-        @test_throws Exception TokenOrientedObjectNotation.decode("users[3]{name,age}: Alice,30,Bob,25", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("users[3]{name,age}: Alice,30,Bob,25", options=ToonFormat.DecodeOptions(strict=true))
         
         # Non-strict mode allows mismatches
-        result = TokenOrientedObjectNotation.decode("[5]: 1,2,3", options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
+        result = ToonFormat.decode("[5]: 1,2,3", options=ToonFormat.DecodeOptions(strict=false))
         @test length(result) == 3
         
         # Non-strict mode with too many items
-        result = TokenOrientedObjectNotation.decode("[2]: 1,2,3,4", options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
+        result = ToonFormat.decode("[2]: 1,2,3,4", options=ToonFormat.DecodeOptions(strict=false))
         @test length(result) == 4
     end
     
@@ -65,7 +65,7 @@ using TokenOrientedObjectNotation
           Alice,30
           Bob,25,NYC
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Too many values in row
         input = """
@@ -73,7 +73,7 @@ using TokenOrientedObjectNotation
           Alice,30,extra
           Bob,25
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Non-strict mode allows width mismatches
         input = """
@@ -81,70 +81,70 @@ using TokenOrientedObjectNotation
           Alice,30,extra
           Bob
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=false))
         @test length(result["users"]) == 2
     end
     
     @testset "Missing Colon Errors" begin
         # Missing colon after key
-        @test_throws Exception TokenOrientedObjectNotation.decode("name Alice", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("name Alice", options=ToonFormat.DecodeOptions(strict=true))
         
         # Missing colon after array header
-        @test_throws Exception TokenOrientedObjectNotation.decode("[3] 1,2,3", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("[3] 1,2,3", options=ToonFormat.DecodeOptions(strict=true))
         
         # Missing colon in nested object
         input = """
         user
           name: Alice
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Invalid Escape Sequence Errors" begin
         # Invalid escape sequences
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"bad\\xescape\"")
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"bad\\uescape\"")
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"bad\\0escape\"")
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"bad\\aescape\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"bad\\xescape\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"bad\\uescape\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"bad\\0escape\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"bad\\aescape\"")
         
         # Valid escape sequences should work
-        result = TokenOrientedObjectNotation.decode("text: \"good\\nescape\"")
+        result = ToonFormat.decode("text: \"good\\nescape\"")
         @test result["text"] == "good\nescape"
         
-        result = TokenOrientedObjectNotation.decode("text: \"good\\\\escape\"")
+        result = ToonFormat.decode("text: \"good\\\\escape\"")
         @test result["text"] == "good\\escape"
         
-        result = TokenOrientedObjectNotation.decode("text: \"good\\\"escape\"")
+        result = ToonFormat.decode("text: \"good\\\"escape\"")
         @test result["text"] == "good\"escape"
         
-        result = TokenOrientedObjectNotation.decode("text: \"good\\rescape\"")
+        result = ToonFormat.decode("text: \"good\\rescape\"")
         @test result["text"] == "good\rescape"
         
-        result = TokenOrientedObjectNotation.decode("text: \"good\\tescape\"")
+        result = ToonFormat.decode("text: \"good\\tescape\"")
         @test result["text"] == "good\tescape"
     end
     
     @testset "Unterminated String Errors" begin
         # Unterminated quoted string
-        @test_throws Exception TokenOrientedObjectNotation.decode("name: \"unterminated")
+        @test_throws Exception ToonFormat.decode("name: \"unterminated")
         
         # Unterminated quoted key
-        @test_throws Exception TokenOrientedObjectNotation.decode("\"unterminated: value")
+        @test_throws Exception ToonFormat.decode("\"unterminated: value")
         
         # Unterminated escape at end
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"ends with\\\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"ends with\\\"")
     end
     
     @testset "Indentation Errors" begin
         # Not a multiple of indentSize
-        @test_throws Exception TokenOrientedObjectNotation.decode("   value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
         
         # Tabs in indentation
-        @test_throws Exception TokenOrientedObjectNotation.decode("\tvalue: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode("  \tvalue: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("\tvalue: 1", options=ToonFormat.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("  \tvalue: 1", options=ToonFormat.DecodeOptions(strict=true))
         
         # Non-strict mode allows invalid indentation
-        result = TokenOrientedObjectNotation.decode("   value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=false))
+        result = ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=false))
         @test haskey(result, "value")
     end
     
@@ -159,7 +159,7 @@ using TokenOrientedObjectNotation
         - 2
         - 3
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank line inside list array - in middle
         input = """
@@ -169,7 +169,7 @@ using TokenOrientedObjectNotation
         - 2
         - 3
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank line inside list array - before last item
         input = """
@@ -179,7 +179,7 @@ using TokenOrientedObjectNotation
 
         - 3
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank line inside tabular array - after header
         input = """
@@ -189,7 +189,7 @@ using TokenOrientedObjectNotation
           Bob,25
           Charlie,35
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank line inside tabular array - in middle
         input = """
@@ -199,7 +199,7 @@ using TokenOrientedObjectNotation
           Bob,25
           Charlie,35
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank line inside tabular array - before last row
         input = """
@@ -209,7 +209,7 @@ using TokenOrientedObjectNotation
 
           Charlie,35
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Blank lines outside arrays are OK
         input = """
@@ -217,7 +217,7 @@ using TokenOrientedObjectNotation
 
         age: 30
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         @test result["name"] == "Alice"
         @test result["age"] == 30
         
@@ -229,7 +229,7 @@ using TokenOrientedObjectNotation
         - 1
         - 2
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         @test result["name"] == "Alice"
         @test length(result["items"]) == 2
         
@@ -241,7 +241,7 @@ using TokenOrientedObjectNotation
 
         name: Alice
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         @test result["name"] == "Alice"
         @test length(result["items"]) == 2
     end
@@ -252,10 +252,10 @@ using TokenOrientedObjectNotation
         a: 1
         a.b: 2
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe", strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(expandPaths="safe", strict=true))
         
         # Non-strict mode uses last-write-wins
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe", strict=false))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(expandPaths="safe", strict=false))
         @test haskey(result, "a")
         
         # No conflict when both are objects
@@ -263,7 +263,7 @@ using TokenOrientedObjectNotation
         a.b: 1
         a.c: 2
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe", strict=true))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(expandPaths="safe", strict=true))
         @test result["a"]["b"] == 1
         @test result["a"]["c"] == 2
         
@@ -272,7 +272,7 @@ using TokenOrientedObjectNotation
         a.b.c: 1
         a.b: 2
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe", strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(expandPaths="safe", strict=true))
     end
     
     @testset "Error Messages Include Line Numbers" begin
@@ -283,7 +283,7 @@ using TokenOrientedObjectNotation
         city: NYC
         """
         try
-            TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+            ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
             @test false  # Should have thrown
         catch e
             msg = string(e)
@@ -296,7 +296,7 @@ using TokenOrientedObjectNotation
            age: 30
         """
         try
-            TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=true))
+            ToonFormat.decode(input, options=ToonFormat.DecodeOptions(indent=2, strict=true))
             @test false  # Should have thrown
         catch e
             msg = string(e)
@@ -309,7 +309,7 @@ using TokenOrientedObjectNotation
         \tage: 30
         """
         try
-            TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+            ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
             @test false  # Should have thrown
         catch e
             msg = string(e)
@@ -326,7 +326,7 @@ using TokenOrientedObjectNotation
         # This should be treated as an object with keys, not multiple primitives
         # Actually, this is invalid TOON - only one primitive allowed at root
         # The decoder will try to parse as object and fail on missing colons
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Nested Array Count Mismatches" begin
@@ -336,7 +336,7 @@ using TokenOrientedObjectNotation
         - [3]: 1,2
         - [2]: 3,4
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Nested tabular array with count mismatch
         input = """
@@ -350,82 +350,82 @@ using TokenOrientedObjectNotation
             3
             4
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Empty Array Validation" begin
         # Empty array with correct count
-        result = TokenOrientedObjectNotation.decode("[0]:", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        result = ToonFormat.decode("[0]:", options=ToonFormat.DecodeOptions(strict=true))
         @test length(result) == 0
         
         # Empty array with incorrect count
-        @test_throws Exception TokenOrientedObjectNotation.decode("[1]:", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("[1]:", options=ToonFormat.DecodeOptions(strict=true))
         
         # Empty tabular array
-        result = TokenOrientedObjectNotation.decode("users[0]{name,age}:", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        result = ToonFormat.decode("users[0]{name,age}:", options=ToonFormat.DecodeOptions(strict=true))
         @test length(result["users"]) == 0
     end
     
     @testset "Delimiter-Specific Errors" begin
         # Tab delimiter with count mismatch
         input = "[\t5\t]: 1\t2\t3"
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Pipe delimiter with count mismatch
         input = "[5|]: 1|2|3"
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Tabular with tab delimiter and row width mismatch
         input = "users[2\t]{name\tage}:\n  Alice\t30\textra\n  Bob\t25"
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Tabular with pipe delimiter and row width mismatch
         input = "users[2|]{name|age}:\n  Alice|30|extra\n  Bob|25"
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Complex Indentation Errors" begin
         # Indentation not multiple of 2 (default)
-        @test_throws Exception TokenOrientedObjectNotation.decode(" value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode("   value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode("     value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode(" value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode("     value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
         
         # Indentation not multiple of 4
-        @test_throws Exception TokenOrientedObjectNotation.decode("  value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=4, strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode("   value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=4, strict=true))
+        @test_throws Exception ToonFormat.decode("  value: 1", options=ToonFormat.DecodeOptions(indent=4, strict=true))
+        @test_throws Exception ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=4, strict=true))
         
         # Tab at different positions
-        @test_throws Exception TokenOrientedObjectNotation.decode("\tvalue: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode(" \tvalue: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
-        @test_throws Exception TokenOrientedObjectNotation.decode("  \tvalue: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("\tvalue: 1", options=ToonFormat.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(" \tvalue: 1", options=ToonFormat.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode("  \tvalue: 1", options=ToonFormat.DecodeOptions(strict=true))
         
         # Mixed spaces and tabs
-        @test_throws Exception TokenOrientedObjectNotation.decode(" \t value: 1", options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(" \t value: 1", options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Escape Sequence Edge Cases" begin
         # All valid escape sequences
-        result = TokenOrientedObjectNotation.decode("text: \"\\\\\\\"\\n\\r\\t\"")
+        result = ToonFormat.decode("text: \"\\\\\\\"\\n\\r\\t\"")
         @test result["text"] == "\\\"\n\r\t"
         
         # Invalid escape at different positions
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\x\"")
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"start\\xend\"")
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\xend\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\x\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"start\\xend\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\xend\"")
         
         # Various invalid escapes
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\u0041\"")  # Unicode escape
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\b\"")      # Backspace
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\f\"")      # Form feed
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\v\"")      # Vertical tab
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\0\"")      # Null
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\a\"")      # Alert
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\u0041\"")  # Unicode escape
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\b\"")      # Backspace
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\f\"")      # Form feed
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\v\"")      # Vertical tab
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\0\"")      # Null
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\a\"")      # Alert
         
         # Escape at end of string
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"ends\\\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"ends\\\"")
         
         # Multiple invalid escapes
-        @test_throws ArgumentError TokenOrientedObjectNotation.decode("text: \"\\x\\y\\z\"")
+        @test_throws ArgumentError ToonFormat.decode("text: \"\\x\\y\\z\"")
     end
     
     @testset "Missing Colon Edge Cases" begin
@@ -434,7 +434,7 @@ using TokenOrientedObjectNotation
         user:
           name Alice
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
         
         # Missing colon in array item
         input = """
@@ -443,7 +443,7 @@ using TokenOrientedObjectNotation
         - another: value
         """
         # This should parse "key value" as a primitive string
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=false))
         @test result["items"][1] == "key value"
         
         # Missing colon after nested key
@@ -452,18 +452,18 @@ using TokenOrientedObjectNotation
           inner
             value: 1
         """
-        @test_throws Exception TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     end
     
     @testset "Strict Mode Can Be Disabled" begin
         # All the above errors should be lenient when strict=false
         
         # Count mismatch
-        result = TokenOrientedObjectNotation.decode("[5]: 1,2,3", options=TokenOrientedObjectNotation.DecodeOptions(strict=false))
+        result = ToonFormat.decode("[5]: 1,2,3", options=ToonFormat.DecodeOptions(strict=false))
         @test length(result) == 3
         
         # Invalid indentation
-        result = TokenOrientedObjectNotation.decode("   value: 1", options=TokenOrientedObjectNotation.DecodeOptions(indent=2, strict=false))
+        result = ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=false))
         @test haskey(result, "value")
         
         # Path expansion conflict
@@ -471,7 +471,7 @@ using TokenOrientedObjectNotation
         a: 1
         a.b: 2
         """
-        result = TokenOrientedObjectNotation.decode(input, options=TokenOrientedObjectNotation.DecodeOptions(expandPaths="safe", strict=false))
+        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(expandPaths="safe", strict=false))
         @test haskey(result, "a")
     end
 end

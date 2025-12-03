@@ -7,7 +7,7 @@ This guide covers how to decode TOON format strings into Julia data structures.
 The `decode` function parses TOON format strings:
 
 ```julia
-using TokenOrientedObjectNotation
+using ToonFormat
 
 data = TOON.decode(input_string)
 ```
@@ -145,7 +145,7 @@ TOON.decode(input, options=options)
 
 ## Error Handling
 
-TokenOrientedObjectNotation.jl provides detailed error messages:
+ToonFormat.jl provides detailed error messages:
 
 ### Array Count Mismatch
 

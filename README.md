@@ -400,11 +400,16 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 
 ### Development
 
-```julia
-# Clone the repository
-git clone https://github.com/toon-format/ToonFormat.jl.git
+```bash
+# Clone the repository with submodules (required for fixture tests)
+git clone --recurse-submodules https://github.com/toon-format/ToonFormat.jl.git
 cd ToonFormat.jl
 
+# If already cloned without submodules, initialize them:
+git submodule update --init --recursive
+```
+
+```julia
 # Run tests
 julia --project=. -e 'using Pkg; Pkg.test()'
 

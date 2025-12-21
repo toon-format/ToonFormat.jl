@@ -6,10 +6,15 @@ Thank you for your interest in contributing to ToonFormat.jl!
 
 ### Development Setup
 
-1. Clone the repository:
+1. Clone the repository with submodules:
 ```bash
-git clone https://github.com/toon-format/ToonFormat.jl.git
+git clone --recurse-submodules https://github.com/toon-format/ToonFormat.jl.git
 cd ToonFormat.jl
+```
+
+If you already cloned without `--recurse-submodules`, initialize the submodule:
+```bash
+git submodule update --init --recursive
 ```
 
 2. Install dependencies:
@@ -22,6 +27,32 @@ Pkg.instantiate()
 3. Run tests:
 ```julia
 Pkg.test()
+```
+
+### Updating the Spec Submodule
+
+The official TOON specification test fixtures are included via a Git submodule at `test/spec/`.
+
+**To update to the latest spec version:**
+```bash
+# Update submodule to latest
+git submodule update --remote test/spec
+
+# Verify tests still work
+julia --project=. -e 'using Pkg; Pkg.test()'
+
+# Commit the update
+git add test/spec
+git commit -m "chore: update TOON spec submodule"
+```
+
+**To pin to a specific spec version (for reproducible builds):**
+```bash
+cd test/spec
+git checkout <commit-hash-or-tag>
+cd ../..
+git add test/spec
+git commit -m "chore: pin TOON spec to <version>"
 ```
 
 ### Project Structure

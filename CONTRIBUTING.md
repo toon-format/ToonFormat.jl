@@ -158,15 +158,15 @@ Example:
 ```julia
 @testset "Primitive Encoding" begin
     @testset "Numbers" begin
-        @test TOON.encode(42) == "42"
-        @test TOON.encode(3.14) == "3.14"
-        @test TOON.encode(-0.0) == "0"
+        @test ToonFormat.encode(42) == "42"
+        @test ToonFormat.encode(3.14) == "3.14"
+        @test ToonFormat.encode(-0.0) == "0"
     end
 
     @testset "Strings" begin
-        @test TOON.encode("hello") == "hello"
-        @test TOON.encode("hello world") == "\"hello world\""
-        @test TOON.encode("") == "\"\""
+        @test ToonFormat.encode("hello") == "hello"
+        @test ToonFormat.encode("hello world") == "\"hello world\""
+        @test ToonFormat.encode("") == "\"\""
     end
 end
 ```

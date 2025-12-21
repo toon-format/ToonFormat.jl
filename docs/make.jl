@@ -5,7 +5,7 @@ makedocs(
     sitename = "ToonFormat.jl",
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
-        canonical = "https://s-celles.github.io/ToonFormat.jl",
+        canonical = "https://toon-format.github.io/ToonFormat.jl",
         assets = String[],
     ),
     modules = [ToonFormat],
@@ -26,6 +26,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/s-celles/ToonFormat.jl.git",
+    repo = "github.com/toon-format/ToonFormat.jl.git",
     devbranch = "main",
 )

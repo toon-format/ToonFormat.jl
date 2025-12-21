@@ -7,14 +7,14 @@ This guide covers all configuration options for encoding and decoding.
 Configure encoding behavior with `EncodeOptions`:
 
 ```julia
-options = TOON.EncodeOptions(
+options = ToonFormat.EncodeOptions(
     indent = 2,
-    delimiter = TOON.COMMA,
+    delimiter = ToonFormat.COMMA,
     keyFolding = "off",
     flattenDepth = typemax(Int)
 )
 
-TOON.encode(data, options=options)
+ToonFormat.encode(data, options=options)
 ```
 
 ### indent
@@ -27,13 +27,13 @@ Number of spaces per indentation level.
 
 ```julia
 # 2 spaces (default)
-options = TOON.EncodeOptions(indent=2)
+options = ToonFormat.EncodeOptions(indent=2)
 
 # 4 spaces
-options = TOON.EncodeOptions(indent=4)
+options = ToonFormat.EncodeOptions(indent=4)
 
 # 8 spaces
-options = TOON.EncodeOptions(indent=8)
+options = ToonFormat.EncodeOptions(indent=8)
 ```
 
 ### delimiter
@@ -41,20 +41,20 @@ options = TOON.EncodeOptions(indent=8)
 Delimiter character for arrays.
 
 **Type:** `Delimiter`  
-**Default:** `TOON.COMMA`  
-**Valid values:** `TOON.COMMA`, `TOON.TAB`, `TOON.PIPE`
+**Default:** `ToonFormat.COMMA`  
+**Valid values:** `ToonFormat.COMMA`, `ToonFormat.TAB`, `ToonFormat.PIPE`
 
 ```julia
 # Comma (default)
-options = TOON.EncodeOptions(delimiter=TOON.COMMA)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.COMMA)
 # Output: [3]: 1,2,3
 
 # Tab
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
 # Output: [3	]: 1	2	3
 
 # Pipe
-options = TOON.EncodeOptions(delimiter=TOON.PIPE)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
 # Output: [3|]: 1|2|3
 ```
 
@@ -75,15 +75,15 @@ Enable flattening of nested objects into dotted keys.
 data = Dict("a" => Dict("b" => Dict("c" => 42)))
 
 # Off (default) - no folding
-options = TOON.EncodeOptions(keyFolding="off")
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="off")
+ToonFormat.encode(data, options=options)
 # a:
 #   b:
 #     c: 42
 
 # Safe - fold identifier keys only
-options = TOON.EncodeOptions(keyFolding="safe")
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+ToonFormat.encode(data, options=options)
 # a.b.c: 42
 ```
 
@@ -104,13 +104,13 @@ Maximum depth for key folding.
 data = Dict("a" => Dict("b" => Dict("c" => Dict("d" => 42))))
 
 # Unlimited depth (default)
-options = TOON.EncodeOptions(keyFolding="safe")
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+ToonFormat.encode(data, options=options)
 # a.b.c.d: 42
 
 # Limit to 2 levels
-options = TOON.EncodeOptions(keyFolding="safe", flattenDepth=2)
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe", flattenDepth=2)
+ToonFormat.encode(data, options=options)
 # a.b:
 #   c:
 #     d: 42
@@ -121,13 +121,13 @@ TOON.encode(data, options=options)
 Configure decoding behavior with `DecodeOptions`:
 
 ```julia
-options = TOON.DecodeOptions(
+options = ToonFormat.DecodeOptions(
     indent = 2,
     strict = true,
     expandPaths = "off"
 )
 
-TOON.decode(input, options=options)
+ToonFormat.decode(input, options=options)
 ```
 
 ### indent
@@ -140,10 +140,10 @@ Expected number of spaces per indentation level.
 
 ```julia
 # 2 spaces (default)
-options = TOON.DecodeOptions(indent=2)
+options = ToonFormat.DecodeOptions(indent=2)
 
 # 4 spaces
-options = TOON.DecodeOptions(indent=4)
+options = ToonFormat.DecodeOptions(indent=4)
 ```
 
 **Note:** Must match the indentation used in the input.
@@ -158,10 +158,10 @@ Enable strict validation.
 
 ```julia
 # Strict mode (default) - validates everything
-options = TOON.DecodeOptions(strict=true)
+options = ToonFormat.DecodeOptions(strict=true)
 
 # Non-strict mode - lenient parsing
-options = TOON.DecodeOptions(strict=false)
+options = ToonFormat.DecodeOptions(strict=false)
 ```
 
 **Strict mode validates:**
@@ -193,13 +193,13 @@ Enable expansion of dotted keys into nested objects.
 input = "a.b.c: 42"
 
 # Off (default) - no expansion
-options = TOON.DecodeOptions(expandPaths="off")
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="off")
+ToonFormat.decode(input, options=options)
 # Dict("a.b.c" => 42)
 
 # Safe - expand identifier keys only
-options = TOON.DecodeOptions(expandPaths="safe")
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe")
+ToonFormat.decode(input, options=options)
 # Dict("a" => Dict("b" => Dict("c" => 42)))
 ```
 
@@ -215,12 +215,12 @@ TOON.decode(input, options=options)
 ### Production (Strict)
 
 ```julia
-encode_opts = TOON.EncodeOptions(
+encode_opts = ToonFormat.EncodeOptions(
     indent = 2,
-    delimiter = TOON.COMMA
+    delimiter = ToonFormat.COMMA
 )
 
-decode_opts = TOON.DecodeOptions(
+decode_opts = ToonFormat.DecodeOptions(
     indent = 2,
     strict = true
 )
@@ -229,7 +229,7 @@ decode_opts = TOON.DecodeOptions(
 ### Development (Lenient)
 
 ```julia
-decode_opts = TOON.DecodeOptions(
+decode_opts = ToonFormat.DecodeOptions(
     strict = false
 )
 ```
@@ -237,12 +237,12 @@ decode_opts = TOON.DecodeOptions(
 ### Compact (Key Folding)
 
 ```julia
-encode_opts = TOON.EncodeOptions(
+encode_opts = ToonFormat.EncodeOptions(
     keyFolding = "safe",
     flattenDepth = 3
 )
 
-decode_opts = TOON.DecodeOptions(
+decode_opts = ToonFormat.DecodeOptions(
     expandPaths = "safe"
 )
 ```
@@ -250,16 +250,16 @@ decode_opts = TOON.DecodeOptions(
 ### TSV-like (Tab Delimiter)
 
 ```julia
-encode_opts = TOON.EncodeOptions(
-    delimiter = TOON.TAB
+encode_opts = ToonFormat.EncodeOptions(
+    delimiter = ToonFormat.TAB
 )
 ```
 
 ### Custom Indentation
 
 ```julia
-encode_opts = TOON.EncodeOptions(indent=4)
-decode_opts = TOON.DecodeOptions(indent=4)
+encode_opts = ToonFormat.EncodeOptions(indent=4)
+decode_opts = ToonFormat.DecodeOptions(indent=4)
 ```
 
 ## Round-trip Compatibility
@@ -268,18 +268,18 @@ For perfect round-trips, use matching options:
 
 ```julia
 # Encoding
-encode_opts = TOON.EncodeOptions(
+encode_opts = ToonFormat.EncodeOptions(
     indent = 4,
     keyFolding = "safe"
 )
-encoded = TOON.encode(data, options=encode_opts)
+encoded = ToonFormat.encode(data, options=encode_opts)
 
 # Decoding
-decode_opts = TOON.DecodeOptions(
+decode_opts = ToonFormat.DecodeOptions(
     indent = 4,
     expandPaths = "safe"
 )
-decoded = TOON.decode(encoded, options=decode_opts)
+decoded = ToonFormat.decode(encoded, options=decode_opts)
 
 # data == decoded (structurally equivalent)
 ```

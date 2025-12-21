@@ -9,7 +9,7 @@ The `decode` function parses TOON format strings:
 ```julia
 using ToonFormat
 
-data = TOON.decode(input_string)
+data = ToonFormat.decode(input_string)
 ```
 
 ## Root Forms
@@ -22,7 +22,7 @@ When the first line is an array header:
 
 ```julia
 input = "[3]: 1,2,3"
-TOON.decode(input)  # [1, 2, 3]
+ToonFormat.decode(input)  # [1, 2, 3]
 ```
 
 ### Root Primitive
@@ -30,9 +30,9 @@ TOON.decode(input)  # [1, 2, 3]
 When the entire input is a single primitive:
 
 ```julia
-TOON.decode("42")      # 42
-TOON.decode("true")    # true
-TOON.decode("hello")   # "hello"
+ToonFormat.decode("42")      # 42
+ToonFormat.decode("true")    # true
+ToonFormat.decode("hello")   # "hello"
 ```
 
 ### Root Object
@@ -44,7 +44,7 @@ input = """
 name: Alice
 age: 30
 """
-TOON.decode(input)  # Dict("name" => "Alice", "age" => 30)
+ToonFormat.decode(input)  # Dict("name" => "Alice", "age" => 30)
 ```
 
 ## Decoding Arrays
@@ -52,10 +52,10 @@ TOON.decode(input)  # Dict("name" => "Alice", "age" => 30)
 ### Inline Arrays
 
 ```julia
-TOON.decode("[5]: 1,2,3,4,5")
+ToonFormat.decode("[5]: 1,2,3,4,5")
 # [1, 2, 3, 4, 5]
 
-TOON.decode("[3]: a,b,c")
+ToonFormat.decode("[3]: a,b,c")
 # ["a", "b", "c"]
 ```
 
@@ -67,7 +67,7 @@ users[2]{id,name,role}:
   1,Alice,admin
   2,Bob,user
 """
-TOON.decode(input)
+ToonFormat.decode(input)
 # Dict("users" => [
 #     Dict("id" => 1, "name" => "Alice", "role" => "admin"),
 #     Dict("id" => 2, "name" => "Bob", "role" => "user")
@@ -83,7 +83,7 @@ input = """
   - 2
   - 3
 """
-TOON.decode(input)  # [1, 2, 3]
+ToonFormat.decode(input)  # [1, 2, 3]
 ```
 
 ## Decoding Options
@@ -94,12 +94,12 @@ Strict mode (enabled by default) validates the input:
 
 ```julia
 # Strict mode (default)
-options = TOON.DecodeOptions(strict=true)
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(strict=true)
+ToonFormat.decode(input, options=options)
 
 # Non-strict mode (lenient)
-options = TOON.DecodeOptions(strict=false)
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(strict=false)
+ToonFormat.decode(input, options=options)
 ```
 
 **Strict mode checks:**
@@ -122,8 +122,8 @@ api.v1.endpoint: /api/v1
 api.v1.version: 1.0
 """
 
-options = TOON.DecodeOptions(expandPaths="safe")
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe")
+ToonFormat.decode(input, options=options)
 # Dict("api" => Dict("v1" => Dict(
 #     "endpoint" => "/api/v1",
 #     "version" => "1.0"
@@ -139,8 +139,8 @@ user:
     age: 30
 """
 
-options = TOON.DecodeOptions(indent=4)
-TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(indent=4)
+ToonFormat.decode(input, options=options)
 ```
 
 ## Error Handling
@@ -151,7 +151,7 @@ ToonFormat.jl provides detailed error messages:
 
 ```julia
 try
-    TOON.decode("[3]: 1,2")  # Expected 3, got 2
+    ToonFormat.decode("[3]: 1,2")  # Expected 3, got 2
 catch e
     println(e)  # "Array length mismatch: expected 3, got 2"
 end
@@ -166,7 +166,7 @@ try
       1,Alice
       2,Bob,user
     """
-    TOON.decode(input)
+    ToonFormat.decode(input)
 catch e
     println(e)  # "Row width mismatch at line 2: expected 3 fields, got 2"
 end
@@ -176,7 +176,7 @@ end
 
 ```julia
 try
-    TOON.decode("value: \"hello\\x\"")
+    ToonFormat.decode("value: \"hello\\x\"")
 catch e
     println(e)  # "Invalid escape sequence: \x"
 end
@@ -190,7 +190,7 @@ try
     user:
      name: Alice
     """
-    TOON.decode(input)
+    ToonFormat.decode(input)
 catch e
     println(e)  # "Indentation must be a multiple of 2 spaces (line 2)"
 end
@@ -202,13 +202,13 @@ TOON automatically detects the delimiter from array headers:
 
 ```julia
 # Comma delimiter
-TOON.decode("[3]: 1,2,3")
+ToonFormat.decode("[3]: 1,2,3")
 
 # Tab delimiter
-TOON.decode("[3\t]: 1\t2\t3")
+ToonFormat.decode("[3\t]: 1\t2\t3")
 
 # Pipe delimiter
-TOON.decode("[3|]: 1|2|3")
+ToonFormat.decode("[3|]: 1|2|3")
 ```
 
 ## String Unescaping
@@ -216,10 +216,10 @@ TOON.decode("[3|]: 1|2|3")
 TOON automatically unescapes strings:
 
 ```julia
-TOON.decode("\"line1\\nline2\"")     # "line1\nline2"
-TOON.decode("\"tab\\there\"")        # "tab\there"
-TOON.decode("\"quote\\\"here\"")     # "quote\"here"
-TOON.decode("\"backslash\\\\here\"") # "backslash\here"
+ToonFormat.decode("\"line1\\nline2\"")     # "line1\nline2"
+ToonFormat.decode("\"tab\\there\"")        # "tab\there"
+ToonFormat.decode("\"quote\\\"here\"")     # "quote\"here"
+ToonFormat.decode("\"backslash\\\\here\"") # "backslash\here"
 ```
 
 ## Best Practices

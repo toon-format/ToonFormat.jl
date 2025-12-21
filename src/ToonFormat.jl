@@ -63,7 +63,8 @@ export EncodeOptions, DecodeOptions
 export COMMA, TAB, PIPE
 
 # Export utility functions for testing
-export escape_string, unescape_string, find_first_unquoted, is_safe_identifier, needs_quoting
+export escape_string,
+    unescape_string, find_first_unquoted, is_safe_identifier, needs_quoting
 export to_parsed_lines, parse_array_header, parse_delimited_values, parse_key
 
 end # module

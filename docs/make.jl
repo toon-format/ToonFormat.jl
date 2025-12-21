@@ -25,7 +25,4 @@ makedocs(
     ],
 )
 
-deploydocs(
-    repo = "github.com/toon-format/ToonFormat.jl.git",
-    devbranch = "main",
-)
+deploydocs(repo = "github.com/toon-format/ToonFormat.jl.git", devbranch = "main")

@@ -6,11 +6,14 @@ using ToonFormat
 
 @testset "Decoder Tests" begin
     @testset "API Tests" begin
-        @test_nowarn ToonFormat.decode("items[5]: a,b,c", options=ToonFormat.DecodeOptions(strict=false))
+        @test_nowarn ToonFormat.decode(
+            "items[5]: a,b,c",
+            options = ToonFormat.DecodeOptions(strict = false),
+        )
 
         # Test decode with custom indent size
         input = "parent:\n    child:\n        value: 42"
-        result = ToonFormat.decode(input, options=ToonFormat.DecodeOptions(indent=4))
+        result = ToonFormat.decode(input, options = ToonFormat.DecodeOptions(indent = 4))
         @test result["parent"]["child"]["value"] == 42
 
         # Test decode returns native Dict (OrderedDict to preserve key order)
@@ -28,7 +31,7 @@ using ToonFormat
 
         # Test strict mode is default
         @test_throws Exception ToonFormat.decode("items[5]: a,b,c")
-        
+
         # Test invalid escape sequences are rejected (Requirement 3.2)
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\x41\"")
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\u0041\"")
@@ -37,7 +40,7 @@ using ToonFormat
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\f\"")
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\v\"")
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\0\"")
-        
+
         # Test unterminated escape sequence
         @test_throws ArgumentError ToonFormat.decode("text: \"test\\\"")
     end
@@ -114,14 +117,14 @@ using ToonFormat
 
     @testset "Whitespace Handling" begin
         # Empty object
-        @test ToonFormat.decode("") == Dict{String, Any}()
-        @test ToonFormat.decode("   ") == Dict{String, Any}()
+        @test ToonFormat.decode("") == Dict{String,Any}()
+        @test ToonFormat.decode("   ") == Dict{String,Any}()
 
         # Whitespace-only string needs quotes
         result = ToonFormat.decode("text: \"  \"")
         @test result["text"] == "  "
     end
-    
+
     @testset "Escape Sequence Handling (Requirements 3.1, 3.2)" begin
         # Test all five valid escape sequences in decoded strings
         @test ToonFormat.decode("text: \"hello\\nworld\"")["text"] == "hello\nworld"
@@ -129,22 +132,23 @@ using ToonFormat
         @test ToonFormat.decode("text: \"line1\\rline2\"")["text"] == "line1\rline2"
         @test ToonFormat.decode("text: \"path\\\\to\\\\file\"")["text"] == "path\\to\\file"
         @test ToonFormat.decode("text: \"say \\\"hello\\\"\"")["text"] == "say \"hello\""
-        
+
         # Test multiple escape sequences
-        @test ToonFormat.decode("text: \"test\\n\\r\\t\\\\\\\"value\\\"\"")["text"] == "test\n\r\t\\\"value\""
-        
+        @test ToonFormat.decode("text: \"test\\n\\r\\t\\\\\\\"value\\\"\"")["text"] ==
+              "test\n\r\t\\\"value\""
+
         # Test escape sequences in arrays
         result = ToonFormat.decode("[3]: \"a\\nb\",\"c\\td\",\"e\\\\f\"")
         @test result[1] == "a\nb"
         @test result[2] == "c\td"
         @test result[3] == "e\\f"
-        
+
         # Test escape sequences in nested objects
         input = "user:\n  name: \"Alice\\nSmith\"\n  path: \"C:\\\\Users\\\\Alice\""
         result = ToonFormat.decode(input)
         @test result["user"]["name"] == "Alice\nSmith"
         @test result["user"]["path"] == "C:\\Users\\Alice"
-        
+
         # Test escape sequences in tabular arrays
         input = "items[2]{name,desc}:\n  \"Item\\n1\",\"First\\titem\"\n  \"Item\\n2\",\"Second\\titem\""
         result = ToonFormat.decode(input)

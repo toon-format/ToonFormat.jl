@@ -7,7 +7,10 @@ using ToonFormat
 @testset "Encoder Tests" begin
     @testset "API Tests" begin
         # Test encode with options
-        result = ToonFormat.encode([1, 2, 3], options=ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB))
+        result = ToonFormat.encode(
+            [1, 2, 3],
+            options = ToonFormat.EncodeOptions(delimiter = ToonFormat.TAB),
+        )
         @test occursin("[3\t]:", result)
 
         # Test encode returns native String
@@ -44,67 +47,67 @@ using ToonFormat
         @test ToonFormat.encode(1e6) == "1000000"
         @test !occursin("e", ToonFormat.encode(1000000))
         @test !occursin("E", ToonFormat.encode(1000000))
-        
+
         # Requirement 2.1: No exponent notation for small decimals
         @test ToonFormat.encode(0.000001) == "0.000001"
         @test ToonFormat.encode(1e-6) == "0.000001"
         @test !occursin("e", ToonFormat.encode(0.000001))
         @test !occursin("E", ToonFormat.encode(0.000001))
-        
+
         # Requirement 2.2: No leading zeros except "0"
         @test ToonFormat.encode(0) == "0"
         @test ToonFormat.encode(0.0) == "0"
         @test !startswith(ToonFormat.encode(123), "0")
         @test !startswith(ToonFormat.encode(0.5), "00")
-        
+
         # Requirement 2.3: No trailing fractional zeros
         @test ToonFormat.encode(1.5) == "1.5"
         @test ToonFormat.encode(1.5000) == "1.5"
         @test !occursin("1.5000", ToonFormat.encode(1.5))
         @test !occursin("1.50", ToonFormat.encode(1.5))
-        
+
         # Requirement 2.4: Integer form when fractional part is zero
         @test ToonFormat.encode(1.0) == "1"
         @test ToonFormat.encode(42.0) == "42"
         @test ToonFormat.encode(100.0) == "100"
         @test !occursin(".", ToonFormat.encode(1.0))
         @test !occursin(".", ToonFormat.encode(42.0))
-        
+
         # Requirement 1.5: Normalize -0 to 0
         @test ToonFormat.encode(-0.0) == "0"
         @test !occursin("-", ToonFormat.encode(-0.0))
-        
+
         # Edge cases: Very large numbers
         @test ToonFormat.encode(999999999999) == "999999999999"
         @test !occursin("e", ToonFormat.encode(999999999999))
-        
+
         # Edge cases: Very small decimals
         @test ToonFormat.encode(0.00000001) == "0.00000001"
         @test !occursin("e", ToonFormat.encode(0.00000001))
-        
+
         # Edge cases: Numbers with many decimal places (check no exponent)
         result = ToonFormat.encode(3.14159265359)
         @test !occursin("e", result)
         @test !occursin("E", result)
         @test startswith(result, "3.14159")
-        
+
         # Edge cases: Trailing zeros should be removed
         result = ToonFormat.encode(2.5000000)
         @test result == "2.5"
         @test !occursin("2.50", result)
-        
+
         # Edge cases: Mixed array with -0
         result = ToonFormat.encode([-0.0, 1.0, 2.5])
         @test occursin("0,1,2.5", result) || occursin("0, 1, 2.5", result)
         @test !occursin("-0", result)
-        
+
         # Edge cases: Negative numbers should keep sign
         @test ToonFormat.encode(-42) == "-42"
         result = ToonFormat.encode(-3.14)
         @test startswith(result, "-3.14")
         @test !occursin("e", result)
         @test !occursin("E", result)
-        
+
         # Edge cases: Integer boundaries
         @test ToonFormat.encode(0) == "0"
         @test ToonFormat.encode(1) == "1"
@@ -152,7 +155,8 @@ using ToonFormat
         @test ToonFormat.encode("say \"hello\"") == "\"say \\\"hello\\\"\""
 
         # Multiple escape sequences
-        @test ToonFormat.encode("test\n\r\t\\\"value\"") == "\"test\\n\\r\\t\\\\\\\"value\\\"\""
+        @test ToonFormat.encode("test\n\r\t\\\"value\"") ==
+              "\"test\\n\\r\\t\\\\\\\"value\\\"\""
     end
 
     @testset "Array Encoding" begin
@@ -180,7 +184,7 @@ using ToonFormat
         @test occursin("age: 30", result)
 
         # Empty object
-        result = ToonFormat.encode(Dict{String, Any}())
+        result = ToonFormat.encode(Dict{String,Any}())
         @test result == ""
 
         # Nested object
@@ -191,12 +195,18 @@ using ToonFormat
 
     @testset "Delimiter Options" begin
         # Tab delimiter
-        result = ToonFormat.encode([1, 2, 3], options=ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB))
+        result = ToonFormat.encode(
+            [1, 2, 3],
+            options = ToonFormat.EncodeOptions(delimiter = ToonFormat.TAB),
+        )
         @test occursin("[3\t]:", result)
         @test occursin("1\t2\t3", result)
 
         # Pipe delimiter
-        result = ToonFormat.encode([1, 2, 3], options=ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE))
+        result = ToonFormat.encode(
+            [1, 2, 3],
+            options = ToonFormat.EncodeOptions(delimiter = ToonFormat.PIPE),
+        )
         @test occursin("[3|]:", result)
         @test occursin("1|2|3", result)
 
@@ -208,7 +218,10 @@ using ToonFormat
 
     @testset "Indent Options" begin
         # Custom indent
-        result = ToonFormat.encode(Dict("a" => Dict("b" => 1)), options=ToonFormat.EncodeOptions(indent=4))
+        result = ToonFormat.encode(
+            Dict("a" => Dict("b" => 1)),
+            options = ToonFormat.EncodeOptions(indent = 4),
+        )
         @test occursin("a:", result)
         @test occursin("    b: 1", result)
 

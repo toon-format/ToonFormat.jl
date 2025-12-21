@@ -55,7 +55,7 @@ end
 # =============================================================================
 
 # Cached schema object (loaded once)
-const _FIXTURE_SCHEMA = Ref{Union{Nothing, JSONSchema.Schema}}(nothing)
+const _FIXTURE_SCHEMA = Ref{Union{Nothing,JSONSchema.Schema}}(nothing)
 
 """
 Load and cache the fixtures schema. Returns the schema object or nothing if unavailable.
@@ -115,7 +115,7 @@ function discover_fixtures(category::String)
         return String[]
     end
 
-    files = readdir(category_dir; join=true)
+    files = readdir(category_dir; join = true)
     json_files = filter(f -> endswith(f, ".json"), files)
     return sort(json_files)
 end
@@ -136,7 +136,9 @@ Convert JSON3 objects to native Julia types for comparison.
 """
 function normalize_json(val)
     if val isa JSON3.Object
-        return ToonFormat.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(val))
+        return ToonFormat.JsonObject(
+            string(k) => normalize_json(v) for (k, v) in pairs(val)
+        )
     elseif val isa JSON3.Array || val isa Vector
         return [normalize_json(v) for v in val]
     else
@@ -152,7 +154,7 @@ function parse_encode_options(opts)
         return EncodeOptions()
     end
 
-    kwargs = Dict{Symbol, Any}()
+    kwargs = Dict{Symbol,Any}()
     haskey(opts, :delimiter) && (kwargs[:delimiter] = opts.delimiter)
     haskey(opts, :indent) && (kwargs[:indent] = opts.indent)
     haskey(opts, :keyFolding) && (kwargs[:keyFolding] = opts.keyFolding)
@@ -169,7 +171,7 @@ function parse_decode_options(opts)
         return DecodeOptions()
     end
 
-    kwargs = Dict{Symbol, Any}()
+    kwargs = Dict{Symbol,Any}()
     haskey(opts, :indent) && (kwargs[:indent] = opts.indent)
     haskey(opts, :strict) && (kwargs[:strict] = opts.strict)
     haskey(opts, :expandPaths) && (kwargs[:expandPaths] = opts.expandPaths)
@@ -201,7 +203,7 @@ function compliance_percentage(report::ComplianceReport)
     if report.total == 0
         return 0.0
     end
-    return round(report.passed / report.total * 100; digits=1)
+    return round(report.passed / report.total * 100; digits = 1)
 end
 
 """
@@ -212,8 +214,10 @@ function print_compliance_summary(report::ComplianceReport)
 
     println()
     println("=" ^ 70)
-    println("Official Fixtures: $(report.passed)/$(report.total) passing, " *
-            "$(report.failed) failing, $(report.skipped) skipped ($pct%)")
+    println(
+        "Official Fixtures: $(report.passed)/$(report.total) passing, " *
+        "$(report.failed) failing, $(report.skipped) skipped ($pct%)",
+    )
     println("=" ^ 70)
 
     if !isempty(report.skipped_fixtures)
@@ -270,9 +274,12 @@ function run_fixture_tests(filepath::String, category::String, report::Complianc
                         options = parse_encode_options(get(test, :options, nothing))
 
                         if get(test, :shouldError, false)
-                            @test_throws Exception ToonFormat.encode(input; options=options)
+                            @test_throws Exception ToonFormat.encode(
+                                input;
+                                options = options,
+                            )
                         else
-                            result = ToonFormat.encode(input; options=options)
+                            result = ToonFormat.encode(input; options = options)
                             if result == expected
                                 report.passed += 1
                             else
@@ -286,9 +293,12 @@ function run_fixture_tests(filepath::String, category::String, report::Complianc
                         options = parse_decode_options(get(test, :options, nothing))
 
                         if get(test, :shouldError, false)
-                            @test_throws Exception ToonFormat.decode(input; options=options)
+                            @test_throws Exception ToonFormat.decode(
+                                input;
+                                options = options,
+                            )
                         else
-                            result = ToonFormat.decode(input; options=options)
+                            result = ToonFormat.decode(input; options = options)
                             if result == expected
                                 report.passed += 1
                             else

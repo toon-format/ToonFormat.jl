@@ -8,10 +8,10 @@ Type definitions for TOON format.
 using OrderedCollections
 
 # JSON-compatible types
-const JsonPrimitive = Union{String, Number, Bool, Nothing}
-const JsonObject = OrderedDict{String, Any}
+const JsonPrimitive = Union{String,Number,Bool,Nothing}
+const JsonObject = OrderedDict{String,Any}
 const JsonArray = Vector{Any}
-const JsonValue = Union{JsonPrimitive, JsonObject, JsonArray}
+const JsonValue = Union{JsonPrimitive,JsonObject,JsonArray}
 
 # Delimiter types
 const DelimiterKey = String  # "comma", "tab", or "pipe"
@@ -34,10 +34,10 @@ end
 
 # Array header information
 struct ArrayHeaderInfo
-    key::Union{String, Nothing}
+    key::Union{String,Nothing}
     length::Int
     delimiter::Delimiter
-    fields::Union{Vector{String}, Nothing}
+    fields::Union{Vector{String},Nothing}
 end
 
 # Parsed line information
@@ -85,11 +85,12 @@ mutable struct LineCursor
     blankLines::Vector{BlankLineInfo}
     position::Int
 
-    LineCursor(lines::Vector{ParsedLine}, blankLines::Vector{BlankLineInfo}) = new(lines, blankLines, 1)
+    LineCursor(lines::Vector{ParsedLine}, blankLines::Vector{BlankLineInfo}) =
+        new(lines, blankLines, 1)
 end
 
 # Helper functions for LineCursor (not extending Base)
-peek_line(cursor::LineCursor)::Union{ParsedLine, Nothing} =
+peek_line(cursor::LineCursor)::Union{ParsedLine,Nothing} =
     cursor.position <= length(cursor.lines) ? cursor.lines[cursor.position] : nothing
 
 advance_line!(cursor::LineCursor) = (cursor.position += 1)

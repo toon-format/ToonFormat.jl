@@ -23,7 +23,7 @@ function parse_primitive(token::AbstractString)::JsonValue
         if !endswith(token, DOUBLE_QUOTE) || length(token) < 2
             error("Unterminated string: missing closing quote")
         end
-        return unescape_string(token[2:end-1])
+        return unescape_string(token[2:(end-1)])
     end
 
     # Boolean and null literals
@@ -107,22 +107,28 @@ function decode_value_from_lines(cursor::LineCursor, options::DecodeOptions)::Js
             if options.strict
                 # Check if it looks like an array header without colon
                 # Only check if it's not a quoted string
-                if !startswith(content, DOUBLE_QUOTE) && occursin('[', content) && occursin(']', content)
+                if !startswith(content, DOUBLE_QUOTE) &&
+                   occursin('[', content) &&
+                   occursin(']', content)
                     # Try to parse as array header to see if it's valid
                     try
                         test_header = parse_array_header(content)
                         if test_header !== nothing
-                            error("Missing colon after array header at line $(first_line.lineNumber)")
+                            error(
+                                "Missing colon after array header at line $(first_line.lineNumber)",
+                            )
                         end
                     catch e
                         # If the error is about missing colon, re-throw it
                         if isa(e, ErrorException) && occursin("colon", e.msg)
-                            error("Missing colon after array header at line $(first_line.lineNumber)")
+                            error(
+                                "Missing colon after array header at line $(first_line.lineNumber)",
+                            )
                         end
                         # Otherwise, not a valid array header, ignore
                     end
                 end
-                
+
                 # Check if it looks like a key without colon (has spaces but not quoted)
                 # However, allow it if it's clearly a string value (e.g., contains emoji or special chars)
                 # This is a heuristic - if it has spaces AND looks like natural language text
@@ -141,7 +147,7 @@ function decode_value_from_lines(cursor::LineCursor, options::DecodeOptions)::Js
                     end
                 end
             end
-            
+
             # Single primitive value
             return parse_primitive(content)
         end
@@ -156,29 +162,31 @@ function decode_value_from_lines(cursor::LineCursor, options::DecodeOptions)::Js
             if line.depth == 0
                 content = line.content
                 colon_pos = find_first_unquoted(content, ':')
-                
+
                 # Skip if it has a colon (key-value or array header)
                 if colon_pos !== nothing
                     continue
                 end
-                
+
                 # Skip if it's a list item marker
                 if startswith(content, LIST_ITEM_MARKER)
                     continue
                 end
-                
+
                 # Skip if it looks like an array header (even without colon - will error elsewhere)
                 if occursin('[', content) && occursin(']', content)
                     continue
                 end
-                
+
                 # This is a primitive
                 primitive_count += 1
             end
         end
-        
+
         if primitive_count > 1
-            error("Multiple primitive values at root level are not allowed (found $primitive_count primitives)")
+            error(
+                "Multiple primitive values at root level are not allowed (found $primitive_count primitives)",
+            )
         end
     end
 
@@ -193,18 +201,28 @@ Expand a dotted key into nested objects if expandPaths is enabled.
 For example, "a.b.c" with value "x" becomes {"a": {"b": {"c": "x"}}}
 If was_quoted is true, the key will not be expanded even if it contains dots.
 """
-function expand_dotted_key(result::JsonObject, key::String, value::JsonValue, options::DecodeOptions, was_quoted::Bool=false)
+function expand_dotted_key(
+    result::JsonObject,
+    key::String,
+    value::JsonValue,
+    options::DecodeOptions,
+    was_quoted::Bool = false,
+)
     # Check if we should expand this key
     # Don't expand if the key was explicitly quoted (literal key)
-    should_expand = options.expandPaths == "safe" &&
-                    !was_quoted &&
-                    occursin('.', key) &&
-                    all(is_safe_identifier, split(key, '.'))
+    should_expand =
+        options.expandPaths == "safe" &&
+        !was_quoted &&
+        occursin('.', key) &&
+        all(is_safe_identifier, split(key, '.'))
 
     if !should_expand
         # No expansion needed - just set the key
         # But first check if we're overwriting an object in strict mode
-        if options.strict && haskey(result, key) && isa(result[key], JsonObject) && !isa(value, JsonObject)
+        if options.strict &&
+           haskey(result, key) &&
+           isa(result[key], JsonObject) &&
+           !isa(value, JsonObject)
             error("Cannot set key '$key': key already exists as object")
         end
         result[key] = value
@@ -216,7 +234,7 @@ function expand_dotted_key(result::JsonObject, key::String, value::JsonValue, op
 
     # Navigate/create nested structure
     current = result
-    for (i, segment) in enumerate(segments[1:end-1])
+    for (i, segment) in enumerate(segments[1:(end-1)])
         segment_str = String(segment)
         if !haskey(current, segment_str)
             # Create new nested object
@@ -224,7 +242,9 @@ function expand_dotted_key(result::JsonObject, key::String, value::JsonValue, op
         elseif !isa(current[segment_str], JsonObject)
             # Key already exists but is not an object - error in strict mode
             if options.strict
-                error("Cannot expand path '$key': segment '$segment_str' already exists as non-object")
+                error(
+                    "Cannot expand path '$key': segment '$segment_str' already exists as non-object",
+                )
             end
             # In non-strict mode, overwrite with new object
             current[segment_str] = JsonObject()
@@ -235,9 +255,13 @@ function expand_dotted_key(result::JsonObject, key::String, value::JsonValue, op
     # Set the final value
     final_key = String(segments[end])
     # Check if final key already exists as an object and we're trying to set a primitive
-    if haskey(current, final_key) && isa(current[final_key], JsonObject) && !isa(value, JsonObject)
+    if haskey(current, final_key) &&
+       isa(current[final_key], JsonObject) &&
+       !isa(value, JsonObject)
         if options.strict
-            error("Cannot expand path '$key': segment '$final_key' already exists as object")
+            error(
+                "Cannot expand path '$key': segment '$final_key' already exists as object",
+            )
         end
     end
     current[final_key] = value
@@ -248,7 +272,11 @@ end
 
 Decode an object from the cursor.
 """
-function decode_object(cursor::LineCursor, parent_depth::Int, options::DecodeOptions)::JsonObject
+function decode_object(
+    cursor::LineCursor,
+    parent_depth::Int,
+    options::DecodeOptions,
+)::JsonObject
     result = JsonObject()
 
     while has_more_lines(cursor)
@@ -261,13 +289,13 @@ function decode_object(cursor::LineCursor, parent_depth::Int, options::DecodeOpt
 
         # Check if at expected child depth
         expected_depth = parent_depth + 1
-        
+
         # In strict mode, require exact depth match
         if options.strict && line.depth != expected_depth
             advance_line!(cursor)
             continue
         end
-        
+
         # In non-strict mode, if we're at root and see unexpected depth, process it anyway
         # This handles cases like "   value: 1" with indent=2 (depth=1 instead of 0)
         if !options.strict && parent_depth == -1 && line.depth > expected_depth
@@ -294,8 +322,8 @@ function decode_object(cursor::LineCursor, parent_depth::Int, options::DecodeOpt
             end
         end
 
-        key_str = strip(content[1:colon_pos-1])
-        value_str = strip(content[colon_pos+1:end])
+        key_str = strip(content[1:(colon_pos-1)])
+        value_str = strip(content[(colon_pos+1):end])
 
         # Check if the key contains an array header
         array_header = try
@@ -354,23 +382,29 @@ end
 
 Decode inline array data (all on one line after the colon).
 """
-function decode_inline_array_data(data_str::AbstractString, header::ArrayHeaderInfo, options::DecodeOptions)::JsonArray
+function decode_inline_array_data(
+    data_str::AbstractString,
+    header::ArrayHeaderInfo,
+    options::DecodeOptions,
+)::JsonArray
     result = JsonArray()
     tokens = parse_delimited_values(data_str, header.delimiter)
 
     if header.fields !== nothing
         # Inline tabular array - values are row-major
         num_fields = length(header.fields)
-        
+
         # Validate that we have the right number of tokens for the declared rows
         expected_tokens = header.length * num_fields
         if options.strict && length(tokens) != expected_tokens
-            error("Array length mismatch: expected $(header.length) rows ($(expected_tokens) values), got $(div(length(tokens), num_fields)) rows ($(length(tokens)) values)")
+            error(
+                "Array length mismatch: expected $(header.length) rows ($(expected_tokens) values), got $(div(length(tokens), num_fields)) rows ($(length(tokens)) values)",
+            )
         end
-        
+
         # Build rows from tokens
         num_rows = div(length(tokens), num_fields)
-        for i in 1:num_rows
+        for i = 1:num_rows
             row = JsonObject()
             for (j, field) in enumerate(header.fields)
                 idx = (i-1) * num_fields + j
@@ -387,7 +421,7 @@ function decode_inline_array_data(data_str::AbstractString, header::ArrayHeaderI
         for token in tokens
             push!(result, parse_primitive(strip(token)))
         end
-        
+
         # Validate count in strict mode
         if options.strict && length(result) != header.length
             error("Array length mismatch: expected $(header.length), got $(length(result))")
@@ -402,7 +436,11 @@ end
 
 Decode array data that appears on subsequent lines.
 """
-function decode_multiline_array_data(cursor::LineCursor, header::ArrayHeaderInfo, options::DecodeOptions)::JsonArray
+function decode_multiline_array_data(
+    cursor::LineCursor,
+    header::ArrayHeaderInfo,
+    options::DecodeOptions,
+)::JsonArray
     if header.fields !== nothing
         # Tabular format - rows on subsequent lines
         return decode_tabular_array(cursor, options, header)
@@ -417,7 +455,11 @@ end
 
 Decode an array from the cursor using the parsed header.
 """
-function decode_array(cursor::LineCursor, options::DecodeOptions, header::ArrayHeaderInfo)::JsonArray
+function decode_array(
+    cursor::LineCursor,
+    options::DecodeOptions,
+    header::ArrayHeaderInfo,
+)::JsonArray
     result = JsonArray()
 
     # Get the header line
@@ -428,7 +470,7 @@ function decode_array(cursor::LineCursor, options::DecodeOptions, header::ArrayH
         # Check if there are inline values after the colon
         colon_pos = find_first_unquoted(header_content, ':')
         if colon_pos !== nothing && colon_pos < length(header_content)
-            after_colon = strip(header_content[colon_pos+1:end])
+            after_colon = strip(header_content[(colon_pos+1):end])
 
             if !isempty(after_colon)
                 # Inline array (primitive or tabular)
@@ -437,7 +479,7 @@ function decode_array(cursor::LineCursor, options::DecodeOptions, header::ArrayH
                 if header.fields !== nothing
                     # Inline tabular array - values are row-major
                     num_fields = length(header.fields)
-                    for i in 1:header.length
+                    for i = 1:header.length
                         row = JsonObject()
                         for (j, field) in enumerate(header.fields)
                             idx = (i-1) * num_fields + j
@@ -458,7 +500,9 @@ function decode_array(cursor::LineCursor, options::DecodeOptions, header::ArrayH
 
                 # Validate count in strict mode
                 if options.strict && length(result) != header.length
-                    error("Array length mismatch: expected $(header.length), got $(length(result))")
+                    error(
+                        "Array length mismatch: expected $(header.length), got $(length(result))",
+                    )
                 end
 
                 advance_line!(cursor)
@@ -485,8 +529,11 @@ end
 
 Decode a tabular array.
 """
-function decode_tabular_array(cursor::LineCursor, options::DecodeOptions,
-                             header::ArrayHeaderInfo)::JsonArray
+function decode_tabular_array(
+    cursor::LineCursor,
+    options::DecodeOptions,
+    header::ArrayHeaderInfo,
+)::JsonArray
     result = JsonArray()
     fields = header.fields
 
@@ -532,12 +579,14 @@ function decode_tabular_array(cursor::LineCursor, options::DecodeOptions,
 
         # Parse row
         tokens = parse_delimited_values(content, header.delimiter)
-        
+
         # Validate row width in strict mode
         if options.strict && length(tokens) != length(fields)
-            error("Row width mismatch at line $(line.lineNumber): expected $(length(fields)) fields, got $(length(tokens))")
+            error(
+                "Row width mismatch at line $(line.lineNumber): expected $(length(fields)) fields, got $(length(tokens))",
+            )
         end
-        
+
         row = JsonObject()
 
         for (i, field) in enumerate(fields)
@@ -557,22 +606,25 @@ function decode_tabular_array(cursor::LineCursor, options::DecodeOptions,
     if options.strict && header.length > 0
         # Get the line number of the header (one before start_position)
         header_line_num = if start_position > 1
-            cursor.lines[start_position - 1].lineNumber
+            cursor.lines[start_position-1].lineNumber
         else
             0
         end
-        
+
         # Get the line number of the last row we processed
-        last_row_line_num = if cursor.position > 1 && cursor.position - 1 <= length(cursor.lines)
-            cursor.lines[cursor.position - 1].lineNumber
-        else
-            typemax(Int)
-        end
-        
+        last_row_line_num =
+            if cursor.position > 1 && cursor.position - 1 <= length(cursor.lines)
+                cursor.lines[cursor.position-1].lineNumber
+            else
+                typemax(Int)
+            end
+
         for blank in cursor.blankLines
             # Blank line is inside the array if it's after the header and before/at the last row
             if blank.lineNumber > header_line_num && blank.lineNumber <= last_row_line_num
-                error("Blank lines are not allowed inside tabular arrays (line $(blank.lineNumber))")
+                error(
+                    "Blank lines are not allowed inside tabular arrays (line $(blank.lineNumber))",
+                )
             end
         end
     end
@@ -591,8 +643,11 @@ end
 
 Decode an expanded list array.
 """
-function decode_list_array(cursor::LineCursor, options::DecodeOptions,
-                          header::ArrayHeaderInfo)::JsonArray
+function decode_list_array(
+    cursor::LineCursor,
+    options::DecodeOptions,
+    header::ArrayHeaderInfo,
+)::JsonArray
     result = JsonArray()
     item_count = 0
     start_position = cursor.position
@@ -612,7 +667,7 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
             after_marker = ""
         elseif startswith(line.content, LIST_ITEM_MARKER)
             # Normal list item with "- "
-            after_marker = String(strip(line.content[length(LIST_ITEM_MARKER)+1:end]))
+            after_marker = String(strip(line.content[(length(LIST_ITEM_MARKER)+1):end]))
         else
             # Not a list item (e.g., "-5" or "-abc")
             break
@@ -623,10 +678,12 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
             # Could be empty object or object with fields at depth +1
             hyphen_line_depth = line.depth
             advance_line!(cursor)
-            
+
             # Check if there are fields at depth +1
             next_line = peek_line(cursor)
-            if next_line !== nothing && next_line.depth == hyphen_line_depth + 1 && !startswith(next_line.content, "-")
+            if next_line !== nothing &&
+               next_line.depth == hyphen_line_depth + 1 &&
+               !startswith(next_line.content, "-")
                 # Object with fields at depth +1
                 obj = decode_object(cursor, hyphen_line_depth, options)
                 push!(result, obj)
@@ -653,14 +710,16 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                     hyphen_line_depth = line.depth
 
                     if colon_pos !== nothing
-                        after_colon = strip(after_marker[colon_pos+1:end])
+                        after_colon = strip(after_marker[(colon_pos+1):end])
                         advance_line!(cursor)
 
                         # Check if there are additional fields at depth +1
                         next_line = peek_line(cursor)
-                        has_additional_fields = (next_line !== nothing &&
-                                                 next_line.depth == hyphen_line_depth + 1 &&
-                                                 !startswith(next_line.content, LIST_ITEM_MARKER))
+                        has_additional_fields = (
+                            next_line !== nothing &&
+                            next_line.depth == hyphen_line_depth + 1 &&
+                            !startswith(next_line.content, LIST_ITEM_MARKER)
+                        )
 
                         if has_additional_fields
                             # This is an object with an array as first field
@@ -669,7 +728,11 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                             # Decode the array value
                             if !isempty(after_colon)
                                 # Inline array data
-                                obj[first_key] = decode_inline_array_data(after_colon, item_header, options)
+                                obj[first_key] = decode_inline_array_data(
+                                    after_colon,
+                                    item_header,
+                                    options,
+                                )
                             else
                                 # Empty colon - either empty array or multiline array
                                 if item_header.length == 0
@@ -677,7 +740,11 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                     obj[first_key] = []
                                 else
                                     # Multiline array (data on subsequent lines)
-                                    obj[first_key] = decode_multiline_array_data(cursor, item_header, options)
+                                    obj[first_key] = decode_multiline_array_data(
+                                        cursor,
+                                        item_header,
+                                        options,
+                                    )
                                 end
                             end
 
@@ -696,17 +763,22 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                 end
 
                                 # Parse key-value pair
-                                field_colon_pos = find_first_unquoted(next_line.content, ':')
+                                field_colon_pos =
+                                    find_first_unquoted(next_line.content, ':')
                                 if field_colon_pos === nothing
                                     if options.strict
-                                        error("Missing colon after key at line $(next_line.lineNumber)")
+                                        error(
+                                            "Missing colon after key at line $(next_line.lineNumber)",
+                                        )
                                     end
                                     advance_line!(cursor)
                                     continue
                                 end
 
-                                field_key_str = strip(next_line.content[1:field_colon_pos-1])
-                                field_value_str = strip(next_line.content[field_colon_pos+1:end])
+                                field_key_str =
+                                    strip(next_line.content[1:(field_colon_pos-1)])
+                                field_value_str =
+                                    strip(next_line.content[(field_colon_pos+1):end])
 
                                 # Check if the key contains an array header
                                 field_header = try
@@ -722,10 +794,18 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
 
                                     if !isempty(field_value_str)
                                         # Inline array data
-                                        obj[field_key] = decode_inline_array_data(field_value_str, field_header, options)
+                                        obj[field_key] = decode_inline_array_data(
+                                            field_value_str,
+                                            field_header,
+                                            options,
+                                        )
                                     else
                                         # Multiline array data
-                                        obj[field_key] = decode_multiline_array_data(cursor, field_header, options)
+                                        obj[field_key] = decode_multiline_array_data(
+                                            cursor,
+                                            field_header,
+                                            options,
+                                        )
                                     end
                                 else
                                     # Regular key-value pair
@@ -739,7 +819,8 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                         # Nested object or array
                                         nested_line = peek_line(cursor)
 
-                                        if nested_line !== nothing && nested_line.depth > hyphen_line_depth + 1
+                                        if nested_line !== nothing &&
+                                           nested_line.depth > hyphen_line_depth + 1
                                             # Check if it's an array header
                                             nested_header = try
                                                 parse_array_header(nested_line.content)
@@ -749,10 +830,18 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
 
                                             if nested_header !== nothing
                                                 # Array value
-                                                obj[field_key] = decode_array(cursor, options, nested_header)
+                                                obj[field_key] = decode_array(
+                                                    cursor,
+                                                    options,
+                                                    nested_header,
+                                                )
                                             else
                                                 # Nested object
-                                                obj[field_key] = decode_object(cursor, hyphen_line_depth + 1, options)
+                                                obj[field_key] = decode_object(
+                                                    cursor,
+                                                    hyphen_line_depth + 1,
+                                                    options,
+                                                )
                                             end
                                         else
                                             # Empty value
@@ -770,7 +859,11 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                             obj = JsonObject()
                             if !isempty(after_colon)
                                 # Decode as inline array
-                                obj[first_key] = decode_inline_array_data(after_colon, item_header, options)
+                                obj[first_key] = decode_inline_array_data(
+                                    after_colon,
+                                    item_header,
+                                    options,
+                                )
                             else
                                 # No inline data - check if it's a tabular array or empty
                                 if item_header.length == 0
@@ -778,10 +871,18 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                     obj[first_key] = []
                                 elseif item_header.fields !== nothing
                                     # Tabular array - decode rows
-                                    obj[first_key] = decode_multiline_array_data(cursor, item_header, options)
+                                    obj[first_key] = decode_multiline_array_data(
+                                        cursor,
+                                        item_header,
+                                        options,
+                                    )
                                 else
                                     # Non-empty list array without inline data
-                                    obj[first_key] = decode_multiline_array_data(cursor, item_header, options)
+                                    obj[first_key] = decode_multiline_array_data(
+                                        cursor,
+                                        item_header,
+                                        options,
+                                    )
                                 end
 
                                 # After decoding multiline array, check for additional fields at depth+1
@@ -799,17 +900,22 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                     end
 
                                     # Parse key-value pair
-                                    field_colon_pos = find_first_unquoted(next_line.content, ':')
+                                    field_colon_pos =
+                                        find_first_unquoted(next_line.content, ':')
                                     if field_colon_pos === nothing
                                         if options.strict
-                                            error("Missing colon after key at line $(next_line.lineNumber)")
+                                            error(
+                                                "Missing colon after key at line $(next_line.lineNumber)",
+                                            )
                                         end
                                         advance_line!(cursor)
                                         continue
                                     end
 
-                                    field_key_str = strip(next_line.content[1:field_colon_pos-1])
-                                    field_value_str = strip(next_line.content[field_colon_pos+1:end])
+                                    field_key_str =
+                                        strip(next_line.content[1:(field_colon_pos-1)])
+                                    field_value_str =
+                                        strip(next_line.content[(field_colon_pos+1):end])
                                     field_key = parse_key(field_key_str)
                                     advance_line!(cursor)
 
@@ -819,9 +925,14 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                     else
                                         # Nested object or array
                                         nested_line = peek_line(cursor)
-                                        if nested_line !== nothing && nested_line.depth > hyphen_line_depth + 1
+                                        if nested_line !== nothing &&
+                                           nested_line.depth > hyphen_line_depth + 1
                                             # Nested content
-                                            obj[field_key] = decode_object(cursor, hyphen_line_depth + 1, options)
+                                            obj[field_key] = decode_object(
+                                                cursor,
+                                                hyphen_line_depth + 1,
+                                                options,
+                                            )
                                         else
                                             # Empty value
                                             obj[field_key] = JsonObject()
@@ -840,11 +951,12 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                     # Bare array item (no key) - e.g., "- [2]: 1,2"
                     # This is just a standalone array, not an object
                     if colon_pos !== nothing
-                        after_colon = strip(after_marker[colon_pos+1:end])
+                        after_colon = strip(after_marker[(colon_pos+1):end])
                         if !isempty(after_colon)
                             # Inline array data
                             advance_line!(cursor)
-                            array_value = decode_inline_array_data(after_colon, item_header, options)
+                            array_value =
+                                decode_inline_array_data(after_colon, item_header, options)
                             push!(result, array_value)
                         else
                             # Empty colon - either empty array or multiline array
@@ -854,7 +966,11 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                                 push!(result, [])
                             else
                                 # Multiline array (data on subsequent lines)
-                                array_value = decode_multiline_array_data(cursor, item_header, options)
+                                array_value = decode_multiline_array_data(
+                                    cursor,
+                                    item_header,
+                                    options,
+                                )
                                 push!(result, array_value)
                             end
                         end
@@ -870,16 +986,16 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
 
                 if colon_pos !== nothing
                     # Object item with first field on hyphen line
-                    key_str = strip(after_marker[1:colon_pos-1])
-                    value_str = strip(after_marker[colon_pos+1:end])
-                    
+                    key_str = strip(after_marker[1:(colon_pos-1)])
+                    value_str = strip(after_marker[(colon_pos+1):end])
+
                     first_key = parse_key(key_str)
                     hyphen_line_depth = line.depth
-                    
+
                     advance_line!(cursor)
-                    
+
                     obj = JsonObject()
-                    
+
                     # Parse the first field value
                     if !isempty(value_str)
                         # Primitive value on hyphen line
@@ -887,88 +1003,105 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                     else
                         # Nested object or array - check next line
                         next_line = peek_line(cursor)
-                        
+
                         if next_line !== nothing && next_line.depth == hyphen_line_depth + 2
                             # Nested object at depth +2
-                            obj[first_key] = decode_object(cursor, hyphen_line_depth + 1, options)
+                            obj[first_key] =
+                                decode_object(cursor, hyphen_line_depth + 1, options)
                         else
                             # Empty value
                             obj[first_key] = JsonObject()
                         end
                     end
-                    
+
                     # Parse remaining fields at depth +1
                     while has_more_lines(cursor)
                         next_line = peek_line(cursor)
-                        
+
                         # Remaining fields should be at depth +1 relative to hyphen
                         if next_line.depth != hyphen_line_depth + 1
                             break
                         end
-                        
+
                         # Check if it's a list item marker (next item in array)
                         if startswith(next_line.content, LIST_ITEM_MARKER)
                             break
                         end
-                        
+
                         # Parse key-value pair
                         field_colon_pos = find_first_unquoted(next_line.content, ':')
                         if field_colon_pos === nothing
                             if options.strict
-                                error("Missing colon after key at line $(next_line.lineNumber)")
+                                error(
+                                    "Missing colon after key at line $(next_line.lineNumber)",
+                                )
                             end
                             advance_line!(cursor)
                             continue
                         end
-                        
-                        field_key_str = strip(next_line.content[1:field_colon_pos-1])
-                        field_value_str = strip(next_line.content[field_colon_pos+1:end])
-                        
+
+                        field_key_str = strip(next_line.content[1:(field_colon_pos-1)])
+                        field_value_str = strip(next_line.content[(field_colon_pos+1):end])
+
                         # Check if the key contains an array header
                         field_header = try
                             parse_array_header(field_key_str * ":")
                         catch
                             nothing
                         end
-                        
+
                         if field_header !== nothing && field_header.key !== nothing
                             # Key contains array syntax like "tags[2]:"
                             field_key = field_header.key
                             advance_line!(cursor)
-                            
+
                             if !isempty(field_value_str)
                                 # Inline array data
-                                obj[field_key] = decode_inline_array_data(field_value_str, field_header, options)
+                                obj[field_key] = decode_inline_array_data(
+                                    field_value_str,
+                                    field_header,
+                                    options,
+                                )
                             else
                                 # Multiline array data
-                                obj[field_key] = decode_multiline_array_data(cursor, field_header, options)
+                                obj[field_key] = decode_multiline_array_data(
+                                    cursor,
+                                    field_header,
+                                    options,
+                                )
                             end
                         else
                             # Regular key-value pair
                             field_key = parse_key(field_key_str)
                             advance_line!(cursor)
-                            
+
                             if !isempty(field_value_str)
                                 # Primitive value
                                 obj[field_key] = parse_primitive(field_value_str)
                             else
                                 # Nested object or array
                                 nested_line = peek_line(cursor)
-                                
-                                if nested_line !== nothing && nested_line.depth > hyphen_line_depth + 1
+
+                                if nested_line !== nothing &&
+                                   nested_line.depth > hyphen_line_depth + 1
                                     # Check if it's an array header
                                     nested_header = try
                                         parse_array_header(nested_line.content)
                                     catch
                                         nothing
                                     end
-                                    
+
                                     if nested_header !== nothing
                                         # Array value
-                                        obj[field_key] = decode_array(cursor, options, nested_header)
+                                        obj[field_key] =
+                                            decode_array(cursor, options, nested_header)
                                     else
                                         # Nested object
-                                        obj[field_key] = decode_object(cursor, hyphen_line_depth + 1, options)
+                                        obj[field_key] = decode_object(
+                                            cursor,
+                                            hyphen_line_depth + 1,
+                                            options,
+                                        )
                                     end
                                 else
                                     # Empty value
@@ -977,7 +1110,7 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
                             end
                         end
                     end
-                    
+
                     push!(result, obj)
                 else
                     # Primitive item
@@ -994,23 +1127,26 @@ function decode_list_array(cursor::LineCursor, options::DecodeOptions,
     if options.strict && header.length > 0
         # Get the line number of the header (one before start_position)
         header_line_num = if start_position > 1
-            cursor.lines[start_position - 1].lineNumber
+            cursor.lines[start_position-1].lineNumber
         else
             0
         end
-        
+
         # Get the line number of the last item we processed
-        last_item_line_num = if cursor.position > 1 && cursor.position - 1 <= length(cursor.lines)
-            cursor.lines[cursor.position - 1].lineNumber
-        else
-            typemax(Int)
-        end
-        
+        last_item_line_num =
+            if cursor.position > 1 && cursor.position - 1 <= length(cursor.lines)
+                cursor.lines[cursor.position-1].lineNumber
+            else
+                typemax(Int)
+            end
+
         for blank in cursor.blankLines
             # Blank line is inside the array if it's after the header and before/at the last item
             # We use <= for the upper bound to catch blank lines between items
             if blank.lineNumber > header_line_num && blank.lineNumber <= last_item_line_num
-                error("Blank lines are not allowed inside list arrays (line $(blank.lineNumber))")
+                error(
+                    "Blank lines are not allowed inside list arrays (line $(blank.lineNumber))",
+                )
             end
         end
     end
@@ -1044,7 +1180,7 @@ decode("[2]: 1,2")
 # [1, 2]
 ```
 """
-function decode(input::String; options::DecodeOptions=DecodeOptions())::JsonValue
+function decode(input::String; options::DecodeOptions = DecodeOptions())::JsonValue
     scan_result = to_parsed_lines(input, options.indent, options.strict)
 
     if isempty(scan_result.lines)

@@ -11,11 +11,7 @@ const TAB = "\t"
 const PIPE = "|"
 const DEFAULT_DELIMITER = COMMA
 
-const DELIMITERS = Dict(
-    "comma" => COMMA,
-    "tab" => TAB,
-    "pipe" => PIPE
-)
+const DELIMITERS = Dict("comma" => COMMA, "tab" => TAB, "pipe" => PIPE)
 
 # Special characters
 const COLON = ":"
@@ -39,21 +35,10 @@ const FALSE_LITERAL = "false"
 const NULL_LITERAL = "null"
 
 # Escape sequences
-const ESCAPE_CHARS = Dict(
-    '\\' => '\\',
-    '"' => '"',
-    'n' => '\n',
-    'r' => '\r',
-    't' => '\t'
-)
+const ESCAPE_CHARS = Dict('\\' => '\\', '"' => '"', 'n' => '\n', 'r' => '\r', 't' => '\t')
 
-const CHARS_TO_ESCAPE = Dict(
-    '\\' => "\\\\",
-    '"' => "\\\"",
-    '\n' => "\\n",
-    '\r' => "\\r",
-    '\t' => "\\t"
-)
+const CHARS_TO_ESCAPE =
+    Dict('\\' => "\\\\", '"' => "\\\"", '\n' => "\\n", '\r' => "\\r", '\t' => "\\t")
 
 # Validation patterns
 const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*$"

@@ -107,9 +107,12 @@ end
 
 Format an array header.
 """
-function format_header(key::Union{String, Nothing}, length::Int,
-                      delimiter::Delimiter,
-                      fields::Union{Vector{String}, Nothing}=nothing)::String
+function format_header(
+    key::Union{String,Nothing},
+    length::Int,
+    delimiter::Delimiter,
+    fields::Union{Vector{String},Nothing} = nothing,
+)::String
     result = ""
 
     # Add key if present

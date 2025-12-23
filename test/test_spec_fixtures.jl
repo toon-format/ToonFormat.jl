@@ -2,40 +2,38 @@
 Test ToonFormat.jl against official TOON specification test fixtures
 https://github.com/toon-format/spec/tree/main/tests
 
-Uses Git submodule at test/spec/ for fixtures. To initialize:
-    git submodule update --init --recursive
+Uses Julia Artifacts to download fixtures from the official spec repository.
 """
 
 using Test
 using ToonFormat
 using JSON3
 using JSONSchema
+using LazyArtifacts
 
 # =============================================================================
-# T006: Submodule availability check
+# Artifact-based fixture loading
 # =============================================================================
 
-const SPEC_DIR = joinpath(@__DIR__, "spec", "tests")
+# GitHub release tarballs extract to a subdirectory named "spec-{version}"
+const ARTIFACT_ROOT = artifact"toon_spec"
+const SPEC_SUBDIR = let
+    # Find the extracted subdirectory (e.g., "spec-3.0.1")
+    entries = isdir(ARTIFACT_ROOT) ? readdir(ARTIFACT_ROOT) : String[]
+    spec_dirs = filter(d -> startswith(d, "spec-") && isdir(joinpath(ARTIFACT_ROOT, d)), entries)
+    isempty(spec_dirs) ? "" : first(spec_dirs)
+end
+const SPEC_DIR = joinpath(ARTIFACT_ROOT, SPEC_SUBDIR, "tests")
 const FIXTURES_DIR = joinpath(SPEC_DIR, "fixtures")
 const SCHEMA_PATH = joinpath(SPEC_DIR, "fixtures.schema.json")
 
 """
-Check if the spec submodule is initialized and available.
+Check if the spec artifact is available.
 Returns true if fixtures are accessible, false otherwise with a warning.
 """
-function check_submodule_available()
+function check_fixtures_available()
     if !isdir(FIXTURES_DIR)
-        @warn """
-        TOON spec submodule not initialized.
-
-        To initialize the submodule, run:
-            git submodule update --init --recursive
-
-        Or clone with submodules:
-            git clone --recurse-submodules <repo-url>
-
-        Skipping official fixture tests.
-        """
+        @warn "TOON spec fixtures not available at: $FIXTURES_DIR"
         return false
     end
 
@@ -43,7 +41,7 @@ function check_submodule_available()
     decode_dir = joinpath(FIXTURES_DIR, "decode")
 
     if !isdir(encode_dir) || !isdir(decode_dir)
-        @warn "Spec submodule incomplete: missing encode/ or decode/ directories"
+        @warn "Spec fixtures incomplete: missing encode/ or decode/ directories"
         return false
     end
 
@@ -332,7 +330,7 @@ end
 # Test execution entry point
 # =============================================================================
 
-if check_submodule_available()
+if check_fixtures_available()
     @testset "TOON Spec Fixtures" begin
 
         @testset "Encode Fixtures" begin
@@ -356,6 +354,6 @@ if check_submodule_available()
     end
 else
     @testset "TOON Spec Fixtures" begin
-        @test_skip "Spec submodule not available"
+        @test_skip "Spec fixtures not available"
     end
 end

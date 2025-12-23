@@ -1,0 +1,10 @@
+# TOON Specification test fixtures
+# https://github.com/toon-format/spec
+
+[toon_spec]
+git-tree-sha1 = "fd47fe7b2c0ce1b72c4432d053f76354c1fda790"
+lazy = true
+
+    [[toon_spec.download]]
+    sha256 = "6e5f25bc1463fee477b9c67804b9e450b5d552c0a8bc2beb6885269108275676"
+    url = "https://github.com/toon-format/spec/archive/refs/tags/v3.0.1.tar.gz"

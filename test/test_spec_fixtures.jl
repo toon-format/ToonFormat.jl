@@ -15,7 +15,15 @@ using LazyArtifacts
 # Artifact-based fixture loading
 # =============================================================================
 
-const SPEC_DIR = joinpath(artifact"toon_spec", "tests")
+# GitHub release tarballs extract to a subdirectory named "spec-{version}"
+const ARTIFACT_ROOT = artifact"toon_spec"
+const SPEC_SUBDIR = let
+    # Find the extracted subdirectory (e.g., "spec-3.0.1")
+    entries = isdir(ARTIFACT_ROOT) ? readdir(ARTIFACT_ROOT) : String[]
+    spec_dirs = filter(d -> startswith(d, "spec-") && isdir(joinpath(ARTIFACT_ROOT, d)), entries)
+    isempty(spec_dirs) ? "" : first(spec_dirs)
+end
+const SPEC_DIR = joinpath(ARTIFACT_ROOT, SPEC_SUBDIR, "tests")
 const FIXTURES_DIR = joinpath(SPEC_DIR, "fixtures")
 const SCHEMA_PATH = joinpath(SPEC_DIR, "fixtures.schema.json")
 

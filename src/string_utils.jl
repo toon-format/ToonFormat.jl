@@ -38,7 +38,7 @@ function unescape_string(s::AbstractString)::String
                 throw(ArgumentError("Unterminated escape sequence at end of string"))
             end
 
-            next_char = s_str[i + 1]
+            next_char = s_str[i+1]
             if haskey(ESCAPE_CHARS, next_char)
                 write(result, ESCAPE_CHARS[next_char])
                 i += 2
@@ -112,8 +112,10 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
     end
 
     # Contains brackets or braces
-    if occursin(OPEN_BRACKET, s) || occursin(CLOSE_BRACKET, s) ||
-       occursin(OPEN_BRACE, s) || occursin(CLOSE_BRACE, s)
+    if occursin(OPEN_BRACKET, s) ||
+       occursin(CLOSE_BRACKET, s) ||
+       occursin(OPEN_BRACE, s) ||
+       occursin(CLOSE_BRACE, s)
         return true
     end
 
@@ -176,7 +178,7 @@ end
 Find the first occurrence of a character outside of quoted strings.
 Returns the index (1-based) or nothing if not found.
 """
-function find_first_unquoted(s::String, target::Char)::Union{Int, Nothing}
+function find_first_unquoted(s::String, target::Char)::Union{Int,Nothing}
     in_quotes = false
     skip_next = false
 

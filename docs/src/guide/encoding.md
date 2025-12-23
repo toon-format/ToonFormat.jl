@@ -9,7 +9,7 @@ The `encode` function converts Julia values to TOON format strings:
 ```julia
 using ToonFormat
 
-result = TOON.encode(value)
+result = ToonFormat.encode(value)
 ```
 
 ## Primitive Types
@@ -19,10 +19,10 @@ result = TOON.encode(value)
 Numbers are encoded in canonical decimal form:
 
 ```julia
-TOON.encode(42)           # "42"
-TOON.encode(3.14)         # "3.14"
-TOON.encode(-0.5)         # "-0.5"
-TOON.encode(1000000)      # "1000000"
+ToonFormat.encode(42)           # "42"
+ToonFormat.encode(3.14)         # "3.14"
+ToonFormat.encode(-0.5)         # "-0.5"
+ToonFormat.encode(1000000)      # "1000000"
 ```
 
 **Rules:**
@@ -37,11 +37,11 @@ TOON.encode(1000000)      # "1000000"
 Strings are quoted only when necessary:
 
 ```julia
-TOON.encode("hello")      # "hello"
-TOON.encode("hello world") # "\"hello world\""  (contains space)
-TOON.encode("")           # "\"\""  (empty string)
-TOON.encode("true")       # "\"true\""  (reserved literal)
-TOON.encode("123")        # "\"123\""  (numeric-like)
+ToonFormat.encode("hello")      # "hello"
+ToonFormat.encode("hello world") # "\"hello world\""  (contains space)
+ToonFormat.encode("")           # "\"\""  (empty string)
+ToonFormat.encode("true")       # "\"true\""  (reserved literal)
+ToonFormat.encode("123")        # "\"123\""  (numeric-like)
 ```
 
 **Quoting rules:**
@@ -54,9 +54,9 @@ TOON.encode("123")        # "\"123\""  (numeric-like)
 ### Booleans and Null
 
 ```julia
-TOON.encode(true)         # "true"
-TOON.encode(false)        # "false"
-TOON.encode(nothing)      # "null"
+ToonFormat.encode(true)         # "true"
+ToonFormat.encode(false)        # "false"
+ToonFormat.encode(nothing)      # "null"
 ```
 
 ## Objects
@@ -70,7 +70,7 @@ data = Dict(
     "active" => true
 )
 
-TOON.encode(data)
+ToonFormat.encode(data)
 # name: Alice
 # age: 30
 # active: true
@@ -90,7 +90,7 @@ data = Dict(
     )
 )
 
-TOON.encode(data)
+ToonFormat.encode(data)
 # user:
 #   name: Alice
 #   email: alice@example.com
@@ -108,13 +108,13 @@ TOON supports three array formats depending on the content.
 Arrays of primitives are encoded inline:
 
 ```julia
-TOON.encode([1, 2, 3, 4, 5])
+ToonFormat.encode([1, 2, 3, 4, 5])
 # [5]: 1,2,3,4,5
 
-TOON.encode(["a", "b", "c"])
+ToonFormat.encode(["a", "b", "c"])
 # [3]: a,b,c
 
-TOON.encode([true, false, true])
+ToonFormat.encode([true, false, true])
 # [3]: true,false,true
 ```
 
@@ -128,7 +128,7 @@ users = [
     Dict("id" => 2, "name" => "Bob", "role" => "user")
 ]
 
-TOON.encode(Dict("users" => users))
+ToonFormat.encode(Dict("users" => users))
 # users[2]{id,name,role}:
 #   1,Alice,admin
 #   2,Bob,user
@@ -151,7 +151,7 @@ mixed = [
     "string value"
 ]
 
-TOON.encode(mixed)
+ToonFormat.encode(mixed)
 # [4]:
 #   - type: user
 #     name: Alice
@@ -169,7 +169,7 @@ Nested arrays are encoded as list items:
 ```julia
 matrix = [[1, 2], [3, 4], [5, 6]]
 
-TOON.encode(matrix)
+ToonFormat.encode(matrix)
 # [3]:
 #   - [2]: 1,2
 #   - [2]: 3,4
@@ -181,8 +181,8 @@ TOON.encode(matrix)
 ### Custom Indentation
 
 ```julia
-options = TOON.EncodeOptions(indent=4)
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(indent=4)
+ToonFormat.encode(data, options=options)
 ```
 
 ### Delimiter Selection
@@ -191,16 +191,16 @@ Choose between comma, tab, or pipe delimiters:
 
 ```julia
 # Comma (default)
-options = TOON.EncodeOptions(delimiter=TOON.COMMA)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.COMMA)
 
 # Tab
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
 
 # Pipe
-options = TOON.EncodeOptions(delimiter=TOON.PIPE)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
 
 users = [Dict("name" => "Alice", "age" => 30)]
-TOON.encode(Dict("users" => users), options=options)
+ToonFormat.encode(Dict("users" => users), options=options)
 # With pipe: users[1|]{name|age}:
 #              Alice|30
 ```
@@ -219,22 +219,22 @@ data = Dict(
 )
 
 # Without key folding (default)
-TOON.encode(data)
+ToonFormat.encode(data)
 # api:
 #   v1:
 #     endpoint: /api/v1
 
 # With key folding
-options = TOON.EncodeOptions(keyFolding="safe")
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+ToonFormat.encode(data, options=options)
 # api.v1.endpoint: /api/v1
 ```
 
 **Flatten depth limit:**
 
 ```julia
-options = TOON.EncodeOptions(keyFolding="safe", flattenDepth=2)
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe", flattenDepth=2)
+ToonFormat.encode(data, options=options)
 # api.v1:
 #   endpoint: /api/v1
 ```
@@ -244,18 +244,18 @@ TOON.encode(data, options=options)
 ### Empty Values
 
 ```julia
-TOON.encode(Dict())       # "{}"
-TOON.encode([])           # "[]"
-TOON.encode("")           # "\"\""
+ToonFormat.encode(Dict())       # "{}"
+ToonFormat.encode([])           # "[]"
+ToonFormat.encode("")           # "\"\""
 ```
 
 ### Special Numbers
 
 ```julia
-TOON.encode(NaN)          # "null"  (normalized)
-TOON.encode(Inf)          # "null"  (normalized)
-TOON.encode(-Inf)         # "null"  (normalized)
-TOON.encode(-0.0)         # "0"     (normalized)
+ToonFormat.encode(NaN)          # "null"  (normalized)
+ToonFormat.encode(Inf)          # "null"  (normalized)
+ToonFormat.encode(-Inf)         # "null"  (normalized)
+ToonFormat.encode(-0.0)         # "0"     (normalized)
 ```
 
 ### Escape Sequences
@@ -263,11 +263,11 @@ TOON.encode(-0.0)         # "0"     (normalized)
 Five escape sequences are supported:
 
 ```julia
-TOON.encode("line1\nline2")        # "\"line1\\nline2\""
-TOON.encode("tab\there")           # "\"tab\\there\""
-TOON.encode("quote\"here")         # "\"quote\\\"here\""
-TOON.encode("backslash\\here")     # "\"backslash\\\\here\""
-TOON.encode("return\rhere")        # "\"return\\rhere\""
+ToonFormat.encode("line1\nline2")        # "\"line1\\nline2\""
+ToonFormat.encode("tab\there")           # "\"tab\\there\""
+ToonFormat.encode("quote\"here")         # "\"quote\\\"here\""
+ToonFormat.encode("backslash\\here")     # "\"backslash\\\\here\""
+ToonFormat.encode("return\rhere")        # "\"return\\rhere\""
 ```
 
 ## Best Practices

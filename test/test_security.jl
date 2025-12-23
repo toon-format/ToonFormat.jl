@@ -8,7 +8,7 @@ using ToonFormat
     @testset "Resource Exhaustion" begin
         # Deeply nested objects
         nested = Dict("level" => "0")
-        for i in 1:100
+        for i = 1:100
             nested = Dict("level" => string(i), "child" => nested)
         end
         encoded = ToonFormat.encode(nested)
@@ -31,7 +31,7 @@ using ToonFormat
         @test length(decoded) == 10000
 
         # Many object keys
-        many_keys = Dict("key_$i" => i for i in 1:1000)
+        many_keys = Dict("key_$i" => i for i = 1:1000)
         encoded = ToonFormat.encode(many_keys)
         decoded = ToonFormat.decode(encoded)
         @test length(decoded) == 1000
@@ -48,7 +48,10 @@ using ToonFormat
         @test_throws Exception ToonFormat.decode("  \tindented: value")
 
         # Invalid indentation (strict mode)
-        @test_throws Exception ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode(
+            "   value: 1",
+            options = ToonFormat.DecodeOptions(indent = 2, strict = true),
+        )
 
         # Count mismatch (strict mode)
         @test_throws Exception ToonFormat.decode("items[5]: 1,2,3")
@@ -141,7 +144,7 @@ using ToonFormat
         @test ToonFormat.encode([]) == "[0]:"
 
         # Empty object
-        @test ToonFormat.encode(Dict{String, Any}()) == ""
+        @test ToonFormat.encode(Dict{String,Any}()) == ""
 
         # Null values
         obj = Dict("value" => nothing)
@@ -163,17 +166,29 @@ using ToonFormat
 
     @testset "Strict Mode Validation" begin
         # Array count mismatch (array property)
-        @test_throws Exception ToonFormat.decode("items[5]: 1,2,3", options=ToonFormat.DecodeOptions(strict=true))
+        @test_throws Exception ToonFormat.decode(
+            "items[5]: 1,2,3",
+            options = ToonFormat.DecodeOptions(strict = true),
+        )
 
         # Lenient mode allows mismatch
-        result = ToonFormat.decode("items[5]: 1,2,3", options=ToonFormat.DecodeOptions(strict=false))
+        result = ToonFormat.decode(
+            "items[5]: 1,2,3",
+            options = ToonFormat.DecodeOptions(strict = false),
+        )
         @test length(result["items"]) == 3
 
         # Invalid indentation in strict mode
-        @test_throws Exception ToonFormat.decode("   value: 1", options=ToonFormat.DecodeOptions(indent=2, strict=true))
+        @test_throws Exception ToonFormat.decode(
+            "   value: 1",
+            options = ToonFormat.DecodeOptions(indent = 2, strict = true),
+        )
 
         # Lenient mode allows invalid indentation
-        result = ToonFormat.decode("a: 0\n   b: 1", options=ToonFormat.DecodeOptions(indent=2, strict=false))
+        result = ToonFormat.decode(
+            "a: 0\n   b: 1",
+            options = ToonFormat.DecodeOptions(indent = 2, strict = false),
+        )
         @test haskey(result, "a")
     end
 end

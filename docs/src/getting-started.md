@@ -27,7 +27,7 @@ using ToonFormat
 
 # Simple object
 data = Dict("name" => "Alice", "age" => 30)
-toon_str = TOON.encode(data)
+toon_str = ToonFormat.encode(data)
 println(toon_str)
 # Output:
 # name: Alice
@@ -46,7 +46,7 @@ name: Alice
 age: 30
 """
 
-data = TOON.decode(input)
+data = ToonFormat.decode(input)
 # Dict("name" => "Alice", "age" => 30)
 ```
 
@@ -57,12 +57,12 @@ data = TOON.decode(input)
 ```julia
 # Encode
 numbers = [1, 2, 3, 4, 5]
-toon_str = TOON.encode(numbers)
+toon_str = ToonFormat.encode(numbers)
 println(toon_str)
 # [5]: 1,2,3,4,5
 
 # Decode
-decoded = TOON.decode("[5]: 1,2,3,4,5")
+decoded = ToonFormat.decode("[5]: 1,2,3,4,5")
 # [1, 2, 3, 4, 5]
 ```
 
@@ -77,7 +77,7 @@ users = [
     Dict("id" => 3, "name" => "Charlie", "role" => "user")
 ]
 
-toon_str = TOON.encode(Dict("users" => users))
+toon_str = ToonFormat.encode(Dict("users" => users))
 println(toon_str)
 # Output:
 # users[3]{id,name,role}:
@@ -94,16 +94,16 @@ println(toon_str)
 using ToonFormat
 
 # Custom indentation (4 spaces instead of 2)
-options = TOON.EncodeOptions(indent=4)
-toon_str = TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(indent=4)
+toon_str = ToonFormat.encode(data, options=options)
 
 # Use tab delimiter
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
-toon_str = TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+toon_str = ToonFormat.encode(data, options=options)
 
 # Enable key folding for nested objects
-options = TOON.EncodeOptions(keyFolding="safe")
-toon_str = TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+toon_str = ToonFormat.encode(data, options=options)
 ```
 
 ### Decoding Options
@@ -112,16 +112,16 @@ toon_str = TOON.encode(data, options=options)
 using ToonFormat
 
 # Disable strict mode (lenient parsing)
-options = TOON.DecodeOptions(strict=false)
-data = TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(strict=false)
+data = ToonFormat.decode(input, options=options)
 
 # Enable path expansion
-options = TOON.DecodeOptions(expandPaths="safe")
-data = TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe")
+data = ToonFormat.decode(input, options=options)
 
 # Custom indentation
-options = TOON.DecodeOptions(indent=4)
-data = TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(indent=4)
+data = ToonFormat.decode(input, options=options)
 ```
 
 ## Common Patterns
@@ -140,7 +140,7 @@ config = Dict(
     )
 )
 
-toon_str = TOON.encode(config)
+toon_str = ToonFormat.encode(config)
 # server:
 #   host: localhost
 #   port: 8080
@@ -161,7 +161,7 @@ data = Dict(
     "object" => Dict("nested" => "value")
 )
 
-toon_str = TOON.encode(data)
+toon_str = ToonFormat.encode(data)
 ```
 
 ## Error Handling
@@ -173,7 +173,7 @@ using ToonFormat
 
 # Array count mismatch (strict mode)
 try
-    TOON.decode("[3]: 1,2")  # Declares 3 items but only has 2
+    ToonFormat.decode("[3]: 1,2")  # Declares 3 items but only has 2
 catch e
     println(e)
     # "Array length mismatch: expected 3, got 2"
@@ -181,7 +181,7 @@ end
 
 # Invalid escape sequence
 try
-    TOON.decode("value: \"hello\\x\"")  # \x is not valid
+    ToonFormat.decode("value: \"hello\\x\"")  # \x is not valid
 catch e
     println(e)
     # "Invalid escape sequence: \x"

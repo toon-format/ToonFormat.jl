@@ -7,16 +7,16 @@ using ToonFormat
 @testset "Objects as List Items (Requirements 12.1-12.5)" begin
     # Note: Uniform objects with primitive values use tabular format (Requirement 6.2)
     # Objects as list items only appear in mixed or non-uniform arrays
-    
+
     @testset "Requirement 12.1: Empty object emits single '-'" begin
         # Mixed array with empty objects
-        arr = [1, Dict{String, Any}(), 2, Dict{String, Any}()]
+        arr = [1, Dict{String,Any}(), 2, Dict{String,Any}()]
         result = ToonFormat.encode(arr)
-        
+
         lines = split(result, '\n')
         @test lines[1] == "[4]:"
         @test any(l -> strip(l) == "-", lines)
-        
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test length(decoded) == 4
@@ -27,29 +27,35 @@ using ToonFormat
         @test isa(decoded[4], AbstractDict)
         @test isempty(decoded[4])
     end
-    
+
     @testset "Requirement 12.2: Primitive first field uses '- key: value'" begin
         # Mixed array with object - first field is primitive
         arr = [42, Dict("name" => "Alice")]
         result = ToonFormat.encode(arr)
-        
+
         @test occursin("- 42", result)
         @test occursin("- name: Alice", result)
-        
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test length(decoded) == 2
         @test decoded[1] == 42
         @test decoded[2]["name"] == "Alice"
-        
+
         # Multiple fields - first is primitive
         arr = [1, Dict("id" => 1, "name" => "Alice", "age" => 30)]
         result = ToonFormat.encode(arr)
-        
+
         lines = split(result, '\n')
         # First field on hyphen line
-        @test any(l -> occursin("- id: 1", l) || occursin("- name: Alice", l) || occursin("- age: 30", l), lines)
-        
+        @test any(
+            l ->
+                occursin("- id: 1", l) ||
+                occursin("- name: Alice", l) ||
+                occursin("- age: 30", l),
+            lines,
+        )
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test decoded[1] == 1
@@ -57,12 +63,12 @@ using ToonFormat
         @test decoded[2]["name"] == "Alice"
         @test decoded[2]["age"] == 30
     end
-    
+
     @testset "Requirement 12.3: Nested object first field uses '- key:' with fields at depth +2" begin
         # Mixed array with object that has nested object as first field
         arr = [1, Dict("user" => Dict("name" => "Alice", "age" => 30))]
         result = ToonFormat.encode(arr)
-        
+
         lines = split(result, '\n')
         @test lines[1] == "[2]:"
         @test any(l -> occursin("- 1", l), lines)
@@ -70,30 +76,37 @@ using ToonFormat
         # Nested fields at depth +2 (4 spaces)
         @test any(l -> startswith(l, "    ") && occursin("name: Alice", l), lines)
         @test any(l -> startswith(l, "    ") && occursin("age: 30", l), lines)
-        
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["user"]["name"] == "Alice"
         @test decoded[2]["user"]["age"] == 30
     end
-    
+
     @testset "Requirement 12.4: Remaining fields appear at depth +1" begin
         # Object with multiple fields in mixed array
         arr = [1, Dict("a" => 1, "b" => 2, "c" => 3)]
         result = ToonFormat.encode(arr)
-        
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test decoded[1] == 1
         @test decoded[2]["a"] == 1
         @test decoded[2]["b"] == 2
         @test decoded[2]["c"] == 3
-        
+
         # Object with nested objects in remaining fields
-        arr = [true, Dict("id" => 1, "user" => Dict("name" => "Alice"), "meta" => Dict("created" => "2025-01-01"))]
+        arr = [
+            true,
+            Dict(
+                "id" => 1,
+                "user" => Dict("name" => "Alice"),
+                "meta" => Dict("created" => "2025-01-01"),
+            ),
+        ]
         result = ToonFormat.encode(arr)
-        
+
         # Decode and verify
         decoded = ToonFormat.decode(result)
         @test decoded[1] == true
@@ -101,7 +114,7 @@ using ToonFormat
         @test decoded[2]["user"]["name"] == "Alice"
         @test decoded[2]["meta"]["created"] == "2025-01-01"
     end
-    
+
     @testset "Requirement 12.5: Array first field is supported" begin
         # Object with array as first field in mixed array
         arr = [1, Dict("items" => [1, 2, 3], "count" => 3)]
@@ -119,7 +132,7 @@ using ToonFormat
         @test decoded[2]["items"] == [1, 2, 3]
         @test decoded[2]["count"] == 3
     end
-    
+
     @testset "Complex objects as list items" begin
         # Deeply nested structure in mixed array
         arr = [
@@ -128,29 +141,23 @@ using ToonFormat
                 "id" => 1,
                 "user" => Dict(
                     "name" => "Alice",
-                    "address" => Dict(
-                        "city" => "NYC",
-                        "zip" => 10001
-                    )
+                    "address" => Dict("city" => "NYC", "zip" => 10001),
                 ),
-                "tags" => ["admin", "active"]
+                "tags" => ["admin", "active"],
             ),
             Dict(
                 "id" => 2,
                 "user" => Dict(
                     "name" => "Bob",
-                    "address" => Dict(
-                        "city" => "LA",
-                        "zip" => 90001
-                    )
+                    "address" => Dict("city" => "LA", "zip" => 90001),
                 ),
-                "tags" => ["user"]
-            )
+                "tags" => ["user"],
+            ),
         ]
-        
+
         encoded = ToonFormat.encode(arr)
         decoded = ToonFormat.decode(encoded)
-        
+
         # Verify structure
         @test length(decoded) == 3
         @test decoded[1] == "header"
@@ -165,7 +172,7 @@ using ToonFormat
         @test decoded[3]["user"]["address"]["zip"] == 90001
         @test decoded[3]["tags"] == ["user"]
     end
-    
+
     @testset "Mixed array with objects as list items" begin
         # Mixed array with primitives, arrays, and objects
         arr = [
@@ -173,13 +180,13 @@ using ToonFormat
             "hello",
             [1, 2, 3],
             Dict("name" => "Alice", "age" => 30),
-            Dict{String, Any}(),
-            true
+            Dict{String,Any}(),
+            true,
         ]
-        
+
         encoded = ToonFormat.encode(arr)
         decoded = ToonFormat.decode(encoded)
-        
+
         @test length(decoded) == 6
         @test decoded[1] == 42
         @test decoded[2] == "hello"
@@ -189,31 +196,31 @@ using ToonFormat
         @test isempty(decoded[5])
         @test decoded[6] == true
     end
-    
+
     @testset "Round-trip with various object configurations" begin
         # Mixed arrays with objects
         arr = [1, Dict("x" => 1), 2, Dict("y" => 2), 3, Dict("z" => 3)]
         @test ToonFormat.decode(ToonFormat.encode(arr)) == arr
-        
+
         # Objects with nested objects
         arr = [
             "a",
             Dict("outer" => Dict("inner" => 1)),
             "b",
-            Dict("outer" => Dict("inner" => 2))
+            Dict("outer" => Dict("inner" => 2)),
         ]
         @test ToonFormat.decode(ToonFormat.encode(arr)) == arr
-        
+
         # Objects with arrays
         arr = [
             0,
             Dict("items" => [1, 2], "count" => 2),
-            Dict("items" => [3, 4, 5], "count" => 3)
+            Dict("items" => [3, 4, 5], "count" => 3),
         ]
         @test ToonFormat.decode(ToonFormat.encode(arr)) == arr
-        
+
         # Empty objects in mixed array
-        arr = [1, Dict{String, Any}(), 2, Dict{String, Any}(), 3, Dict{String, Any}()]
+        arr = [1, Dict{String,Any}(), 2, Dict{String,Any}(), 3, Dict{String,Any}()]
         @test ToonFormat.decode(ToonFormat.encode(arr)) == arr
     end
 end

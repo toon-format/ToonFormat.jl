@@ -19,3 +19,8 @@ docs/site/
 # OS
 .DS_Store
 Thumbs.db
+
+# AI files
+.claude
+.specify
+specs/

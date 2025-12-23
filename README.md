@@ -4,8 +4,8 @@
 [![Documentation](https://github.com/toon-format/ToonFormat.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/Documentation.yml)
 [![codecov](https://codecov.io/gh/s-celles/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/ToonFormat.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-[![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
-[![Compliance](https://img.shields.io/badge/compliance-87.6%25-yellow)](https://github.com/toon-format/ToonFormat.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
+[![Compliance](https://img.shields.io/badge/compliance-100%25-brightgreen)](https://github.com/toon-format/ToonFormat.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
@@ -286,9 +286,9 @@ Configuration for decoding:
 
 ## Specification Compliance
 
-**✅ FULLY COMPLIANT with TOON Specification v2.0**
+**✅ FULLY COMPLIANT with TOON Specification v3.0**
 
-This implementation has been validated against all normative requirements in the official [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md) with **1750 passing tests**.
+This implementation has been validated against all normative requirements in the official [TOON Specification v3.0](https://github.com/toon-format/spec/blob/main/SPEC.md) with **1750 passing tests**.
 
 ### Core Features
 - ✅ All primitive types (string, number, boolean, null)
@@ -317,7 +317,7 @@ This implementation has been validated against all normative requirements in the
 - ✅ Indentation validation (multiples, no tabs)
 - ✅ Configurable encoding/decoding options
 
-### Advanced Features (v2.0)
+### Advanced Features (v3.0)
 - ✅ Key folding (safe mode with depth limits)
 - ✅ Path expansion (safe mode with conflict detection)
 - ✅ Round-trip compatibility between folding and expansion
@@ -333,7 +333,7 @@ Run the comprehensive test suite (1750 tests):
 
 ```julia
 using Pkg
-Pkg.test("TOON")
+Pkg.test("ToonFormat")
 ```
 
 ### Test Coverage
@@ -365,15 +365,14 @@ users = [
 ]
 ```
 
-## Known Issues
+## Specification Conformance
 
-While our internal test suite (1750 tests) validates full TOON Specification v2.0 compliance for the core implementation, testing against the official specification fixtures reveals some implementation gaps:
+**Official Fixture Compliance: 349/349 tests passing (100%)**
 
-- **Fixture Compliance:** 87.6% (298/340 tests passing, 37 failing, 5 erroring)
-- **Critical Issues (P0):** Unicode string indexing crashes, large number handling errors
-- **High Priority (P1):** Quoted key handling, key order preservation, floating-point precision
-- **Medium Priority (P2):** Array format selection refinement, list item structure encoding
-- **Low Priority (P3):** Delimiter scoping edge cases, path expansion with quoted keys
+This implementation passes all official TOON Specification v3.0 conformance tests. The test suite validates:
+- Encoding correctness for all data types and structures
+- Decoding correctness including edge cases
+- Round-trip consistency for all supported formats
 
 ## Documentation
 
@@ -400,11 +399,16 @@ Contributions are welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelin
 
 ### Development
 
-```julia
-# Clone the repository
-git clone https://github.com/toon-format/ToonFormat.jl.git
+```bash
+# Clone the repository with submodules (required for fixture tests)
+git clone --recurse-submodules https://github.com/toon-format/ToonFormat.jl.git
 cd ToonFormat.jl
 
+# If already cloned without submodules, initialize them:
+git submodule update --init --recursive
+```
+
+```julia
 # Run tests
 julia --project=. -e 'using Pkg; Pkg.test()'
 

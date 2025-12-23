@@ -23,7 +23,9 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
         # Check if line is blank
         if isempty(strip(raw_line))
             indent_count = count(c -> c == ' ', raw_line)
-            depth = strict ? (indent_count ÷ indent_size) : floor(Int, indent_count / indent_size)
+            depth =
+                strict ? (indent_count ÷ indent_size) :
+                floor(Int, indent_count / indent_size)
             push!(blank_lines, BlankLineInfo(line_num, indent_count, depth))
             continue
         end
@@ -46,7 +48,9 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
         # Calculate depth
         if strict
             if indent_count % indent_size != 0
-                error("Indentation must be a multiple of $(indent_size) spaces (line $(line_num))")
+                error(
+                    "Indentation must be a multiple of $(indent_size) spaces (line $(line_num))",
+                )
             end
             depth = indent_count ÷ indent_size
         else
@@ -67,7 +71,7 @@ end
 
 Find the first unquoted occurrence of a character.
 """
-function find_first_unquoted(s::AbstractString, char::Char)::Union{Int, Nothing}
+function find_first_unquoted(s::AbstractString, char::Char)::Union{Int,Nothing}
     s = String(s)  # Convert to String if it's a SubString
     in_quotes = false
     i = 1
@@ -135,7 +139,7 @@ end
 Parse an array header from a content string.
 Returns nothing if not a valid array header.
 """
-function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
+function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
     # Find opening bracket (outside of quotes)
     bracket_start = find_first_unquoted(content, '[')
     if bracket_start === nothing
@@ -149,7 +153,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
     end
 
     # Extract key (everything before opening bracket)
-    key = bracket_start > 1 ? strip(content[1:bracket_start-1]) : nothing
+    key = bracket_start > 1 ? strip(content[1:(bracket_start-1)]) : nothing
     if key !== nothing && isempty(key)
         key = nothing
     end
@@ -159,7 +163,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
     end
 
     # Extract bracket content
-    bracket_content = content[bracket_start+1:bracket_end-1]
+    bracket_content = content[(bracket_start+1):(bracket_end-1)]
 
     # Determine delimiter and length
     delimiter = COMMA
@@ -167,10 +171,10 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
 
     if endswith(bracket_content, TAB)
         delimiter = TAB
-        length_str = bracket_content[1:end-1]
+        length_str = bracket_content[1:(end-1)]
     elseif endswith(bracket_content, PIPE)
         delimiter = PIPE
-        length_str = bracket_content[1:end-1]
+        length_str = bracket_content[1:(end-1)]
     end
 
     # Parse length
@@ -181,7 +185,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
 
     # Look for fields segment
     fields = nothing
-    remainder = strip(content[bracket_end+1:end])
+    remainder = strip(content[(bracket_end+1):end])
 
     if startswith(remainder, '{')
         brace_end = findfirst('}', remainder)
@@ -189,13 +193,13 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo, Nothing}
             error("Unterminated fields segment in array header")
         end
 
-        fields_content = remainder[2:brace_end-1]
+        fields_content = remainder[2:(brace_end-1)]
         fields = parse_delimited_values(fields_content, delimiter)
 
         # Unescape quoted field names
         fields = [parse_key(f) for f in fields]
 
-        remainder = strip(remainder[brace_end+1:end])
+        remainder = strip(remainder[(brace_end+1):end])
     end
 
     # Check for colon
@@ -220,7 +224,7 @@ function parse_key(token::AbstractString)::String
         if !endswith(token, DOUBLE_QUOTE) || length(token) < 2
             error("Unterminated quoted key")
         end
-        return unescape_string(token[2:end-1])
+        return unescape_string(token[2:(end-1)])
     end
 
     return token

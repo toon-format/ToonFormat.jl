@@ -1,75 +1,38 @@
 #!/usr/bin/env julia
 
 """
-Download TOON specification test fixtures from GitHub
+DEPRECATED: This script is no longer needed.
+
+The TOON specification test fixtures are now included via Git submodule.
+
+To get the fixtures, use one of these approaches:
+
+1. Clone with submodules:
+   git clone --recurse-submodules https://github.com/toon-format/ToonFormat.jl.git
+
+2. Initialize submodule after cloning:
+   git submodule update --init --recursive
+
+3. Update to latest spec version:
+   git submodule update --remote test/spec
+
+The fixtures are located at: test/spec/tests/fixtures/
 """
 
-using Downloads
+@warn """
+DEPRECATED: download_fixtures.jl is no longer needed.
 
-const BASE_URL = "https://raw.githubusercontent.com/toon-format/spec/main/tests/fixtures"
-const FIXTURES_DIR = joinpath(@__DIR__, "fixtures")
+Fixtures are now included via Git submodule at test/spec/
 
-# Ensure directories exist
-mkpath(joinpath(FIXTURES_DIR, "encode"))
-mkpath(joinpath(FIXTURES_DIR, "decode"))
+To initialize the submodule, run:
+    git submodule update --init --recursive
 
-# Encode fixtures
-encode_files = [
-    "arrays-nested.json",
-    "arrays-objects.json",
-    "arrays-primitive.json",
-    "arrays-tabular.json",
-    "delimiters.json",
-    "key-folding.json",
-    "objects.json",
-    "primitives.json",
-    "whitespace.json"
-]
+See test/spec/tests/fixtures/ for the official fixtures.
+"""
 
-# Decode fixtures
-decode_files = [
-    "arrays-nested.json",
-    "arrays-primitive.json",
-    "arrays-tabular.json",
-    "blank-lines.json",
-    "delimiters.json",
-    "indentation-errors.json",
-    "numbers.json",
-    "objects.json",
-    "path-expansion.json",
-    "primitives.json",
-    "root-form.json",
-    "validation-errors.json",
-    "whitespace.json"
-]
-
-println("Downloading TOON test fixtures...")
-
-# Download encode fixtures
-for file in encode_files
-    url = "$BASE_URL/encode/$file"
-    dest = joinpath(FIXTURES_DIR, "encode", file)
-    print("  encode/$file... ")
-    try
-        Downloads.download(url, dest)
-        println("✓")
-    catch e
-        println("✗ ($(e))")
-    end
-end
-
-# Download decode fixtures
-for file in decode_files
-    url = "$BASE_URL/decode/$file"
-    dest = joinpath(FIXTURES_DIR, "decode", file)
-    print("  decode/$file... ")
-    try
-        Downloads.download(url, dest)
-        println("✓")
-    catch e
-        println("✗ ($(e))")
-    end
-end
-
-println("\nFixtures downloaded to: $FIXTURES_DIR")
-println("Run tests with: julia --project test/test_spec_fixtures.jl")
+println()
+println("This script is deprecated. Use the Git submodule instead:")
+println()
+println("  git submodule update --init --recursive")
+println()
+println("Fixtures location: test/spec/tests/fixtures/")

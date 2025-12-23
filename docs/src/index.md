@@ -68,13 +68,13 @@ using ToonFormat
 
 # Encode Julia data to TOON
 data = Dict("name" => "Alice", "age" => 30)
-toon_str = TOON.encode(data)
+toon_str = ToonFormat.encode(data)
 println(toon_str)
 # name: Alice
 # age: 30
 
 # Decode TOON to Julia data
-decoded = TOON.decode(toon_str)
+decoded = ToonFormat.decode(toon_str)
 # Dict("name" => "Alice", "age" => 30)
 ```
 

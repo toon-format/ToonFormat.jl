@@ -19,7 +19,7 @@ using Pkg
 Pkg.add("DocumenterTools")
 
 using DocumenterTools
-DocumenterTools.genkeys(user="s-celles", repo="ToonFormat.jl")
+DocumenterTools.genkeys(user="toon-format", repo="ToonFormat.jl")
 ```
 
 This will generate two keys and provide instructions.
@@ -100,7 +100,7 @@ git push
 ### Verify Documentation
 
 After the Documentation workflow completes:
-1. Go to: https://s-celles.github.io/ToonFormat.jl/
+1. Go to: https://toon-format.github.io/ToonFormat.jl/
 2. Your documentation should be live!
 
 ## Troubleshooting

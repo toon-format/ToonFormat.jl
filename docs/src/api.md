@@ -21,7 +21,7 @@ Encode a Julia value to TOON format string.
 **Example:**
 ```julia
 data = Dict("name" => "Alice", "age" => 30)
-toon_str = TOON.encode(data)
+toon_str = ToonFormat.encode(data)
 ```
 
 ### decode
@@ -41,7 +41,7 @@ Decode a TOON format string to a Julia value.
 **Example:**
 ```julia
 input = "name: Alice\nage: 30"
-data = TOON.decode(input)
+data = ToonFormat.decode(input)
 ```
 
 ## Configuration Types
@@ -67,9 +67,9 @@ Configuration for encoding behavior.
 
 **Example:**
 ```julia
-options = TOON.EncodeOptions(
+options = ToonFormat.EncodeOptions(
     indent = 4,
-    delimiter = TOON.TAB,
+    delimiter = ToonFormat.TAB,
     keyFolding = "safe",
     flattenDepth = 2
 )
@@ -94,7 +94,7 @@ Configuration for decoding behavior.
 
 **Example:**
 ```julia
-options = TOON.DecodeOptions(
+options = ToonFormat.DecodeOptions(
     indent = 4,
     strict = true,
     expandPaths = "safe"
@@ -115,7 +115,7 @@ Delimiter constants for array encoding.
 
 **Example:**
 ```julia
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
 ```
 
 ### Escape Sequences
@@ -246,8 +246,8 @@ Normalize a Julia value to the JSON data model.
 
 **Example:**
 ```julia
-TOON.normalize(NaN)  # nothing
-TOON.normalize(-0.0)  # 0.0
+ToonFormat.normalize(NaN)  # nothing
+ToonFormat.normalize(-0.0)  # 0.0
 ```
 
 ### is_tabular_array
@@ -266,7 +266,7 @@ Check if an array can be encoded in tabular format.
 **Example:**
 ```julia
 arr = [Dict("a" => 1, "b" => 2), Dict("a" => 3, "b" => 4)]
-TOON.is_tabular_array(arr)  # true
+ToonFormat.is_tabular_array(arr)  # true
 ```
 
 ### needs_quoting
@@ -287,9 +287,9 @@ Check if a string needs to be quoted.
 
 **Example:**
 ```julia
-TOON.needs_quoting("hello", TOON.COMMA)  # false
-TOON.needs_quoting("hello world", TOON.COMMA)  # true
-TOON.needs_quoting("true", TOON.COMMA)  # true
+ToonFormat.needs_quoting("hello", ToonFormat.COMMA)  # false
+ToonFormat.needs_quoting("hello world", ToonFormat.COMMA)  # true
+ToonFormat.needs_quoting("true", ToonFormat.COMMA)  # true
 ```
 
 ## Error Types
@@ -309,7 +309,7 @@ ToonFormat.jl throws `ErrorException` with descriptive messages for various erro
 ## Version Information
 
 ```julia
-TOON.version  # Package version
+ToonFormat.version  # Package version
 ```
 
 Get the current version of ToonFormat.jl.

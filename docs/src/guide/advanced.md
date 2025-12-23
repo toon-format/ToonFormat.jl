@@ -23,7 +23,7 @@ data = Dict(
 )
 
 # Without folding
-TOON.encode(data)
+ToonFormat.encode(data)
 # database:
 #   host: localhost
 #   port: 5432
@@ -32,8 +32,8 @@ TOON.encode(data)
 #     password: secret
 
 # With folding
-options = TOON.EncodeOptions(keyFolding="safe")
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe")
+ToonFormat.encode(data, options=options)
 # database.host: localhost
 # database.port: 5432
 # database.credentials.username: admin
@@ -52,8 +52,8 @@ database.credentials.username: admin
 database.credentials.password: secret
 """
 
-options = TOON.DecodeOptions(expandPaths="safe")
-data = TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe")
+data = ToonFormat.decode(input, options=options)
 # Dict("database" => Dict(
 #     "host" => "localhost",
 #     "port" => 5432,
@@ -72,13 +72,13 @@ Key folding and path expansion are designed to work together:
 original = Dict("a" => Dict("b" => Dict("c" => 42)))
 
 # Encode with folding
-encode_opts = TOON.EncodeOptions(keyFolding="safe")
-encoded = TOON.encode(original, options=encode_opts)
+encode_opts = ToonFormat.EncodeOptions(keyFolding="safe")
+encoded = ToonFormat.encode(original, options=encode_opts)
 # a.b.c: 42
 
 # Decode with expansion
-decode_opts = TOON.DecodeOptions(expandPaths="safe")
-decoded = TOON.decode(encoded, options=decode_opts)
+decode_opts = ToonFormat.DecodeOptions(expandPaths="safe")
+decoded = ToonFormat.decode(encoded, options=decode_opts)
 # Dict("a" => Dict("b" => Dict("c" => 42)))
 
 # original == decoded ✓
@@ -96,16 +96,16 @@ a.b: 2
 """
 
 # Strict mode: error
-options = TOON.DecodeOptions(expandPaths="safe", strict=true)
+options = ToonFormat.DecodeOptions(expandPaths="safe", strict=true)
 try
-    TOON.decode(input, options=options)
+    ToonFormat.decode(input, options=options)
 catch e
     println(e)  # "Cannot expand path 'a.b': segment 'a' already exists as non-object"
 end
 
 # Non-strict mode: last-write-wins
-options = TOON.DecodeOptions(expandPaths="safe", strict=false)
-data = TOON.decode(input, options=options)
+options = ToonFormat.DecodeOptions(expandPaths="safe", strict=false)
+data = ToonFormat.decode(input, options=options)
 # Dict("a" => Dict("b" => 2))  # 'a: 1' is overwritten
 ```
 
@@ -117,8 +117,8 @@ Control how deep folding goes:
 data = Dict("a" => Dict("b" => Dict("c" => Dict("d" => 42))))
 
 # Fold only 2 levels
-options = TOON.EncodeOptions(keyFolding="safe", flattenDepth=2)
-TOON.encode(data, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe", flattenDepth=2)
+ToonFormat.encode(data, options=options)
 # a.b:
 #   c:
 #     d: 42
@@ -134,7 +134,7 @@ Best for general purpose use:
 
 ```julia
 users = [Dict("name" => "Alice", "age" => 30)]
-TOON.encode(Dict("users" => users))
+ToonFormat.encode(Dict("users" => users))
 # users[1]{name,age}:
 #   Alice,30
 ```
@@ -152,9 +152,9 @@ TOON.encode(Dict("users" => users))
 Best for TSV-like data:
 
 ```julia
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
 users = [Dict("name" => "Alice", "age" => 30)]
-TOON.encode(Dict("users" => users), options=options)
+ToonFormat.encode(Dict("users" => users), options=options)
 # users[1	]{name	age}:
 #   Alice	30
 ```
@@ -173,9 +173,9 @@ TOON.encode(Dict("users" => users), options=options)
 Best for visual separation:
 
 ```julia
-options = TOON.EncodeOptions(delimiter=TOON.PIPE)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
 users = [Dict("name" => "Alice", "age" => 30)]
-TOON.encode(Dict("users" => users), options=options)
+ToonFormat.encode(Dict("users" => users), options=options)
 # users[1|]{name|age}:
 #   Alice|30
 ```
@@ -205,7 +205,7 @@ function encode_large_dataset(records, chunk_size=1000)
     chunks = []
     for i in 1:chunk_size:length(records)
         chunk = records[i:min(i+chunk_size-1, length(records))]
-        push!(chunks, TOON.encode(Dict("data" => chunk)))
+        push!(chunks, ToonFormat.encode(Dict("data" => chunk)))
     end
     return chunks
 end
@@ -218,11 +218,11 @@ ToonFormat.jl is designed for correctness over performance, but you can optimize
 ```julia
 # Use tabular format for uniform data (most compact)
 users = [Dict("id" => i, "name" => "User$i") for i in 1:10000]
-toon_str = TOON.encode(Dict("users" => users))
+toon_str = ToonFormat.encode(Dict("users" => users))
 
 # Use appropriate delimiter (tabs are fastest)
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
-toon_str = TOON.encode(Dict("users" => users), options=options)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+toon_str = ToonFormat.encode(Dict("users" => users), options=options)
 ```
 
 ## Custom Indentation
@@ -231,13 +231,13 @@ Match your team's style preferences:
 
 ```julia
 # 2 spaces (default, most compact)
-options = TOON.EncodeOptions(indent=2)
+options = ToonFormat.EncodeOptions(indent=2)
 
 # 4 spaces (common in many languages)
-options = TOON.EncodeOptions(indent=4)
+options = ToonFormat.EncodeOptions(indent=4)
 
 # 8 spaces (very readable)
-options = TOON.EncodeOptions(indent=8)
+options = ToonFormat.EncodeOptions(indent=8)
 ```
 
 ## Error Recovery
@@ -248,12 +248,12 @@ Handle errors gracefully in production:
 function safe_decode(input::String)
     try
         # Try strict mode first
-        return TOON.decode(input, options=TOON.DecodeOptions(strict=true))
+        return ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=true))
     catch e
         @warn "Strict decoding failed, trying lenient mode" exception=e
         try
             # Fall back to lenient mode
-            return TOON.decode(input, options=TOON.DecodeOptions(strict=false))
+            return ToonFormat.decode(input, options=ToonFormat.DecodeOptions(strict=false))
         catch e2
             @error "Decoding failed completely" exception=e2
             return nothing
@@ -272,11 +272,11 @@ using JSON
 # JSON to TOON
 json_str = """{"name": "Alice", "age": 30}"""
 data = JSON.parse(json_str)
-toon_str = TOON.encode(data)
+toon_str = ToonFormat.encode(data)
 
 # TOON to JSON
 toon_str = "name: Alice\nage: 30"
-data = TOON.decode(toon_str)
+data = ToonFormat.decode(toon_str)
 json_str = JSON.json(data)
 ```
 
@@ -288,11 +288,11 @@ using CSV, DataFrames
 # CSV to TOON
 df = CSV.read("data.csv", DataFrame)
 records = [Dict(pairs(row)) for row in eachrow(df)]
-toon_str = TOON.encode(Dict("data" => records))
+toon_str = ToonFormat.encode(Dict("data" => records))
 
 # Use tab delimiter for TSV-like output
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
-toon_str = TOON.encode(Dict("data" => records), options=options)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+toon_str = ToonFormat.encode(Dict("data" => records), options=options)
 ```
 
 ## Performance Tips
@@ -305,15 +305,15 @@ toon_str = TOON.encode(Dict("data" => records), options=options)
 
 ```julia
 # Good: reuse options
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
 for data in datasets
-    toon_str = TOON.encode(data, options=options)
+    toon_str = ToonFormat.encode(data, options=options)
     # process...
 end
 
 # Bad: create options every time
 for data in datasets
-    toon_str = TOON.encode(data, options=TOON.EncodeOptions(delimiter=TOON.TAB))
+    toon_str = ToonFormat.encode(data, options=ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB))
     # process...
 end
 ```

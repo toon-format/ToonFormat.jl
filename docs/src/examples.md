@@ -33,12 +33,12 @@ config = Dict(
 )
 
 # Encode to TOON
-toon_str = TOON.encode(config)
+toon_str = ToonFormat.encode(config)
 println(toon_str)
 
 # With key folding for flatter structure
-options = TOON.EncodeOptions(keyFolding="safe", flattenDepth=2)
-toon_str = TOON.encode(config, options=options)
+options = ToonFormat.EncodeOptions(keyFolding="safe", flattenDepth=2)
+toon_str = ToonFormat.encode(config, options=options)
 println(toon_str)
 ```
 
@@ -56,7 +56,7 @@ users = [
 ]
 
 # Encode as tabular data (very compact)
-toon_str = TOON.encode(Dict("users" => users))
+toon_str = ToonFormat.encode(Dict("users" => users))
 println(toon_str)
 # users[3]{id,name,email,active}:
 #   1,Alice,alice@example.com,true
@@ -68,7 +68,7 @@ write("users.toon", toon_str)
 
 # Load from file
 loaded_str = read("users.toon", String)
-data = TOON.decode(loaded_str)
+data = ToonFormat.decode(loaded_str)
 ```
 
 ### Time Series Data
@@ -86,8 +86,8 @@ data = [
 ]
 
 # Encode with tab delimiter for TSV-like format
-options = TOON.EncodeOptions(delimiter=TOON.TAB)
-toon_str = TOON.encode(Dict("readings" => data), options=options)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB)
+toon_str = ToonFormat.encode(Dict("readings" => data), options=options)
 println(toon_str)
 ```
 
@@ -121,7 +121,7 @@ response = Dict(
 )
 
 # Encode for LLM context (compact)
-toon_str = TOON.encode(response)
+toon_str = ToonFormat.encode(response)
 println(toon_str)
 
 # Token count comparison
@@ -152,7 +152,7 @@ results = Dict(
     )
 )
 
-toon_str = TOON.encode(results)
+toon_str = ToonFormat.encode(results)
 println(toon_str)
 ```
 
@@ -171,11 +171,11 @@ training_data = [
 ]
 
 # Encode for storage
-toon_str = TOON.encode(Dict("training" => training_data))
+toon_str = ToonFormat.encode(Dict("training" => training_data))
 write("training.toon", toon_str)
 
 # Load for training
-loaded = TOON.decode(read("training.toon", String))
+loaded = ToonFormat.decode(read("training.toon", String))
 X = hcat([d["features"] for d in loaded["training"]]...)'
 y = [d["label"] for d in loaded["training"]]
 ```
@@ -210,7 +210,7 @@ metadata = Dict(
     )
 )
 
-toon_str = TOON.encode(metadata)
+toon_str = ToonFormat.encode(metadata)
 println(toon_str)
 ```
 
@@ -229,8 +229,8 @@ query_results = [
 ]
 
 # Export with pipe delimiter (database-style)
-options = TOON.EncodeOptions(delimiter=TOON.PIPE)
-toon_str = TOON.encode(Dict("products" => query_results), options=options)
+options = ToonFormat.EncodeOptions(delimiter=ToonFormat.PIPE)
+toon_str = ToonFormat.encode(Dict("products" => query_results), options=options)
 println(toon_str)
 # products[3|]{id|name|price|stock}:
 #   1|Product A|29.99|100
@@ -260,7 +260,7 @@ context_data = Dict(
 )
 
 # Encode for LLM context
-toon_str = TOON.encode(context_data)
+toon_str = ToonFormat.encode(context_data)
 
 # Build prompt
 prompt = """
@@ -293,7 +293,7 @@ settings:
 """
 
 # Load fixtures
-fixtures = TOON.decode(fixtures_toon)
+fixtures = ToonFormat.decode(fixtures_toon)
 
 # Use in tests
 @testset "User Tests" begin
@@ -312,22 +312,22 @@ end
 using ToonFormat, JSON
 
 # Convert JSON to TOON
-function json_to_toon(json_file, toon_file; options=TOON.EncodeOptions())
+function json_to_toon(json_file, toon_file; options=ToonFormat.EncodeOptions())
     data = JSON.parsefile(json_file)
-    toon_str = TOON.encode(data, options=options)
+    toon_str = ToonFormat.encode(data, options=options)
     write(toon_file, toon_str)
 end
 
 # Convert TOON to JSON
 function toon_to_json(toon_file, json_file)
     toon_str = read(toon_file, String)
-    data = TOON.decode(toon_str)
+    data = ToonFormat.decode(toon_str)
     json_str = JSON.json(data, 2)  # Pretty print with 2-space indent
     write(json_file, json_str)
 end
 
 # Usage
-json_to_toon("data.json", "data.toon", options=TOON.EncodeOptions(delimiter=TOON.TAB))
+json_to_toon("data.json", "data.toon", options=ToonFormat.EncodeOptions(delimiter=ToonFormat.TAB))
 toon_to_json("data.toon", "data_converted.json")
 ```
 

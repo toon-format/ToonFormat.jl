@@ -8,12 +8,21 @@ Add ToonFormat.jl to your Julia environment:
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
+Pkg.add("ToonFormat")
 ```
 
 Or using the package manager:
 ```julia-repl
-pkg> add https://github.com/toon-format/ToonFormat.jl
+pkg> add ToonFormat
+```
+
+### Development Version
+
+To install the latest development version:
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
 ```
 
 ## Basic Usage

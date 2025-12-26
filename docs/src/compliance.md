@@ -1,6 +1,6 @@
 # Specification Compliance
 
-ToonFormat.jl is **fully compliant** with the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+ToonFormat.jl is **fully compliant** with the [TOON Specification v3.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 ## Validation Status
 

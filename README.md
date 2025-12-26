@@ -26,12 +26,21 @@ TOON is a line-oriented, indentation-based text format that encodes the JSON dat
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
+Pkg.add("ToonFormat")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/toon-format/ToonFormat.jl
+pkg> add ToonFormat
+```
+
+### Development Version
+
+To install the latest development version:
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
 ```
 
 ## Quick Start

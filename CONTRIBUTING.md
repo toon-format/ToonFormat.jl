@@ -268,7 +268,7 @@ Types: `Add`, `Fix`, `Update`, `Remove`, `Refactor`, `Docs`, `Test`
 
 ## Specification Compliance
 
-ToonFormat.jl follows the [TOON Specification v2.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
+ToonFormat.jl follows the [TOON Specification](https://github.com/toon-format/spec/blob/main/SPEC.md).
 
 When making changes:
 

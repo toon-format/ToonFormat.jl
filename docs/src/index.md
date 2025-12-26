@@ -1,10 +1,10 @@
 # ToonFormat.jl
 
-[![SPEC v2.0](https://img.shields.io/badge/spec-v2.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
 
-**✅ Fully compliant with TOON Specification v2.0** - All 1750 tests passing
+**✅ Fully compliant with TOON Specification v3.0** - All 1750 tests passing
 
 ## What is TOON?
 
@@ -53,12 +53,21 @@ count: 2
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
+Pkg.add("ToonFormat")
 ```
 
 Or in the Julia REPL package mode:
 ```julia-repl
-pkg> add https://github.com/toon-format/ToonFormat.jl
+pkg> add ToonFormat
+```
+
+### Development Version
+
+To install the latest development version:
+
+```julia
+using Pkg
+Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
 ```
 
 ## Quick Start

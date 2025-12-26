@@ -31,6 +31,40 @@ function normalize_value(v)::JsonValue
         return String(v)
     end
 
+    # Vector of Pairs → treat as object (like OrderedDict)
+    # Must check before AbstractArray to avoid encoding pairs as strings
+    if isa(v, AbstractVector) && eltype(v) <: Pair
+        result = JsonObject()
+        for (k, val) in v
+            key_str = string(k)
+            result[key_str] = normalize_value(val)
+        end
+        return result
+    end
+
+    # NamedTuple → treat as object (like OrderedDict)
+    # Must check before default string fallback
+    if isa(v, NamedTuple)
+        result = JsonObject()
+        for (k, val) in pairs(v)
+            key_str = string(k)
+            result[key_str] = normalize_value(val)
+        end
+        return result
+    end
+
+    # Tuple of Pairs → treat as object (like OrderedDict)
+    # Must check before general Tuple handler
+    # Only applies to non-empty tuples where ALL elements are Pairs
+    if isa(v, Tuple) && !isempty(v) && all(x -> isa(x, Pair), v)
+        result = JsonObject()
+        for (k, val) in v
+            key_str = string(k)
+            result[key_str] = normalize_value(val)
+        end
+        return result
+    end
+
     # Arrays and vectors
     if isa(v, AbstractArray)
         return JsonArray([normalize_value(item) for item in v])

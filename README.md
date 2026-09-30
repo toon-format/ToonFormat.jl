@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18650017.svg)](https://doi.org/10.5281/zenodo.18650017)
 [![CI](https://github.com/toon-format/ToonFormat.jl/workflows/CI/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/CI.yml)
 [![Documentation](https://github.com/toon-format/ToonFormat.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/Documentation.yml)
-[![codecov](https://codecov.io/gh/s-celles/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/ToonFormat.jl)
+[![codecov](https://codecov.io/gh/toon-format/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/toon-format/ToonFormat.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)

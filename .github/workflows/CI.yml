@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     permissions:
@@ -24,17 +24,16 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          #- '1.6'
-          - '1.10'
-          - '1.12'
+          - 'min'
           - '1'
-          #- 'nightly'
         os:
           - ubuntu-latest
           - macOS-latest
           - windows-latest
-        arch:
-          - x64
+        include:
+          - version: 'pre'
+            os: ubuntu-latest
+    continue-on-error: ${{ matrix.version == 'pre' }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -44,7 +43,6 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
       
       - uses: julia-actions/cache@v2
       

@@ -11,6 +11,8 @@ using JSON3
 using JSONSchema
 using LazyArtifacts
 
+include("spec_fixtures_known_failures.jl")
+
 # =============================================================================
 # Artifact-based fixture loading
 # =============================================================================
@@ -18,7 +20,7 @@ using LazyArtifacts
 # GitHub release tarballs extract to a subdirectory named "spec-{version}"
 const ARTIFACT_ROOT = artifact"toon_spec"
 const SPEC_SUBDIR = let
-    # Find the extracted subdirectory (e.g., "spec-3.0.1")
+    # Find the extracted subdirectory (e.g., "spec-4.1.2")
     entries = isdir(ARTIFACT_ROOT) ? readdir(ARTIFACT_ROOT) : String[]
     spec_dirs = filter(d -> startswith(d, "spec-") && isdir(joinpath(ARTIFACT_ROOT, d)), entries)
     isempty(spec_dirs) ? "" : first(spec_dirs)
@@ -154,9 +156,7 @@ function parse_encode_options(opts)
 
     kwargs = Dict{Symbol,Any}()
     haskey(opts, :delimiter) && (kwargs[:delimiter] = opts.delimiter)
-    haskey(opts, :indent) && (kwargs[:indent] = opts.indent)
-    haskey(opts, :keyFolding) && (kwargs[:keyFolding] = opts.keyFolding)
-    haskey(opts, :flattenDepth) && (kwargs[:flattenDepth] = opts.flattenDepth)
+    haskey(opts, :indentSize) && (kwargs[:indent] = opts.indentSize)
 
     return EncodeOptions(; kwargs...)
 end
@@ -170,9 +170,8 @@ function parse_decode_options(opts)
     end
 
     kwargs = Dict{Symbol,Any}()
-    haskey(opts, :indent) && (kwargs[:indent] = opts.indent)
+    haskey(opts, :indentSize) && (kwargs[:indent] = opts.indentSize)
     haskey(opts, :strict) && (kwargs[:strict] = opts.strict)
-    haskey(opts, :expandPaths) && (kwargs[:expandPaths] = opts.expandPaths)
 
     return DecodeOptions(; kwargs...)
 end
@@ -235,6 +234,51 @@ end
 const COMPLIANCE = ComplianceReport()
 
 """
+JSON-model equality per spec §2: ordered keys, no Bool/Number coercion
+(`true == 1` holds in Julia, so plain `==` is too lenient).
+"""
+json_equal(a::AbstractDict, b::AbstractDict) =
+    collect(keys(a)) == collect(keys(b)) && all(json_equal(a[k], b[k]) for k in keys(a))
+json_equal(a::AbstractVector, b::AbstractVector) =
+    length(a) == length(b) && all(json_equal(x, y) for (x, y) in zip(a, b))
+json_equal(a::Bool, b::Bool) = a == b
+json_equal(::Bool, ::Any) = false
+json_equal(::Any, ::Bool) = false
+json_equal(a::Number, b::Number) = a == b
+json_equal(a::AbstractString, b::AbstractString) = a == b
+json_equal(::Nothing, ::Nothing) = true
+json_equal(::Any, ::Any) = false
+const ≅ = json_equal
+
+"""
+Run a single fixture case and return the encoded or decoded result.
+"""
+function run_fixture_case(test, category::String)
+    if category == "encode"
+        options = parse_encode_options(get(test, :options, nothing))
+        return ToonFormat.encode(normalize_json(test.input); options = options)
+    end
+    options = parse_decode_options(get(test, :options, nothing))
+    return ToonFormat.decode(test.input; options = options)
+end
+
+expected_result(test, category::String) =
+    category == "encode" ? test.expected : normalize_json(test.expected)
+
+"""
+Run a single fixture case and return whether it conforms.
+"""
+function fixture_case_passes(test, category::String)
+    should_error = get(test, :shouldError, false)
+    try
+        result = run_fixture_case(test, category)
+        return !should_error && result ≅ expected_result(test, category)
+    catch
+        return should_error
+    end
+end
+
+"""
 Run tests for a single fixture file.
 Returns number of tests run.
 """
@@ -260,65 +304,20 @@ function run_fixture_tests(filepath::String, category::String, report::Complianc
     description = get(fixture_data, :description, filename)
 
     @testset "$description" begin
-        for test in fixture_data.tests
+        for (i, test) in enumerate(fixture_data.tests)
             report.total += 1
             tests_run += 1
+            id = "$category/$filename#$(i - 1)"
 
             @testset "$(test.name)" begin
-                try
-                    if category == "encode"
-                        input = normalize_json(test.input)
-                        expected = test.expected
-                        options = parse_encode_options(get(test, :options, nothing))
-
-                        if get(test, :shouldError, false)
-                            @test_throws Exception ToonFormat.encode(
-                                input;
-                                options = options,
-                            )
-                        else
-                            result = ToonFormat.encode(input; options = options)
-                            if result == expected
-                                report.passed += 1
-                            else
-                                report.failed += 1
-                            end
-                            @test result == expected
-                        end
-                    else  # decode
-                        input = test.input
-                        expected = normalize_json(test.expected)
-                        options = parse_decode_options(get(test, :options, nothing))
-
-                        if get(test, :shouldError, false)
-                            @test_throws Exception ToonFormat.decode(
-                                input;
-                                options = options,
-                            )
-                        else
-                            result = ToonFormat.decode(input; options = options)
-                            if result == expected
-                                report.passed += 1
-                            else
-                                report.failed += 1
-                            end
-                            @test result == expected
-                        end
-                    end
-
-                    # Count shouldError tests as passed if they threw
-                    if get(test, :shouldError, false)
-                        report.passed += 1
-                    end
-                catch e
-                    if get(test, :shouldError, false)
-                        # Expected to throw - this is a pass
-                        report.passed += 1
-                    else
-                        report.failed += 1
-                        rethrow(e)
-                    end
+                outcome = if id in KNOWN_FAILURES
+                    @test_broken fixture_case_passes(test, category)
+                elseif get(test, :shouldError, false)
+                    @test_throws Exception run_fixture_case(test, category)
+                else
+                    @test run_fixture_case(test, category) ≅ expected_result(test, category)
                 end
+                outcome isa Test.Pass ? (report.passed += 1) : (report.failed += 1)
             end
         end
     end

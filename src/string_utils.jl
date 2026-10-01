@@ -31,23 +31,25 @@ Unescape a TOON string. Throws an error if invalid escape sequences are found.
 function unescape_string(s::AbstractString)::String
     s_str = String(s)
     result = IOBuffer()
-    i = 1
-    while i <= length(s_str)
-        if s_str[i] == '\\'
-            if i == length(s_str)
+    i = firstindex(s_str)
+    while i <= lastindex(s_str)
+        c = s_str[i]
+        if c == '\\'
+            if i == lastindex(s_str)
                 throw(ArgumentError("Unterminated escape sequence at end of string"))
             end
 
-            next_char = s_str[i+1]
+            next_i = nextind(s_str, i)
+            next_char = s_str[next_i]
             if haskey(ESCAPE_CHARS, next_char)
                 write(result, ESCAPE_CHARS[next_char])
-                i += 2
+                i = nextind(s_str, next_i)
             else
                 throw(ArgumentError("Invalid escape sequence: \\$(next_char)"))
             end
         else
-            write(result, s_str[i])
-            i += 1
+            write(result, c)
+            i = nextind(s_str, i)
         end
     end
     return String(take!(result))

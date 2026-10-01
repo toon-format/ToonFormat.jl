@@ -23,7 +23,7 @@ function parse_primitive(token::AbstractString)::JsonValue
         if !endswith(token, DOUBLE_QUOTE) || length(token) < 2
             error("Unterminated string: missing closing quote")
         end
-        return unescape_string(token[2:(end-1)])
+        return unescape_string(chop(token; head = 1, tail = 1))
     end
 
     # Boolean and null literals
@@ -322,7 +322,7 @@ function decode_object(
             end
         end
 
-        key_str = strip(content[1:(colon_pos-1)])
+        key_str = strip(content[1:prevind(content, colon_pos)])
         value_str = strip(content[(colon_pos+1):end])
 
         # Check if the key contains an array header
@@ -776,7 +776,7 @@ function decode_list_array(
                                 end
 
                                 field_key_str =
-                                    strip(next_line.content[1:(field_colon_pos-1)])
+                                    strip(next_line.content[1:prevind(next_line.content, field_colon_pos)])
                                 field_value_str =
                                     strip(next_line.content[(field_colon_pos+1):end])
 
@@ -913,7 +913,7 @@ function decode_list_array(
                                     end
 
                                     field_key_str =
-                                        strip(next_line.content[1:(field_colon_pos-1)])
+                                        strip(next_line.content[1:prevind(next_line.content, field_colon_pos)])
                                     field_value_str =
                                         strip(next_line.content[(field_colon_pos+1):end])
                                     field_key = parse_key(field_key_str)
@@ -986,7 +986,7 @@ function decode_list_array(
 
                 if colon_pos !== nothing
                     # Object item with first field on hyphen line
-                    key_str = strip(after_marker[1:(colon_pos-1)])
+                    key_str = strip(after_marker[1:prevind(after_marker, colon_pos)])
                     value_str = strip(after_marker[(colon_pos+1):end])
 
                     first_key = parse_key(key_str)
@@ -1040,7 +1040,7 @@ function decode_list_array(
                             continue
                         end
 
-                        field_key_str = strip(next_line.content[1:(field_colon_pos-1)])
+                        field_key_str = strip(next_line.content[1:prevind(next_line.content, field_colon_pos)])
                         field_value_str = strip(next_line.content[(field_colon_pos+1):end])
 
                         # Check if the key contains an array header

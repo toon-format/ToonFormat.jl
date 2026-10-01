@@ -93,12 +93,6 @@ using ToonFormat
         decoded = ToonFormat.decode(encoded)
         @test decoded == str
 
-        # Unicode characters (skip for now - may have indexing issues)
-        # str = "Hello 世界 🌍"
-        # encoded = ToonFormat.encode(str)
-        # decoded = ToonFormat.decode(encoded)
-        # @test decoded == str
-
         # Control characters (should be escaped or quoted)
         for char in ['\x00', '\x01', '\x1F']
             str = "test$(char)value"

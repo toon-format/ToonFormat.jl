@@ -74,18 +74,19 @@ Find the first unquoted occurrence of a character.
 function find_first_unquoted(s::AbstractString, char::Char)::Union{Int,Nothing}
     s = String(s)  # Convert to String if it's a SubString
     in_quotes = false
-    i = 1
+    i = firstindex(s)
 
-    while i <= length(s)
-        if s[i] == '"'
+    while i <= lastindex(s)
+        c = s[i]
+        if c == '"'
             in_quotes = !in_quotes
-        elseif s[i] == '\\' && i < length(s) && in_quotes
+        elseif c == '\\' && in_quotes && i < lastindex(s)
             # Skip escaped character
-            i += 1
-        elseif !in_quotes && s[i] == char
+            i = nextind(s, i)
+        elseif !in_quotes && c == char
             return i
         end
-        i += 1
+        i = nextind(s, i)
     end
 
     return nothing
@@ -101,21 +102,19 @@ function parse_delimited_values(s::AbstractString, delimiter::Delimiter)::Vector
     tokens = String[]
     current = IOBuffer()
     in_quotes = false
-    i = 1
+    i = firstindex(s)
 
-    while i <= length(s)
+    while i <= lastindex(s)
         char = s[i]
 
         if char == '"'
             in_quotes = !in_quotes
             write(current, char)
-        elseif char == '\\' && i < length(s) && in_quotes
+        elseif char == '\\' && in_quotes && i < lastindex(s)
             # Include escape sequence as-is
             write(current, char)
-            i += 1
-            if i <= length(s)
-                write(current, s[i])
-            end
+            i = nextind(s, i)
+            write(current, s[i])
         elseif !in_quotes && string(char) == delimiter
             # Split on delimiter
             push!(tokens, String(take!(current)))
@@ -124,7 +123,7 @@ function parse_delimited_values(s::AbstractString, delimiter::Delimiter)::Vector
             write(current, char)
         end
 
-        i += 1
+        i = nextind(s, i)
     end
 
     # Add final token
@@ -153,7 +152,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
     end
 
     # Extract key (everything before opening bracket)
-    key = bracket_start > 1 ? strip(content[1:(bracket_start-1)]) : nothing
+    key = bracket_start > 1 ? strip(content[1:prevind(content, bracket_start)]) : nothing
     if key !== nothing && isempty(key)
         key = nothing
     end
@@ -163,7 +162,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
     end
 
     # Extract bracket content
-    bracket_content = content[(bracket_start+1):(bracket_end-1)]
+    bracket_content = content[(bracket_start+1):prevind(content, bracket_end)]
 
     # Determine delimiter and length
     delimiter = COMMA
@@ -171,10 +170,10 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
 
     if endswith(bracket_content, TAB)
         delimiter = TAB
-        length_str = bracket_content[1:(end-1)]
+        length_str = chop(bracket_content)
     elseif endswith(bracket_content, PIPE)
         delimiter = PIPE
-        length_str = bracket_content[1:(end-1)]
+        length_str = chop(bracket_content)
     end
 
     # Parse length
@@ -193,7 +192,7 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
             error("Unterminated fields segment in array header")
         end
 
-        fields_content = remainder[2:(brace_end-1)]
+        fields_content = remainder[2:prevind(remainder, brace_end)]
         fields = parse_delimited_values(fields_content, delimiter)
 
         # Unescape quoted field names
@@ -224,7 +223,7 @@ function parse_key(token::AbstractString)::String
         if !endswith(token, DOUBLE_QUOTE) || length(token) < 2
             error("Unterminated quoted key")
         end
-        return unescape_string(token[2:(end-1)])
+        return unescape_string(chop(token; head = 1, tail = 1))
     end
 
     return token

@@ -1,13 +1,6 @@
 # Specification Compliance
 
-ToonFormat.jl is **fully compliant** with the [TOON Specification v3.0](https://github.com/toon-format/spec/blob/main/SPEC.md).
-
-## Validation Status
-
-**✅ 100% Compliant** - All 1750 tests passing
-
-- **Validation Date:** November 16, 2025
-- **Test Suite:** 1750 comprehensive tests
+ToonFormat.jl targets the [TOON Specification v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md) (`toon-spec: 3.0`). Spec 4.1 is not implemented yet.
 
 ## Requirements Coverage
 
@@ -285,7 +278,7 @@ using Pkg
 Pkg.test("TOON")
 ```
 
-This runs the complete test suite (1750 tests) and verifies all requirements.
+This runs the complete test suite.
 
 ## Next Steps
 

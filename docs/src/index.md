@@ -1,10 +1,10 @@
 # ToonFormat.jl
 
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
 
-**✅ Fully compliant with TOON Specification v3.0** - All 1750 tests passing
+Targets [TOON Specification v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md) (`toon-spec: 3.0`). Spec 4.1 is not implemented yet.
 
 ## What is TOON?
 

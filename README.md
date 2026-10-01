@@ -5,8 +5,7 @@
 [![Documentation](https://github.com/toon-format/ToonFormat.jl/workflows/Documentation/badge.svg)](https://github.com/toon-format/ToonFormat.jl/actions/workflows/Documentation.yml)
 [![codecov](https://codecov.io/gh/s-celles/ToonFormat.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/s-celles/ToonFormat.jl)
 [![Aqua QA](https://raw.githubusercontent.com/JuliaTesting/Aqua.jl/master/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
-[![Compliance](https://img.shields.io/badge/compliance-100%25-brightgreen)](https://github.com/toon-format/ToonFormat.jl/issues?q=is%3Aissue+is%3Aopen+label%3Aspec-compliance)
+[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
@@ -296,9 +295,11 @@ Configuration for decoding:
 
 ## Specification Compliance
 
-**✅ FULLY COMPLIANT with TOON Specification v3.0**
+```
+toon-spec: 3.0
+```
 
-This implementation has been validated against all normative requirements in the official [TOON Specification v3.0](https://github.com/toon-format/spec/blob/main/SPEC.md) with **1750 passing tests**.
+This implementation targets [TOON Specification v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md). Spec 4.1 is not implemented yet.
 
 ### Core Features
 - ✅ All primitive types (string, number, boolean, null)
@@ -339,7 +340,7 @@ This implementation has been validated against all normative requirements in the
 
 ## Testing
 
-Run the comprehensive test suite (1750 tests):
+Run the test suite:
 
 ```julia
 using Pkg
@@ -374,15 +375,6 @@ users = [
     Dict("id" => 2, "name" => "Bob", "email" => "bob@example.com", "active" => false)
 ]
 ```
-
-## Specification Conformance
-
-**Official Fixture Compliance: 349/349 tests passing (100%)**
-
-This implementation passes all official TOON Specification v3.0 conformance tests. The test suite validates:
-- Encoding correctness for all data types and structures
-- Decoding correctness including edge cases
-- Round-trip consistency for all supported formats
 
 ## Documentation
 

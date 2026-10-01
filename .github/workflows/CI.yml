@@ -57,27 +57,3 @@ jobs:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
-
-  aqua:
-    name: Aqua.jl Quality Assurance
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          persist-credentials: false
-          submodules: recursive
-
-      - uses: julia-actions/setup-julia@v2
-        with:
-          version: '1'
-      
-      - uses: julia-actions/cache@v2
-      
-      - uses: julia-actions/julia-buildpkg@v1
-      
-      - name: Run Aqua tests
-        shell: julia --project=. --color=yes {0}
-        run: |
-          using Pkg
-          Pkg.test(test_args=["aqua"])

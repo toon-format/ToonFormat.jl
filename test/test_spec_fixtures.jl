@@ -7,7 +7,7 @@ Uses Julia Artifacts to download fixtures from the official spec repository.
 
 using Test
 using ToonFormat
-using JSON3
+using JSON
 using JSONSchema
 using LazyArtifacts
 
@@ -64,7 +64,7 @@ function get_fixture_schema()
     if _FIXTURE_SCHEMA[] === nothing
         if isfile(SCHEMA_PATH)
             try
-                schema_json = JSON3.read(read(SCHEMA_PATH, String))
+                schema_json = JSON.parse(read(SCHEMA_PATH, String))
                 _FIXTURE_SCHEMA[] = JSONSchema.Schema(schema_json)
             catch e
                 @warn "Failed to load fixtures schema: $e"
@@ -124,7 +124,7 @@ end
 Load a fixture file and return parsed JSON.
 """
 function load_fixture_file(filepath::String)
-    return JSON3.read(read(filepath, String))
+    return JSON.parse(read(filepath, String))
 end
 
 # =============================================================================
@@ -132,14 +132,14 @@ end
 # =============================================================================
 
 """
-Convert JSON3 objects to native Julia types for comparison.
+Convert JSON objects to native Julia types for comparison.
 """
 function normalize_json(val)
-    if val isa JSON3.Object
+    if val isa AbstractDict
         return ToonFormat.JsonObject(
             string(k) => normalize_json(v) for (k, v) in pairs(val)
         )
-    elseif val isa JSON3.Array || val isa Vector
+    elseif val isa Vector
         return [normalize_json(v) for v in val]
     else
         return val

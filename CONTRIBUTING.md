@@ -10,7 +10,7 @@ cd ToonFormat.jl
 julia --project=. -e 'using Pkg; Pkg.instantiate(); Pkg.test()'
 ```
 
-The test suite downloads the spec's conformance fixtures as a lazy artifact pinned in `test/Artifacts.toml`. Set `TEST_GROUP=aqua` to run only the [Aqua.jl](https://github.com/JuliaTesting/Aqua.jl) checks.
+The test suite downloads the spec's conformance fixtures as a lazy artifact pinned in `test/Artifacts.toml`.
 
 Build the documentation site into `docs/build/`:
 

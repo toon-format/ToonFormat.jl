@@ -1,40 +1,5 @@
 """
-ToonFormat - Token-Oriented Object Notation (TOON)
-
-A compact, human-readable serialization format optimized for LLM contexts.
-Achieves 30-60% token reduction vs JSON while maintaining readability and structure.
-
-This package provides encoding and decoding functionality with 100% compatibility
-with the official TOON specification (v2.0).
-
-# Examples
-
-```julia
-using ToonFormat
-
-# Encoding
-data = Dict("name" => "Alice", "age" => 30)
-toon_str = ToonFormat.encode(data)
-println(toon_str)
-# name: Alice
-# age: 30
-
-# Decoding
-decoded = ToonFormat.decode(toon_str)
-# Dict("name" => "Alice", "age" => 30)
-
-# With options
-options = ToonFormat.EncodeOptions(indent=4, delimiter=ToonFormat.TAB)
-toon_str = ToonFormat.encode(data, options=options)
-```
-
-# Main Functions
-- `encode(value; options)`: Encode a Julia value to TOON format
-- `decode(input; options)`: Decode a TOON string to a Julia value
-
-# Types
-- `EncodeOptions`: Configuration for encoding (indent, delimiter, keyFolding, flattenDepth)
-- `DecodeOptions`: Configuration for decoding (indent, strict, expandPaths)
+Encodes Julia values to TOON (Token-Oriented Object Notation) and decodes TOON back.
 """
 module ToonFormat
 

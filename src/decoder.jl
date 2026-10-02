@@ -469,7 +469,7 @@ function decode_array(
 
         # Check if there are inline values after the colon
         colon_pos = find_first_unquoted(header_content, ':')
-        if colon_pos !== nothing && colon_pos < length(header_content)
+        if colon_pos !== nothing
             after_colon = strip(header_content[(colon_pos+1):end])
 
             if !isempty(after_colon)

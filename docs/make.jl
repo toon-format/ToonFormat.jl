@@ -12,16 +12,8 @@ makedocs(
     checkdocs = :none,  # Don't require all functions to be documented
     pages = [
         "Home" => "index.md",
-        "Getting Started" => "getting-started.md",
-        "User Guide" => [
-            "guide/encoding.md",
-            "guide/decoding.md",
-            "guide/options.md",
-            "guide/advanced.md",
-        ],
-        "Examples" => "examples.md",
+        "Options" => "options.md",
         "API Reference" => "api.md",
-        "Compliance" => "compliance.md",
     ],
 )
 

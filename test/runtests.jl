@@ -25,6 +25,7 @@ include("test_aqua.jl")
     include("test_tabular_arrays.jl")
     include("test_objects_as_list_items.jl")
     include("test_options.jl")
+    include("test_normalize.jl")
 
     # Include comprehensive compliance test suites
     include("test_compliance_requirements.jl")

@@ -1,96 +1,33 @@
 # ToonFormat.jl
 
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/main/SPEC.md)
-
-Julia implementation of **Token-Oriented Object Notation (TOON)**, a compact, human-readable serialization format optimized for LLM contexts.
-
-**✅ Fully compliant with TOON Specification v3.0** - All 1750 tests passing
-
-## What is TOON?
-
-TOON is a line-oriented, indentation-based text format that encodes the JSON data model with explicit structure and minimal quoting. It achieves **30-60% token reduction** compared to JSON while maintaining readability and deterministic structure.
-
-### Key Features
-
-- **Compact tabular data** - Efficient representation of arrays of objects
-- **Minimal quoting** - Smart quoting rules reduce visual noise
-- **Explicit array lengths** - Built-in validation for data integrity
-- **Multiple delimiters** - Comma, tab, and pipe support
-- **Strict mode** - Optional validation for production use
-- **100% JSON compatible** - Encodes the complete JSON data model
-
-### Why TOON?
-
-When working with Large Language Models, token efficiency matters. TOON provides:
-
-- **Reduced token costs** - 30-60% fewer tokens than JSON
-- **Better readability** - Cleaner syntax for humans and LLMs
-- **Validation** - Explicit lengths catch errors early
-- **Flexibility** - Multiple delimiters for different use cases
-
-## Quick Example
-
-**JSON (156 tokens):**
-```json
-{
-  "users": [
-    { "id": 1, "name": "Alice", "email": "alice@example.com", "active": true },
-    { "id": 2, "name": "Bob", "email": "bob@example.com", "active": false }
-  ],
-  "count": 2
-}
-```
-
-**TOON (89 tokens - 43% reduction):**
-```
-users[2]{id,name,email,active}:
-  1,Alice,alice@example.com,true
-  2,Bob,bob@example.com,false
-count: 2
-```
+Encodes Julia values to [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) and decodes TOON back. TOON is a compact, indentation-based encoding of the JSON data model for LLM input – the [Format Overview](https://toonformat.dev/guide/format-overview) covers its syntax.
 
 ## Installation
 
 ```julia
-using Pkg
-Pkg.add("ToonFormat")
+using Pkg; Pkg.add("ToonFormat")
 ```
 
-Or in the Julia REPL package mode:
-```julia-repl
-pkg> add ToonFormat
-```
-
-### Development Version
-
-To install the latest development version:
-
-```julia
-using Pkg
-Pkg.add(url="https://github.com/toon-format/ToonFormat.jl")
-```
-
-## Quick Start
+## Usage
 
 ```julia
 using ToonFormat
 
-# Encode Julia data to TOON
-data = Dict("name" => "Alice", "age" => 30)
-toon_str = ToonFormat.encode(data)
-println(toon_str)
-# name: Alice
-# age: 30
+users = [(id = 1, name = "Ada", role = "admin"), (id = 2, name = "Bob", role = "user")]
+toon = encode((users = users,))
+# users[2]{id,name,role}:
+#   1,Ada,admin
+#   2,Bob,user
 
-# Decode TOON to Julia data
-decoded = ToonFormat.decode(toon_str)
-# Dict("name" => "Alice", "age" => 30)
+decode(toon)
+# OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])
 ```
 
-## Next Steps
+A `Dict` iterates in hash order, so encode a `NamedTuple` or an `OrderedDict` from OrderedCollections.jl when the field order matters. `decode` throws an `ErrorException` on invalid input, e.g. `Array length mismatch: expected 3, got 2`. [Options](options.md) covers delimiters, key folding, and strict mode.
 
-- [Getting Started](getting-started.md) - Installation and basic usage
-- [User Guide](guide/encoding.md) - Detailed encoding and decoding guide
-- [Examples](examples.md) - Real-world usage examples
-- [API Reference](api.md) - Complete API documentation
-- [Compliance](compliance.md) - Specification compliance details
+## Specification
+
+Targets [TOON spec v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md), and the test suite runs the spec's conformance fixtures.
+
+- **Integers decode to `Int64` and other numbers to `Float64`** – tokens outside that domain (e.g. `99999999999999999999`, `1e999`) decode as strings ([§2](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#2-data-model))
+- **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays, tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, and anything else (`Symbol`, `Date`, `missing`) as its `string` form ([§3](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#3-encoding-normalization-reference-encoder))

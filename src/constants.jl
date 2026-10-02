@@ -1,7 +1,3 @@
-"""
-Constants used throughout the TOON format implementation.
-"""
-
 # Delimiters
 const COMMA = ","
 const TAB = "\t"

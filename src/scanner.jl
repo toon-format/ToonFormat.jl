@@ -1,12 +1,3 @@
-"""
-Scanner for parsing TOON text into structured lines.
-"""
-
-"""
-    to_parsed_lines(input::String, indent_size::Int, strict::Bool) -> ScanResult
-
-Parse TOON input string into structured lines.
-"""
 function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanResult
     if isempty(input)
         return ScanResult(ParsedLine[], BlankLineInfo[])
@@ -17,7 +8,6 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
     blank_lines = BlankLineInfo[]
 
     for (line_num, raw_line) in enumerate(lines)
-        # Check if line is blank
         if isempty(strip(raw_line))
             indent_count = count(c -> c == ' ', raw_line)
             depth =
@@ -27,7 +17,6 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
             continue
         end
 
-        # Count leading spaces
         indent_count = 0
         for char in raw_line
             if char == ' '
@@ -37,12 +26,10 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
             end
         end
 
-        # Check for tabs in indentation (strict mode)
         if strict && occursin('\t', raw_line[1:min(indent_count+1, length(raw_line))])
             error("Tabs are not allowed in indentation (line $(line_num))")
         end
 
-        # Calculate depth
         if strict
             if indent_count % indent_size != 0
                 error(
@@ -54,7 +41,6 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
             depth = floor(Int, indent_count / indent_size)
         end
 
-        # Get content (trimmed)
         content = strip(raw_line)
 
         push!(parsed_lines, ParsedLine(raw_line, depth, indent_count, content, line_num))
@@ -63,13 +49,8 @@ function to_parsed_lines(input::String, indent_size::Int, strict::Bool)::ScanRes
     return ScanResult(parsed_lines, blank_lines)
 end
 
-"""
-    find_first_unquoted(s::AbstractString, char::Char) -> Union{Int, Nothing}
-
-Find the first unquoted occurrence of a character.
-"""
 function find_first_unquoted(s::AbstractString, char::Char)::Union{Int,Nothing}
-    s = String(s)  # Convert to String if it's a SubString
+    s = String(s)
     in_quotes = false
     i = firstindex(s)
 
@@ -78,7 +59,6 @@ function find_first_unquoted(s::AbstractString, char::Char)::Union{Int,Nothing}
         if c == '"'
             in_quotes = !in_quotes
         elseif c == '\\' && in_quotes && i < lastindex(s)
-            # Skip escaped character
             i = nextind(s, i)
         elseif !in_quotes && c == char
             return i
@@ -89,13 +69,8 @@ function find_first_unquoted(s::AbstractString, char::Char)::Union{Int,Nothing}
     return nothing
 end
 
-"""
-    parse_delimited_values(s::AbstractString, delimiter::Delimiter) -> Vector{String}
-
-Parse a delimited string into tokens, respecting quotes.
-"""
 function parse_delimited_values(s::AbstractString, delimiter::Delimiter)::Vector{String}
-    s = String(s)  # Convert to String if it's a SubString
+    s = String(s)
     tokens = String[]
     current = IOBuffer()
     in_quotes = false
@@ -108,12 +83,10 @@ function parse_delimited_values(s::AbstractString, delimiter::Delimiter)::Vector
             in_quotes = !in_quotes
             write(current, char)
         elseif char == '\\' && in_quotes && i < lastindex(s)
-            # Include escape sequence as-is
             write(current, char)
             i = nextind(s, i)
             write(current, s[i])
         elseif !in_quotes && string(char) == delimiter
-            # Split on delimiter
             push!(tokens, String(take!(current)))
             current = IOBuffer()
         else
@@ -123,45 +96,32 @@ function parse_delimited_values(s::AbstractString, delimiter::Delimiter)::Vector
         i = nextind(s, i)
     end
 
-    # Add final token
     push!(tokens, String(take!(current)))
 
     return tokens
 end
 
-"""
-    parse_array_header(content::String) -> Union{ArrayHeaderInfo, Nothing}
-
-Parse an array header from a content string.
-Returns nothing if not a valid array header.
-"""
 function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
-    # Find opening bracket (outside of quotes)
     bracket_start = find_first_unquoted(content, '[')
     if bracket_start === nothing
         return nothing
     end
 
-    # Find closing bracket
     bracket_end = findnext(']', content, bracket_start)
     if bracket_end === nothing
         return nothing
     end
 
-    # Extract key (everything before opening bracket)
     key = bracket_start > 1 ? strip(content[1:prevind(content, bracket_start)]) : nothing
     if key !== nothing && isempty(key)
         key = nothing
     end
-    # Unquote the key if quoted
     if key !== nothing
         key = parse_key(key)
     end
 
-    # Extract bracket content
     bracket_content = content[(bracket_start+1):prevind(content, bracket_end)]
 
-    # Determine delimiter and length
     delimiter = COMMA
     length_str = bracket_content
 
@@ -173,13 +133,11 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
         length_str = chop(bracket_content)
     end
 
-    # Parse length
     arr_length = tryparse(Int, length_str)
     if arr_length === nothing || arr_length < 0
         error("Invalid array length in header")
     end
 
-    # Look for fields segment
     fields = nothing
     remainder = strip(content[(bracket_end+1):end])
 
@@ -192,27 +150,18 @@ function parse_array_header(content::String)::Union{ArrayHeaderInfo,Nothing}
         fields_content = remainder[2:prevind(remainder, brace_end)]
         fields = parse_delimited_values(fields_content, delimiter)
 
-        # Unescape quoted field names
         fields = [parse_key(f) for f in fields]
 
         remainder = strip(remainder[(brace_end+1):end])
     end
 
-    # Check for colon
     if !startswith(remainder, COLON)
-        # If we got this far, it looks like an array header but is missing the colon
-        # This is a syntax error
         error("Array header must end with colon")
     end
 
     return ArrayHeaderInfo(key, arr_length, delimiter, fields)
 end
 
-"""
-    parse_key(token::AbstractString) -> String
-
-Parse a key (quoted or unquoted) and return the unescaped string.
-"""
 function parse_key(token::AbstractString)::String
     token = strip(token)
 

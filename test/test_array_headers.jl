@@ -3,6 +3,7 @@
 
 using Test
 using ToonFormat
+using OrderedCollections
 
 @testset "Array Header Syntax Tests (Task 4)" begin
     @testset "Header Format - Encoding (Requirement 4.1)" begin
@@ -71,8 +72,8 @@ using ToonFormat
         # Tabular array with comma delimiter
         data = Dict(
             "users" => [
-                Dict("name" => "Alice", "age" => 30),
-                Dict("name" => "Bob", "age" => 25),
+                OrderedDict("name" => "Alice", "age" => 30),
+                OrderedDict("name" => "Bob", "age" => 25),
             ],
         )
         result = ToonFormat.encode(data)

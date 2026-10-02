@@ -3,6 +3,7 @@
 
 using Test
 using ToonFormat
+using OrderedCollections
 
 @testset "Array Format Selection" begin
     @testset "Requirement 6.1: Primitive arrays use inline format" begin
@@ -63,8 +64,8 @@ using ToonFormat
 
         # Uniform objects with string values
         data = [
-            Dict("name" => "Alice", "city" => "NYC"),
-            Dict("name" => "Bob", "city" => "LA"),
+            OrderedDict("name" => "Alice", "city" => "NYC"),
+            OrderedDict("name" => "Bob", "city" => "LA"),
         ]
         result = ToonFormat.encode(data)
         @test occursin("[2]{name,city}:", result)
@@ -72,7 +73,7 @@ using ToonFormat
         @test occursin("Bob,LA", result)
 
         # Single object array (still tabular)
-        data = [Dict("x" => 1, "y" => 2)]
+        data = [OrderedDict("x" => 1, "y" => 2)]
         result = ToonFormat.encode(data)
         @test occursin("[1]{x,y}:", result)
         @test occursin("1,2", result)

@@ -3,6 +3,7 @@
 
 using Test
 using ToonFormat
+using OrderedCollections
 
 @testset "Objects as List Items (Requirements 12.1-12.5)" begin
     # Note: Uniform objects with primitive values use tabular format (Requirement 6.2)
@@ -117,7 +118,7 @@ using ToonFormat
 
     @testset "Requirement 12.5: Array first field is supported" begin
         # Object with array as first field in mixed array
-        arr = [1, Dict("items" => [1, 2, 3], "count" => 3)]
+        arr = [1, OrderedDict("items" => [1, 2, 3], "count" => 3)]
         result = ToonFormat.encode(arr)
 
         lines = split(result, '\n')

@@ -1,6 +1,3 @@
-# Copyright (c) 2025 TOON Format Organization
-# SPDX-License-Identifier: MIT
-
 """
 Comprehensive tests for path expansion feature (Requirement 14).
 """

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Stopped exporting the internal helpers `escape_string`, `unescape_string`, `find_first_unquoted`, `is_safe_identifier`, `needs_quoting`, `to_parsed_lines`, `parse_array_header`, `parse_delimited_values` and `parse_key` – call them qualified as `ToonFormat.<name>`
+
 ## [0.1.1] - 2025-12-26
 
 ### Changed

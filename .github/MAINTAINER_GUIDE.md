@@ -74,8 +74,7 @@ This will generate two keys and provide instructions.
 3. Branch name pattern: `main`
 4. Enable:
    - ✅ Require status checks to pass before merging
-   - Select: `test (1, ubuntu-latest, x64)`
-   - Select: `Aqua.jl Quality Assurance`
+   - Select: `Julia 1 - ubuntu-latest`
    - ✅ Require branches to be up to date before merging
 5. Click "Create"
 
@@ -95,7 +94,6 @@ git push
 2. You should see workflows running:
    - ✅ CI
    - ✅ Documentation
-   - ✅ Aqua.jl Quality Assurance
 
 ### Verify Documentation
 

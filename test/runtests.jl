@@ -34,8 +34,6 @@ include("test_aqua.jl")
     include("test_compliance_spec_examples.jl")
     include("test_compliance_errors.jl")
 
-    # Include official TOON spec fixtures (via submodule)
-    # The test file handles missing submodule gracefully with clear instructions
     include("test_spec_fixtures.jl")
 end
 

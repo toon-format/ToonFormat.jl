@@ -1,242 +1,40 @@
-"""
-Test ToonFormat.jl against official TOON specification test fixtures
-https://github.com/toon-format/spec/tree/main/tests
-
-Uses Julia Artifacts to download fixtures from the official spec repository.
-"""
-
-using Test
-using ToonFormat
 using JSON
-using JSONSchema
 using LazyArtifacts
 
 include("spec_fixtures_known_failures.jl")
 
-# =============================================================================
-# Artifact-based fixture loading
-# =============================================================================
-
-# GitHub release tarballs extract to a subdirectory named "spec-{version}"
+# GitHub release tarballs extract to a `spec-<version>` subdirectory.
 const ARTIFACT_ROOT = artifact"toon_spec"
-const SPEC_SUBDIR = let
-    # Find the extracted subdirectory (e.g., "spec-4.1.2")
-    entries = isdir(ARTIFACT_ROOT) ? readdir(ARTIFACT_ROOT) : String[]
-    spec_dirs = filter(d -> startswith(d, "spec-") && isdir(joinpath(ARTIFACT_ROOT, d)), entries)
-    isempty(spec_dirs) ? "" : first(spec_dirs)
-end
-const SPEC_DIR = joinpath(ARTIFACT_ROOT, SPEC_SUBDIR, "tests")
-const FIXTURES_DIR = joinpath(SPEC_DIR, "fixtures")
-const SCHEMA_PATH = joinpath(SPEC_DIR, "fixtures.schema.json")
+const FIXTURES_DIR = joinpath(
+    ARTIFACT_ROOT,
+    only(filter(startswith("spec-"), readdir(ARTIFACT_ROOT))),
+    "tests",
+    "fixtures",
+)
 
-"""
-Check if the spec artifact is available.
-Returns true if fixtures are accessible, false otherwise with a warning.
-"""
-function check_fixtures_available()
-    if !isdir(FIXTURES_DIR)
-        @warn "TOON spec fixtures not available at: $FIXTURES_DIR"
-        return false
-    end
+normalize_json(value::AbstractDict) =
+    ToonFormat.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(value))
+normalize_json(value::AbstractVector) = [normalize_json(v) for v in value]
+normalize_json(value) = value
 
-    encode_dir = joinpath(FIXTURES_DIR, "encode")
-    decode_dir = joinpath(FIXTURES_DIR, "decode")
-
-    if !isdir(encode_dir) || !isdir(decode_dir)
-        @warn "Spec fixtures incomplete: missing encode/ or decode/ directories"
-        return false
-    end
-
-    return true
-end
-
-# =============================================================================
-# T004: Schema validation helper
-# =============================================================================
-
-# Cached schema object (loaded once)
-const _FIXTURE_SCHEMA = Ref{Union{Nothing,JSONSchema.Schema}}(nothing)
-
-"""
-Load and cache the fixtures schema. Returns the schema object or nothing if unavailable.
-"""
-function get_fixture_schema()
-    if _FIXTURE_SCHEMA[] === nothing
-        if isfile(SCHEMA_PATH)
-            try
-                schema_json = JSON.parse(read(SCHEMA_PATH, String))
-                _FIXTURE_SCHEMA[] = JSONSchema.Schema(schema_json)
-            catch e
-                @warn "Failed to load fixtures schema: $e"
-                return nothing
-            end
-        else
-            @warn "Fixtures schema not found at: $SCHEMA_PATH"
-            return nothing
-        end
-    end
-    return _FIXTURE_SCHEMA[]
-end
-
-"""
-Validate a fixture file against the schema.
-Returns (is_valid::Bool, error_message::Union{String, Nothing})
-"""
-function validate_fixture(fixture_data)
-    schema = get_fixture_schema()
-    if schema === nothing
-        # No schema available - assume valid (graceful degradation)
-        return (true, nothing)
-    end
-
-    try
-        result = JSONSchema.validate(schema, fixture_data)
-        if result === nothing
-            return (true, nothing)
-        else
-            return (false, string(result))
-        end
-    catch e
-        return (false, "Schema validation error: $e")
-    end
-end
-
-# =============================================================================
-# T005: Fixture discovery function
-# =============================================================================
-
-"""
-Discover all fixture JSON files in a category directory.
-Returns a sorted list of absolute file paths.
-"""
-function discover_fixtures(category::String)
-    category_dir = joinpath(FIXTURES_DIR, category)
-    if !isdir(category_dir)
-        return String[]
-    end
-
-    files = readdir(category_dir; join = true)
-    json_files = filter(f -> endswith(f, ".json"), files)
-    return sort(json_files)
-end
-
-"""
-Load a fixture file and return parsed JSON.
-"""
-function load_fixture_file(filepath::String)
-    return JSON.parse(read(filepath, String))
-end
-
-# =============================================================================
-# Helper functions (existing, preserved)
-# =============================================================================
-
-"""
-Convert JSON objects to native Julia types for comparison.
-"""
-function normalize_json(val)
-    if val isa AbstractDict
-        return ToonFormat.JsonObject(
-            string(k) => normalize_json(v) for (k, v) in pairs(val)
-        )
-    elseif val isa Vector
-        return [normalize_json(v) for v in val]
-    else
-        return val
-    end
-end
-
-"""
-Parse encode options from fixture test case.
-"""
-function parse_encode_options(opts)
-    if isnothing(opts)
-        return EncodeOptions()
-    end
-
+function encode_options(options)
+    isnothing(options) && return EncodeOptions()
     kwargs = Dict{Symbol,Any}()
-    haskey(opts, :delimiter) && (kwargs[:delimiter] = opts.delimiter)
-    haskey(opts, :indentSize) && (kwargs[:indent] = opts.indentSize)
-
+    haskey(options, :delimiter) && (kwargs[:delimiter] = options.delimiter)
+    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
     return EncodeOptions(; kwargs...)
 end
 
-"""
-Parse decode options from fixture test case.
-"""
-function parse_decode_options(opts)
-    if isnothing(opts)
-        return DecodeOptions()
-    end
-
+function decode_options(options)
+    isnothing(options) && return DecodeOptions()
     kwargs = Dict{Symbol,Any}()
-    haskey(opts, :indentSize) && (kwargs[:indent] = opts.indentSize)
-    haskey(opts, :strict) && (kwargs[:strict] = opts.strict)
-
+    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
+    haskey(options, :strict) && (kwargs[:strict] = options.strict)
     return DecodeOptions(; kwargs...)
 end
 
-# =============================================================================
-# T013-T016: Compliance tracking (User Story 2)
-# =============================================================================
-
-"""
-Mutable struct to track compliance metrics during test execution.
-"""
-mutable struct ComplianceReport
-    total::Int
-    passed::Int
-    failed::Int
-    skipped::Int
-    skipped_fixtures::Vector{String}
-
-    ComplianceReport() = new(0, 0, 0, 0, String[])
-end
-
-"""
-Calculate compliance percentage.
-"""
-function compliance_percentage(report::ComplianceReport)
-    if report.total == 0
-        return 0.0
-    end
-    return round(report.passed / report.total * 100; digits = 1)
-end
-
-"""
-Print compliance summary to test output.
-"""
-function print_compliance_summary(report::ComplianceReport)
-    pct = compliance_percentage(report)
-
-    println()
-    println("=" ^ 70)
-    println(
-        "Official Fixtures: $(report.passed)/$(report.total) passing, " *
-        "$(report.failed) failing, $(report.skipped) skipped ($pct%)",
-    )
-    println("=" ^ 70)
-
-    if !isempty(report.skipped_fixtures)
-        println("\nSkipped fixtures (schema validation failed):")
-        for name in report.skipped_fixtures
-            println("  - $name")
-        end
-    end
-    println()
-end
-
-# =============================================================================
-# Main test execution
-# =============================================================================
-
-# Global compliance report for this test run
-const COMPLIANCE = ComplianceReport()
-
-"""
-JSON-model equality per spec §2: ordered keys, no Bool/Number coercion
-(`true == 1` holds in Julia, so plain `==` is too lenient).
-"""
+# JSON-model equality per spec §2: ordered keys, and no `Bool`/`Number` coercion
+# (`true == 1` holds in Julia, so plain `==` is too lenient).
 json_equal(a::AbstractDict, b::AbstractDict) =
     collect(keys(a)) == collect(keys(b)) && all(json_equal(a[k], b[k]) for k in keys(a))
 json_equal(a::AbstractVector, b::AbstractVector) =
@@ -248,111 +46,44 @@ json_equal(a::Number, b::Number) = a == b
 json_equal(a::AbstractString, b::AbstractString) = a == b
 json_equal(::Nothing, ::Nothing) = true
 json_equal(::Any, ::Any) = false
-const ≅ = json_equal
 
-"""
-Run a single fixture case and return the encoded or decoded result.
-"""
-function run_fixture_case(test, category::String)
-    if category == "encode"
-        options = parse_encode_options(get(test, :options, nothing))
-        return ToonFormat.encode(normalize_json(test.input); options = options)
-    end
-    options = parse_decode_options(get(test, :options, nothing))
-    return ToonFormat.decode(test.input; options = options)
+function run_case(test, category)
+    options = get(test, :options, nothing)
+    category == "encode" &&
+        return ToonFormat.encode(normalize_json(test.input); options = encode_options(options))
+    return ToonFormat.decode(test.input; options = decode_options(options))
 end
 
-expected_result(test, category::String) =
+expected_result(test, category) =
     category == "encode" ? test.expected : normalize_json(test.expected)
 
-"""
-Run a single fixture case and return whether it conforms.
-"""
-function fixture_case_passes(test, category::String)
+function case_passes(test, category)
     should_error = get(test, :shouldError, false)
     try
-        result = run_fixture_case(test, category)
-        return !should_error && result ≅ expected_result(test, category)
+        return !should_error && json_equal(run_case(test, category), expected_result(test, category))
     catch
         return should_error
     end
 end
 
-"""
-Run tests for a single fixture file.
-Returns number of tests run.
-"""
-function run_fixture_tests(filepath::String, category::String, report::ComplianceReport)
-    filename = basename(filepath)
+@testset "Spec Fixtures" begin
+    for category in ("encode", "decode"),
+        path in sort(readdir(joinpath(FIXTURES_DIR, category); join = true))
 
-    # Load fixture
-    fixture_data = load_fixture_file(filepath)
-
-    # Validate against schema (T009)
-    is_valid, error_msg = validate_fixture(fixture_data)
-    if !is_valid
-        @warn "Skipping fixture $filename: $error_msg"
-        # Count tests in this fixture as skipped
-        test_count = length(get(fixture_data, :tests, []))
-        report.skipped += test_count
-        report.total += test_count
-        push!(report.skipped_fixtures, filename)
-        return 0
-    end
-
-    tests_run = 0
-    description = get(fixture_data, :description, filename)
-
-    @testset "$description" begin
-        for (i, test) in enumerate(fixture_data.tests)
-            report.total += 1
-            tests_run += 1
-            id = "$category/$filename#$(i - 1)"
-
-            @testset "$(test.name)" begin
-                outcome = if id in KNOWN_FAILURES
-                    @test_broken fixture_case_passes(test, category)
-                elseif get(test, :shouldError, false)
-                    @test_throws Exception run_fixture_case(test, category)
-                else
-                    @test run_fixture_case(test, category) ≅ expected_result(test, category)
+        endswith(path, ".json") || continue
+        fixture_id = "$category/$(basename(path))"
+        @testset "$fixture_id" begin
+            for (index, test) in enumerate(JSON.parse(read(path, String)).tests)
+                @testset "$(test.name)" begin
+                    if "$fixture_id#$(index - 1)" in KNOWN_FAILURES
+                        @test_broken case_passes(test, category)
+                    elseif get(test, :shouldError, false)
+                        @test_throws Exception run_case(test, category)
+                    else
+                        @test json_equal(run_case(test, category), expected_result(test, category))
+                    end
                 end
-                outcome isa Test.Pass ? (report.passed += 1) : (report.failed += 1)
             end
         end
-    end
-
-    return tests_run
-end
-
-# =============================================================================
-# Test execution entry point
-# =============================================================================
-
-if check_fixtures_available()
-    @testset "TOON Spec Fixtures" begin
-
-        @testset "Encode Fixtures" begin
-            encode_files = discover_fixtures("encode")
-
-            for filepath in encode_files
-                run_fixture_tests(filepath, "encode", COMPLIANCE)
-            end
-        end
-
-        @testset "Decode Fixtures" begin
-            decode_files = discover_fixtures("decode")
-
-            for filepath in decode_files
-                run_fixture_tests(filepath, "decode", COMPLIANCE)
-            end
-        end
-
-        # Print compliance summary at the end
-        print_compliance_summary(COMPLIANCE)
-    end
-else
-    @testset "TOON Spec Fixtures" begin
-        @test_skip "Spec fixtures not available"
     end
 end

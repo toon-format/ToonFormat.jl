@@ -10,7 +10,6 @@ Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 [compat]
 Aqua = "0.8"
 JSON = "1"
-JSONSchema = "1"
 LazyArtifacts = "1"
 OrderedCollections = "1"
 Printf = "1"
@@ -20,9 +19,8 @@ julia = "1.10"
 [extras]
 Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
-JSONSchema = "7d188eb4-7ad8-530c-ae41-71a32a6d4692"
 LazyArtifacts = "4af54fe1-eca0-43a8-85a7-787d91b784e3"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Aqua", "JSON", "JSONSchema", "LazyArtifacts", "Test"]
+test = ["Aqua", "JSON", "LazyArtifacts", "Test"]

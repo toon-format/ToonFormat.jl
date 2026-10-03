@@ -41,24 +41,7 @@ This will generate two keys and provide instructions.
 4. Value: Paste the **private key** from the output above
 5. Click "Add secret"
 
-## Step 3: Set Up Code Coverage (Optional)
-
-### Get Codecov Token
-
-1. Go to https://codecov.io
-2. Sign in with GitHub
-3. Add your repository
-4. Copy the upload token
-
-### Add Codecov Secret
-
-1. Go to: https://github.com/toon-format/ToonFormat.jl/settings/secrets/actions
-2. Click "New repository secret"
-3. Name: `CODECOV_TOKEN`
-4. Value: Paste your Codecov token
-5. Click "Add secret"
-
-## Step 4: Enable GitHub Pages
+## Step 3: Enable GitHub Pages
 
 1. Go to: https://github.com/toon-format/ToonFormat.jl/settings/pages
 2. Source: Deploy from a branch
@@ -67,7 +50,7 @@ This will generate two keys and provide instructions.
 
 **Note:** The `gh-pages` branch will be created automatically on the first documentation deployment.
 
-## Step 5: Configure Branch Protection (Recommended)
+## Step 4: Configure Branch Protection (Recommended)
 
 1. Go to: https://github.com/toon-format/ToonFormat.jl/settings/branches
 2. Click "Add rule"
@@ -78,7 +61,7 @@ This will generate two keys and provide instructions.
    - ✅ Require branches to be up to date before merging
 5. Click "Create"
 
-## Step 6: Test the Setup
+## Step 5: Test the Setup
 
 ### Trigger CI
 
@@ -126,18 +109,6 @@ git push origin gh-pages
 git checkout main
 ```
 
-### Coverage Not Uploading
-
-**Check:**
-- CODECOV_TOKEN is set in secrets
-- Codecov repository is activated
-- Tests are generating coverage data
-
-**Test locally:**
-```bash
-julia --project=. --code-coverage=user -e 'using Pkg; Pkg.test()'
-```
-
 ### Aqua Tests Failing
 
 **Common issues:**
@@ -157,9 +128,8 @@ julia --project=. -e 'using Pkg; Pkg.test()'
 Once everything is set up:
 
 1. **Add badges to README** (already done)
-2. **Set up CompatHelper** (runs automatically daily)
-3. **Register package** in Julia General registry
-4. **Enable TagBot** (creates releases automatically)
+2. **Register package** in Julia General registry
+3. **Enable TagBot** (creates releases automatically)
 
 ## Maintenance
 
@@ -168,7 +138,6 @@ Once everything is set up:
 Workflows are in `.github/workflows/`:
 - `CI.yml` - Main test suite
 - `Documentation.yml` - Docs building
-- `CompatHelper.yml` - Dependency updates
 - `TagBot.yml` - Release automation
 
 ### Monitor Actions
@@ -176,10 +145,8 @@ Workflows are in `.github/workflows/`:
 Check regularly:
 - https://github.com/toon-format/ToonFormat.jl/actions
 - Review failed workflows
-- Update dependencies via CompatHelper PRs
 
 ## Resources
 
 - [Documenter.jl Guide](https://documenter.juliadocs.org/stable/)
 - [GitHub Actions for Julia](https://github.com/julia-actions)
-- [Codecov Documentation](https://docs.codecov.com/)

@@ -1,10 +1,3 @@
-# Copyright (c) 2025 TOON Format Organization
-# SPDX-License-Identifier: MIT
-
-"""
-Primitive encoding and formatting functions.
-"""
-
 """
     encode_number(n::Number) -> String
 
@@ -17,65 +10,47 @@ function encode_number(n::Number)::String
 
     val = Float64(n)
 
-    # Check if the value is effectively an integer
     if isinteger(val)
-        # Check if it fits in Int64 range before converting
         if val >= typemin(Int64) && val <= typemax(Int64)
             return string(Int64(val))
         else
-            # For large integers outside Int64 range, format as decimal with no fraction
             return @sprintf("%.0f", val)
         end
     end
 
-    # Use %.16g for good precision without excess digits
+    # `%.16g` keeps full precision without excess digits.
     s = @sprintf("%.16g", val)
 
-    # If it contains exponent notation, convert to decimal form
     if occursin('e', lowercase(s)) || occursin('E', s)
-        # Determine how many decimal places we need
-        # For very small numbers, we need more precision
         if abs(val) < 1.0
-            # Use %.17f to get all precision, will strip trailing zeros later
+            # `%.17f` keeps every digit – the trailing zeros are stripped below.
             s = @sprintf("%.17f", val)
         else
-            # For large numbers, use fixed format
             s = @sprintf("%.0f", val)
         end
     end
 
-    # Remove trailing zeros after decimal point
     if occursin('.', s)
         s = rstrip(s, '0')
-        # If we stripped all fractional digits, remove the decimal point too
         s = rstrip(s, '.')
     end
 
     return s
 end
 
-"""
-    encode_primitive(value::JsonPrimitive, delimiter::Delimiter) -> String
-
-Encode a primitive value as a TOON string.
-"""
 function encode_primitive(value::JsonPrimitive, delimiter::Delimiter)::String
-    # null
     if value === nothing
         return NULL_LITERAL
     end
 
-    # Boolean
     if isa(value, Bool)
         return value ? TRUE_LITERAL : FALSE_LITERAL
     end
 
-    # Number
     if isa(value, Number)
         return encode_number(value)
     end
 
-    # String
     if isa(value, AbstractString)
         str = String(value)
         if needs_quoting(str, delimiter)
@@ -88,11 +63,6 @@ function encode_primitive(value::JsonPrimitive, delimiter::Delimiter)::String
     error("Unsupported primitive type: $(typeof(value))")
 end
 
-"""
-    encode_key(key::String) -> String
-
-Encode an object key. Quote if necessary.
-"""
 function encode_key(key::String)::String
     if is_valid_unquoted_key(key)
         return key
@@ -101,12 +71,6 @@ function encode_key(key::String)::String
     return "$(DOUBLE_QUOTE)$(escaped)$(DOUBLE_QUOTE)"
 end
 
-"""
-    format_header(key::Union{String, Nothing}, length::Int, delimiter::Delimiter,
-                  fields::Union{Vector{String}, Nothing}=nothing) -> String
-
-Format an array header.
-"""
 function format_header(
     key::Union{String,Nothing},
     length::Int,
@@ -115,15 +79,12 @@ function format_header(
 )::String
     result = ""
 
-    # Add key if present
     if key !== nothing
         result *= encode_key(key)
     end
 
-    # Add bracket segment
     result *= OPEN_BRACKET * string(length)
 
-    # Add delimiter marker if not comma
     if delimiter == TAB
         result *= TAB
     elseif delimiter == PIPE
@@ -132,7 +93,6 @@ function format_header(
 
     result *= CLOSE_BRACKET
 
-    # Add fields if present
     if fields !== nothing && !isempty(fields)
         result *= OPEN_BRACE
         encoded_fields = [encode_key(f) for f in fields]
@@ -145,11 +105,6 @@ function format_header(
     return result
 end
 
-"""
-    join_encoded_values(values::Vector{String}, delimiter::Delimiter) -> String
-
-Join encoded primitive values with delimiter.
-"""
 function join_encoded_values(values::Vector{String}, delimiter::Delimiter)::String
     return join(values, delimiter)
 end

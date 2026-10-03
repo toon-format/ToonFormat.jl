@@ -1,26 +1,5 @@
-# Julia
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
-deps/deps.jl
 Manifest.toml
-
-# Documentation build
 docs/build/
-docs/site/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# AI files
-.claude
-.specify
-specs/

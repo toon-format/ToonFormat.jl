@@ -1,6 +1,3 @@
-# Copyright (c) 2025 TOON Format Organization
-# SPDX-License-Identifier: MIT
-
 using Test
 using ToonFormat
 

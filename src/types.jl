@@ -18,6 +18,12 @@ Base.@kwdef struct DecodeOptions
     strict::Bool = true
 end
 
+# A tabular field; `children` holds the fields of a nested field group.
+struct FieldNode
+    name::String
+    children::Union{Vector{FieldNode},Nothing}
+end
+
 mutable struct LineWriter
     lines::Vector{String}
     indent::Int

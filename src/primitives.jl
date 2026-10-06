@@ -67,10 +67,19 @@ function format_header(
     key::Union{String,Nothing},
     length::Int,
     delimiter::Delimiter,
-    fields::Union{Vector{String},Nothing} = nothing,
+    fields::Union{Vector{FieldNode},Nothing} = nothing,
 )::String
     header = key === nothing ? "" : encode_key(key)
     header *= "[$length$(delimiter == COMMA ? "" : delimiter)]"
-    fields === nothing || (header *= "{$(join(encode_key.(fields), delimiter))}")
+    fields === nothing || (header *= "{$(format_fields(fields, delimiter))}")
     return header * ":"
 end
+
+format_fields(fields::Vector{FieldNode}, delimiter::Delimiter) = join(
+    (
+        encode_key(field.name) *
+        (field.children === nothing ? "" : "{$(format_fields(field.children, delimiter))}") for
+        field in fields
+    ),
+    delimiter,
+)

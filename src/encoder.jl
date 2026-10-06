@@ -107,23 +107,51 @@ function encode_list_item!(writer::LineWriter, value, depth::Int, options::Encod
     end
 end
 
-encode_row(row::AbstractDict, fields::Vector{String}, delimiter::Delimiter) =
-    join((encode_primitive(row[field], delimiter) for field in fields), delimiter)
+function encode_row(row::AbstractDict, fields::Vector{FieldNode}, delimiter::Delimiter)
+    return join((encode_primitive(value, delimiter) for value in row_leaves(row, fields)), delimiter)
+end
+
+# Leaf cells in the depth-first order of the field list.
+function row_leaves(row::AbstractDict, fields::Vector{FieldNode}, leaves = Any[])
+    for field in fields
+        if field.children === nothing
+            push!(leaves, row[field.name])
+        else
+            row_leaves(row[field.name], field.children, leaves)
+        end
+    end
+    return leaves
+end
+
+is_non_empty_object(value) = is_json_object(value) && !isempty(value)
 
 """
-    tabular_fields(rows) -> Union{Vector{String},Nothing}
+    tabular_fields(rows) -> Union{Vector{FieldNode},Nothing}
 
-Returns the keys that objects share when every value is a primitive, or `nothing`.
+Returns the field list of objects that share one key set, with a nested field group for
+every column of non-empty objects that are tabular themselves, or `nothing` when another
+column holds anything but primitives.
 """
-function tabular_fields(rows::AbstractVector)::Union{Vector{String},Nothing}
+function tabular_fields(rows::AbstractVector)::Union{Vector{FieldNode},Nothing}
     first_keys = collect(keys(first(rows)))
     isempty(first_keys) && return nothing
     for row in rows
-        (
-            length(row) == length(first_keys) &&
-            all(haskey(row, key) for key in first_keys) &&
-            all(is_json_primitive, values(row))
-        ) || return nothing
+        (length(row) == length(first_keys) && all(haskey(row, key) for key in first_keys)) ||
+            return nothing
     end
-    return first_keys
+
+    fields = FieldNode[]
+    for key in first_keys
+        column = [row[key] for row in rows]
+        if all(is_json_primitive, column)
+            push!(fields, FieldNode(key, nothing))
+        elseif all(is_non_empty_object, column)
+            children = tabular_fields(column)
+            children === nothing && return nothing
+            push!(fields, FieldNode(key, children))
+        else
+            return nothing
+        end
+    end
+    return fields
 end

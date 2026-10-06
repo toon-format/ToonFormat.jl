@@ -1,8 +1,3 @@
-struct FieldNode
-    name::String
-    children::Union{Vector{FieldNode},Nothing}
-end
-
 struct ArrayHeader
     key::Union{String,Nothing}
     length::Int

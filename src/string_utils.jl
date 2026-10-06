@@ -57,7 +57,7 @@ function unescape_unicode(s::AbstractString, i::Int)::Char
     return Char(code)
 end
 
-function needs_quoting(s::AbstractString, delimiter::Delimiter)::Bool
+function needs_quoting(s::AbstractString, delimiter::String)::Bool
     isempty(s) && return true
     # Only space and tab force quoting; `strip` would also count other Unicode whitespace.
     (first(s) in " \t" || last(s) in " \t") && return true

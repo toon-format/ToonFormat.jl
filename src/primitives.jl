@@ -30,7 +30,7 @@ function encode_number(n::Number)::String
     return "$sign$(digits[1:point]).$(digits[(point+1):end])"
 end
 
-function encode_primitive(value::JsonPrimitive, delimiter::Delimiter)::String
+function encode_primitive(value::JsonPrimitive, delimiter::String)::String
     value === nothing && return "null"
     value isa Bool && return string(value)
     value isa Number && return encode_number(value)
@@ -42,7 +42,7 @@ encode_key(key::String) = is_valid_unquoted_key(key) ? key : quote_string(key)
 function format_header(
     key::Union{String,Nothing},
     len::Int,
-    delimiter::Delimiter,
+    delimiter::String,
     fields::Union{Vector{FieldNode},Nothing} = nothing;
     keyed::Bool = false,
 )::String
@@ -52,7 +52,7 @@ function format_header(
     return header * ":"
 end
 
-function format_fields(fields::Vector{FieldNode}, delimiter::Delimiter)::String
+function format_fields(fields::Vector{FieldNode}, delimiter::String)::String
     entries = map(fields) do field
         key = encode_key(field.name)
         field.children === nothing ? key : "$key{$(format_fields(field.children, delimiter))}"

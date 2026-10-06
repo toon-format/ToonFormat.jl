@@ -104,7 +104,7 @@ function encode_array!(
     end
 end
 
-function inline_array_line(key::Union{String,Nothing}, values::AbstractVector, delimiter::Delimiter)
+function inline_array_line(key::Union{String,Nothing}, values::AbstractVector, delimiter::String)
     header = format_header(key, length(values), delimiter)
     isempty(values) && return header
     return "$header $(join((encode_primitive(value, delimiter) for value in values), delimiter))"
@@ -131,7 +131,7 @@ function encode_list_item!(writer::LineWriter, value, depth::Int, options::Encod
     end
 end
 
-function encode_row(row::AbstractDict, fields::Vector{FieldNode}, delimiter::Delimiter)
+function encode_row(row::AbstractDict, fields::Vector{FieldNode}, delimiter::String)
     return join((encode_primitive(value, delimiter) for value in row_leaves(row, fields)), delimiter)
 end
 

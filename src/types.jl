@@ -5,8 +5,6 @@ const JsonObject = OrderedDict{String,Any}
 const JsonArray = Vector{Any}
 const JsonValue = Union{JsonPrimitive,JsonObject,JsonArray}
 
-const Delimiter = String
-
 const COMMA = ","
 const TAB = "\t"
 const PIPE = "|"
@@ -19,7 +17,7 @@ inline arrays and tabular rows – `COMMA`, `TAB`, or `PIPE`.
 """
 Base.@kwdef struct EncodeOptions
     indentSize::Int = 2
-    delimiter::Delimiter = COMMA
+    delimiter::String = COMMA
 end
 
 """

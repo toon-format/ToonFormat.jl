@@ -12,7 +12,7 @@ function normalize_value(v)::JsonValue
     v isa AbstractDict && return normalize_pairs(v)
 
     if v isa AbstractArray || v isa Tuple || v isa AbstractSet
-        return JsonArray([normalize_value(item) for item in v])
+        return JsonArray(vec([normalize_value(item) for item in v]))
     end
     return normalize_string(string(v))
 end

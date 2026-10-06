@@ -31,7 +31,6 @@ function unescape_string(s::AbstractString)::String
             continue
         end
 
-        i == ncodeunits(s) && error("Invalid escape sequence: backslash at end of string")
         escaped = s[i+1]
         if haskey(UNESCAPES, escaped)
             write(out, UNESCAPES[escaped])

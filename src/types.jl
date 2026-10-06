@@ -18,6 +18,12 @@ inline arrays and tabular rows – `COMMA`, `TAB`, or `PIPE`.
 Base.@kwdef struct EncodeOptions
     indentSize::Int = 2
     delimiter::String = COMMA
+
+    function EncodeOptions(indentSize, delimiter)
+        delimiter in (COMMA, TAB, PIPE) ||
+            throw(ArgumentError("Invalid delimiter $(repr(delimiter)); use COMMA, TAB, or PIPE"))
+        return new(indentSize, delimiter)
+    end
 end
 
 """

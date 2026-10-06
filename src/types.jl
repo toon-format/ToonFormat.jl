@@ -5,14 +5,29 @@ const JsonObject = OrderedDict{String,Any}
 const JsonArray = Vector{Any}
 const JsonValue = Union{JsonPrimitive,JsonObject,JsonArray}
 
-const DelimiterKey = String  # "comma", "tab", or "pipe"
-const Delimiter = String     # actual delimiter character
+const Delimiter = String
 
+const COMMA = ","
+const TAB = "\t"
+const PIPE = "|"
+
+"""
+    EncodeOptions(; indentSize = 2, delimiter = COMMA)
+
+Options for [`encode`](@ref): the spaces per indentation level, and the delimiter of
+inline arrays and tabular rows – `COMMA`, `TAB`, or `PIPE`.
+"""
 Base.@kwdef struct EncodeOptions
     indentSize::Int = 2
-    delimiter::Delimiter = DEFAULT_DELIMITER
+    delimiter::Delimiter = COMMA
 end
 
+"""
+    DecodeOptions(; indentSize = 2, strict = true)
+
+Options for [`decode`](@ref): the spaces per indentation level, and whether to throw on
+every strict-mode error of the spec instead of applying its non-strict leniencies.
+"""
 Base.@kwdef struct DecodeOptions
     indentSize::Int = 2
     strict::Bool = true
@@ -24,18 +39,14 @@ struct FieldNode
     children::Union{Vector{FieldNode},Nothing}
 end
 
-mutable struct LineWriter
+struct LineWriter
     lines::Vector{String}
     indent::Int
-
-    LineWriter(indent::Int) = new(String[], indent)
 end
 
-function Base.push!(writer::LineWriter, depth::Int, content::String)
-    indentation = " " ^ (depth * writer.indent)
-    push!(writer.lines, indentation * content)
-end
+LineWriter(indent::Int) = LineWriter(String[], indent)
 
-function Base.string(writer::LineWriter)::String
-    return join(writer.lines, "\n")
-end
+Base.push!(writer::LineWriter, depth::Int, content::AbstractString) =
+    push!(writer.lines, " "^(depth * writer.indent) * content)
+
+Base.string(writer::LineWriter) = join(writer.lines, '\n')

@@ -276,9 +276,9 @@ function parse_primitive_token(token::AbstractString)::JsonPrimitive
     token = trim_spaces(token)
     isempty(token) && return ""
     startswith(token, '"') && return parse_string_literal(token)
-    token == TRUE_LITERAL && return true
-    token == FALSE_LITERAL && return false
-    token == NULL_LITERAL && return nothing
+    token == "true" && return true
+    token == "false" && return false
+    token == "null" && return nothing
     occursin(NUMBER_PATTERN, token) && return parse_number(token)
     return String(token)
 end

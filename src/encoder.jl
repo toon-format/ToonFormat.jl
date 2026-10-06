@@ -21,7 +21,7 @@ function encode(value; options::EncodeOptions = EncodeOptions())::String
     if is_json_primitive(normalized)
         # Unquoted, a leading U+FEFF would read as the byte-order mark that decoders strip.
         if normalized isa String && startswith(normalized, '\ufeff')
-            return "$(DOUBLE_QUOTE)$(escape_string(normalized))$(DOUBLE_QUOTE)"
+            return quote_string(normalized)
         end
         return encode_primitive(normalized, options.delimiter)
     end
@@ -112,11 +112,11 @@ end
 
 function encode_list_item!(writer::LineWriter, value, depth::Int, options::EncodeOptions)
     if is_json_primitive(value)
-        push!(writer, depth, LIST_ITEM_MARKER * encode_primitive(value, options.delimiter))
+        push!(writer, depth, "- " * encode_primitive(value, options.delimiter))
     elseif is_json_array(value) && is_array_of_primitives(value)
-        push!(writer, depth, LIST_ITEM_MARKER * inline_array_line(nothing, value, options.delimiter))
+        push!(writer, depth, "- " * inline_array_line(nothing, value, options.delimiter))
     elseif is_json_array(value)
-        push!(writer, depth, LIST_ITEM_MARKER * format_header(nothing, length(value), options.delimiter))
+        push!(writer, depth, "- " * format_header(nothing, length(value), options.delimiter))
         for item in value
             encode_list_item!(writer, item, depth + 1, options)
         end
@@ -127,7 +127,7 @@ function encode_list_item!(writer::LineWriter, value, depth::Int, options::Encod
         first_line = length(writer.lines) + 1
         encode_object!(writer, value, depth + 1, options)
         writer.lines[first_line] =
-            " "^(depth * writer.indent) * LIST_ITEM_MARKER * lstrip(writer.lines[first_line])
+            " "^(depth * writer.indent) * "- " * lstrip(writer.lines[first_line])
     end
 end
 

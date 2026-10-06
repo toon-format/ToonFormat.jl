@@ -3,7 +3,6 @@ Encodes Julia values to TOON (Token-Oriented Object Notation) and decodes TOON b
 """
 module ToonFormat
 
-include("constants.jl")
 include("types.jl")
 include("string_utils.jl")
 include("normalize.jl")
@@ -13,10 +12,6 @@ include("parser.jl")
 include("encoder.jl")
 include("decoder.jl")
 
-export encode, decode
-
-export EncodeOptions, DecodeOptions
-
-export COMMA, TAB, PIPE
+export encode, decode, EncodeOptions, DecodeOptions, COMMA, TAB, PIPE
 
 end # module

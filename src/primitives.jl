@@ -31,37 +31,13 @@ function encode_number(n::Number)::String
 end
 
 function encode_primitive(value::JsonPrimitive, delimiter::Delimiter)::String
-    if value === nothing
-        return NULL_LITERAL
-    end
-
-    if isa(value, Bool)
-        return value ? TRUE_LITERAL : FALSE_LITERAL
-    end
-
-    if isa(value, Number)
-        return encode_number(value)
-    end
-
-    if isa(value, AbstractString)
-        str = String(value)
-        if needs_quoting(str, delimiter)
-            escaped = escape_string(str)
-            return "$(DOUBLE_QUOTE)$(escaped)$(DOUBLE_QUOTE)"
-        end
-        return str
-    end
-
-    error("Unsupported primitive type: $(typeof(value))")
+    value === nothing && return "null"
+    value isa Bool && return string(value)
+    value isa Number && return encode_number(value)
+    return needs_quoting(value, delimiter) ? quote_string(value) : String(value)
 end
 
-function encode_key(key::String)::String
-    if is_valid_unquoted_key(key)
-        return key
-    end
-    escaped = escape_string(key)
-    return "$(DOUBLE_QUOTE)$(escaped)$(DOUBLE_QUOTE)"
-end
+encode_key(key::String) = is_valid_unquoted_key(key) ? key : quote_string(key)
 
 function format_header(
     key::Union{String,Nothing},

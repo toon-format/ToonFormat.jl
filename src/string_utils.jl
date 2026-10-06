@@ -107,7 +107,7 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
         return true
     end
 
-    if s == "-" || startswith(s, "-")
+    if startswith(s, "-") || startswith(s, "#")
         return true
     end
 

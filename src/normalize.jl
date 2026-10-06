@@ -2,7 +2,7 @@ function normalize_value(v)::JsonValue
     v === nothing && return nothing
     v isa Bool && return v
     v isa Number && return normalize_number(v)
-    v isa AbstractString && return String(v)
+    v isa AbstractString && return normalize_string(v)
 
     # Checked before `AbstractArray`, which would encode the pairs as strings.
     v isa AbstractVector && eltype(v) <: Pair && return normalize_pairs(v)
@@ -14,10 +14,17 @@ function normalize_value(v)::JsonValue
     if v isa AbstractArray || v isa Tuple || v isa AbstractSet
         return JsonArray([normalize_value(item) for item in v])
     end
-    return string(v)
+    return normalize_string(string(v))
 end
 
-normalize_pairs(pairs) = JsonObject(string(key) => normalize_value(value) for (key, value) in pairs)
+normalize_pairs(pairs) =
+    JsonObject(normalize_string(string(key)) => normalize_value(value) for (key, value) in pairs)
+
+# Invalid UTF-8, such as an unpaired surrogate, has no TOON form; encoding it would corrupt the document.
+function normalize_string(s::AbstractString)::String
+    isvalid(s) || throw(ArgumentError("Cannot encode $(repr(s)), which is not valid Unicode"))
+    return String(s)
+end
 
 function normalize_number(n::Number)::Union{Number,Nothing}
     n isa AbstractFloat || return n

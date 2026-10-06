@@ -17,6 +17,10 @@
         @test encode(value) == expected
     end
 
+    @testset "encode($(repr(value))) throws" for value in ["a\ud800b", Dict("\xff" => 1)]
+        @test_throws ArgumentError encode(value)
+    end
+
     @testset "decode($(repr(input)))" for (input, expected) in [
         "42" => 42,
         "3.5" => 3.5,

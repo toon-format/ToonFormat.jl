@@ -11,6 +11,7 @@ include("string_utils.jl")
 include("normalize.jl")
 include("primitives.jl")
 include("scanner.jl")
+include("parser.jl")
 include("encoder.jl")
 include("decoder.jl")
 

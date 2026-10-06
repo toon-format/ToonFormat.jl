@@ -23,7 +23,7 @@ function unescape_string(s::AbstractString)::String
         c = s_str[i]
         if c == '\\'
             if i == lastindex(s_str)
-                throw(ArgumentError("Unterminated escape sequence at end of string"))
+                error("Invalid escape sequence: backslash at end of string")
             end
 
             next_i = nextind(s_str, i)
@@ -35,7 +35,7 @@ function unescape_string(s::AbstractString)::String
                 write(result, unescape_unicode(s_str, i))
                 i += 6
             else
-                throw(ArgumentError("Invalid escape sequence: \\$(next_char)"))
+                error("Invalid escape sequence: \\$(next_char)")
             end
         else
             write(result, c)
@@ -48,11 +48,11 @@ end
 function unescape_unicode(s::String, i::Int)::Char
     hex = codeunits(s)[(i+2):min(i + 5, end)]
     if length(hex) != 4 || !all(b -> isxdigit(Char(b)), hex)
-        throw(ArgumentError("Invalid escape sequence: \\u must be followed by 4 hex digits"))
+        error("Invalid escape sequence: \\u must be followed by 4 hex digits")
     end
     code = parse(UInt16, String(hex); base = 16)
     if 0xd800 <= code <= 0xdfff
-        throw(ArgumentError("Invalid escape sequence: \\u$(String(hex)) is a lone surrogate"))
+        error("Invalid escape sequence: \\u$(String(hex)) is a lone surrogate")
     end
     return Char(code)
 end
@@ -116,27 +116,4 @@ end
 
 function is_valid_unquoted_key(s::String)::Bool
     return !isnothing(match(UNQUOTED_KEY_PATTERN, s))
-end
-
-function find_first_unquoted(s::String, target::Char)::Union{Int,Nothing}
-    in_quotes = false
-    skip_next = false
-
-    for (idx, char) in pairs(s)
-        if skip_next
-            skip_next = false
-            continue
-        end
-
-        if char == '\\'
-            skip_next = true
-            continue
-        elseif char == '"'
-            in_quotes = !in_quotes
-        elseif char == target && !in_quotes
-            return idx
-        end
-    end
-
-    return nothing
 end

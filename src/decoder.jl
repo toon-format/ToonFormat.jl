@@ -287,7 +287,6 @@ function decode_keyed_object(
     return object
 end
 
-# A row line has no unquoted colon, or its first unquoted delimiter precedes the colon.
 function is_data_row(content::AbstractString, delimiter::Char)::Bool
     colon = find_unquoted(content, ':')
     colon === nothing && return true

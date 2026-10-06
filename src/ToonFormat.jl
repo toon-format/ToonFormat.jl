@@ -3,8 +3,6 @@ Encodes Julia values to TOON (Token-Oriented Object Notation) and decodes TOON b
 """
 module ToonFormat
 
-using Printf
-
 include("constants.jl")
 include("types.jl")
 include("string_utils.jl")

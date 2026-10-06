@@ -84,8 +84,12 @@ end
 # Token trimming removes U+0020 only; any other whitespace belongs to the token.
 trim_spaces(s::AbstractString) = strip(==(' '), s)
 
-parse_delimited_values(s::AbstractString, delimiter::Char) =
-    isempty(s) ? SubString{String}[] : trim_spaces.(split_unquoted(s, delimiter))
+function parse_cells(content::AbstractString, delimiter::Char)::JsonArray
+    content = trim_spaces(content)
+    isempty(content) && return JsonArray()
+    # Not a broadcast, which would return a `BitVector` for a row of booleans.
+    return JsonArray([parse_primitive_token(cell) for cell in split_unquoted(content, delimiter)])
+end
 
 """
     parse_array_header(content, strict) -> Union{ArrayHeader,Nothing}

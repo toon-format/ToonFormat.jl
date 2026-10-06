@@ -426,10 +426,6 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     return object
 end
 
-# Not a broadcast, which would return a `BitVector` for a row of booleans.
-parse_cells(content::AbstractString, delimiter::Char) =
-    JsonArray([parse_primitive_token(value) for value in parse_delimited_values(trim_spaces(content), delimiter)])
-
 function object_from_fields(fields::Vector{FieldNode}, cells::JsonArray)::JsonObject
     cell_index = 0
     function walk(nodes)

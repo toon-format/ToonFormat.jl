@@ -41,13 +41,13 @@ encode_key(key::String) = is_valid_unquoted_key(key) ? key : quote_string(key)
 
 function format_header(
     key::Union{String,Nothing},
-    length::Int,
+    len::Int,
     delimiter::Delimiter,
     fields::Union{Vector{FieldNode},Nothing} = nothing;
     keyed::Bool = false,
 )::String
     header = key === nothing ? "" : encode_key(key)
-    header *= "[$length$(keyed ? ":" : "")$(delimiter == COMMA ? "" : delimiter)]"
+    header *= "[$len$(keyed ? ":" : "")$(delimiter == COMMA ? "" : delimiter)]"
     fields === nothing || (header *= "{$(format_fields(fields, delimiter))}")
     return header * ":"
 end

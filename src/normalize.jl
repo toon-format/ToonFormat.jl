@@ -1,7 +1,7 @@
 function normalize_value(v)::JsonValue
     v === nothing && return nothing
     v isa Bool && return v
-    v isa Number && return normalize_number(v)
+    v isa Real && return normalize_number(v)
     v isa AbstractString && return normalize_string(v)
 
     # Checked before `AbstractArray`, which would encode the pairs as strings.
@@ -26,7 +26,7 @@ function normalize_string(s::AbstractString)::String
     return String(s)
 end
 
-function normalize_number(n::Number)::Union{Number,Nothing}
+function normalize_number(n::Real)::Union{Real,Nothing}
     n isa AbstractFloat || return n
     isfinite(n) || return nothing
     return n == 0 ? zero(n) : n

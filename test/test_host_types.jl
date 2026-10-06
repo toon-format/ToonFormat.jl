@@ -11,6 +11,7 @@
         (1, :a => 2) => "[2]: 1,\":a => 2\"",
         Set([1]) => "[1]: 1",
         [NaN, Inf, -Inf, -0.0] => "[4]: null,null,null,0",
+        1 + 2im => "1 + 2im",
         :sym => "sym",
         missing => "missing",
     ]

@@ -91,7 +91,7 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
     end
 
     for char in s
-        if Int(char) < 32 || Int(char) == 127
+        if char < ' '
             return true
         end
     end

@@ -88,14 +88,15 @@ function decode_document(reader::LineReader)::JsonValue
     end
 
     object = JsonObject()
-    decode_key_value!(object, first_line, reader, 0)
+    seen_keys = new_seen_keys(reader)
+    decode_key_value!(object, first_line, reader, 0, seen_keys)
     while (line = peek_line(reader)) !== nothing
         if line.depth != 0
             skip_over_indented_line(reader, line, 0)
             continue
         end
         read_line!(reader)
-        decode_key_value!(object, line, reader, 0)
+        decode_key_value!(object, line, reader, 0, seen_keys)
     end
     return object
 end
@@ -135,6 +136,14 @@ function assert_fully_consumed(reader::LineReader)
     end
 end
 
+new_seen_keys(reader::LineReader) = reader.strict ? Set{String}() : nothing
+
+function claim_key!(seen_keys::Union{Set{String},Nothing}, key::String, line::ParsedLine)
+    seen_keys === nothing && return
+    key in seen_keys && decode_error(line, "Duplicate sibling key \"$key\"")
+    push!(seen_keys, key)
+end
+
 function assert_expected_count(
     reader::LineReader,
     actual::Int,
@@ -160,9 +169,11 @@ function decode_key_value!(
     line::ParsedLine,
     reader::LineReader,
     base_depth::Int,
+    seen_keys::Union{Set{String},Nothing},
 )
     header = with_line(() -> parse_array_header(line.content, reader.strict), line)
     if header !== nothing && header.key !== nothing
+        claim_key!(seen_keys, header.key, line)
         object[header.key] = decode_header_value(header, reader, base_depth, line)
         return
     end
@@ -172,6 +183,7 @@ function decode_key_value!(
 
     key, value_start = with_line(() -> parse_key_token(line.content), line)
     rest = trim_spaces(SubString(line.content, value_start))
+    claim_key!(seen_keys, key, line)
 
     object[key] = if !isempty(rest)
         rest == "[]" ? JsonArray() : with_line(() -> parse_primitive_token(rest), line)
@@ -188,13 +200,14 @@ end
 
 function decode_object_fields(reader::LineReader, base_depth::Int)::JsonObject
     object = JsonObject()
+    seen_keys = new_seen_keys(reader)
     # A non-strict first line deeper than expected sets the depth of the whole scope.
     field_depth = nothing
     while (line = peek_line(reader)) !== nothing && line.depth >= base_depth
         field_depth = something(field_depth, line.depth)
         if line.depth == field_depth
             read_line!(reader)
-            decode_key_value!(object, line, reader, field_depth)
+            decode_key_value!(object, line, reader, field_depth, seen_keys)
         else
             skip_over_indented_line(reader, line, field_depth)
         end
@@ -348,13 +361,14 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
 
     # The first field sits on the hyphen line; the others follow one level deeper.
     object = JsonObject()
+    seen_keys = new_seen_keys(reader)
     field_depth = base_depth + 1
-    decode_key_value!(object, item_line, reader, field_depth)
+    decode_key_value!(object, item_line, reader, field_depth, seen_keys)
     while (line = peek_line(reader)) !== nothing && line.depth >= field_depth
         if line.depth == field_depth
             # A hyphen marks a list item only at item depth, so a `- ` line here is a further field.
             read_line!(reader)
-            decode_key_value!(object, line, reader, field_depth)
+            decode_key_value!(object, line, reader, field_depth, seen_keys)
         else
             skip_over_indented_line(reader, line, field_depth)
         end

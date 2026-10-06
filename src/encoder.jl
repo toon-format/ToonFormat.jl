@@ -30,7 +30,12 @@ function encode(value; options::EncodeOptions = EncodeOptions())::String
     if is_json_array(normalized)
         encode_array!(writer, nothing, normalized, 0, options)
     else
-        encode_object!(writer, normalized, 0, options)
+        fields = keyed_tabular_fields(normalized)
+        if fields === nothing
+            encode_object!(writer, normalized, 0, options)
+        else
+            encode_keyed_object!(writer, nothing, normalized, fields, 0, options)
+        end
     end
     return string(writer)
 end
@@ -47,8 +52,27 @@ function encode_key_value!(writer::LineWriter, key::String, value, depth::Int, o
     elseif is_json_array(value)
         encode_array!(writer, key, value, depth, options)
     else
-        push!(writer, depth, "$(encode_key(key)):")
-        encode_object!(writer, value, depth + 1, options)
+        fields = keyed_tabular_fields(value)
+        if fields === nothing
+            push!(writer, depth, "$(encode_key(key)):")
+            encode_object!(writer, value, depth + 1, options)
+        else
+            encode_keyed_object!(writer, key, value, fields, depth, options)
+        end
+    end
+end
+
+function encode_keyed_object!(
+    writer::LineWriter,
+    key::Union{String,Nothing},
+    object::AbstractDict,
+    fields::Vector{FieldNode},
+    depth::Int,
+    options::EncodeOptions,
+)
+    push!(writer, depth, format_header(key, length(object), options.delimiter, fields; keyed = true))
+    for (entry_key, entry) in object
+        push!(writer, depth + 1, "$(encode_key(entry_key)): $(encode_row(entry, fields, options.delimiter))")
     end
 end
 
@@ -154,4 +178,10 @@ function tabular_fields(rows::AbstractVector)::Union{Vector{FieldNode},Nothing}
         end
     end
     return fields
+end
+
+function keyed_tabular_fields(object::AbstractDict)::Union{Vector{FieldNode},Nothing}
+    entries = collect(values(object))
+    (length(entries) >= 2 && all(is_non_empty_object, entries)) || return nothing
+    return tabular_fields(entries)
 end

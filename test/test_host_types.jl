@@ -27,9 +27,10 @@
     @testset "decode($(repr(input)))" for (input, expected) in [
         "42" => 42,
         "3.5" => 3.5,
-        "99999999999999999999" => "99999999999999999999",
+        "99999999999999999999" => big"99999999999999999999",
         "1e999" => "1e999",
     ]
-        @test decode(input) === expected
+        decoded = decode(input)
+        @test isequal(decoded, expected) && typeof(decoded) == typeof(expected)
     end
 end

@@ -32,7 +32,7 @@ end
     decode(input::AbstractString; options::DecodeOptions = DecodeOptions()) -> JsonValue
 
 Decodes a TOON document into `OrderedDict{String,Any}` objects, `Vector{Any}` arrays,
-and `String`, `Int`, `Float64`, `Bool`, or `nothing` primitives. Throws an
+and `String`, `Int`, `BigInt`, `Float64`, `Bool`, or `nothing` primitives. Throws an
 `ErrorException` naming the line on invalid input.
 
 # Examples

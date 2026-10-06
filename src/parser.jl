@@ -8,6 +8,7 @@ struct ArrayHeader
     length::Int
     delimiter::Char
     fields::Union{Vector{FieldNode},Nothing}
+    keyed::Bool
     inline_values::Union{SubString{String},Nothing}
 end
 
@@ -178,7 +179,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     bracket === nothing && return invalid(
         "Invalid array length in \"$(slice(content, bracket_start, bracket_end + 1))\" (expected a non-negative integer with no leading zeros)",
     )
-    declared_length, delimiter = bracket
+    declared_length, delimiter, keyed = bracket
 
     fields = nothing
     if brace_end !== nothing
@@ -200,6 +201,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
 
     duplicate = fields === nothing ? nothing : find_duplicate_field_name(fields)
     duplicate_reason = "Duplicate field name \"$duplicate\" in field list"
+    keyed && fields === nothing && return invalid("Keyed header requires a field list")
 
     inline_values = trim_spaces(SubString(content, colon + 1))
     # A fields-bearing header carries no inline content; decoding it as an inline array would drop the fields.
@@ -217,6 +219,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
         declared_length,
         delimiter,
         fields,
+        keyed,
         isempty(inline_values) ? nothing : inline_values,
     )
 end
@@ -228,9 +231,13 @@ function parse_bracket_segment(segment::AbstractString)
         segment = chop(segment)
     end
 
+    # Only a colon between the length and the optional delimiter symbol marks a keyed header.
+    keyed = endswith(segment, ':')
+    keyed && (segment = chop(segment))
+
     occursin(BRACKET_LENGTH_PATTERN, segment) || return nothing
     # A length beyond the integer range still forms a header; no count can match it.
-    return something(tryparse(Int, segment), typemax(Int)), delimiter
+    return something(tryparse(Int, segment), typemax(Int)), delimiter, keyed
 end
 
 function parse_field_entries(content::AbstractString, delimiter::Char)::Vector{FieldNode}

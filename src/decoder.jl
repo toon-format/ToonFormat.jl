@@ -178,7 +178,11 @@ function decode_key_value!(
         return
     end
     if header !== nothing && reader.strict
-        decode_error(line, "Keyless array header is only valid at the document root or as a list item")
+        decode_error(
+            line,
+            header.keyed ? "Keyless keyed header is only valid at the document root" :
+            "Keyless array header is only valid at the document root or as a list item",
+        )
     end
 
     key, value_start = with_line(() -> parse_key_token(line.content), line)
@@ -228,16 +232,59 @@ function decode_header_value(
     base_depth::Int,
     header_line::ParsedLine,
 )::JsonValue
+    header.keyed && return decode_keyed_object(header, reader, base_depth, header_line)
+
     if header.inline_values !== nothing
-        values = with_line(header_line) do
-            parse_primitive_token.(parse_delimited_values(header.inline_values, header.delimiter))
-        end
+        values = with_line(() -> parse_cells(header.inline_values, header.delimiter), header_line)
         assert_expected_count(reader, length(values), header.length, "inline-form values", header_line)
-        return JsonArray(values)
+        return values
     end
 
     header.fields !== nothing && return decode_tabular_array(header, reader, base_depth, header_line)
     return decode_list_array(header, reader, base_depth, header_line)
+end
+
+function decode_keyed_object(
+    header::ArrayHeader,
+    reader::LineReader,
+    base_depth::Int,
+    header_line::ParsedLine,
+)::JsonObject
+    entry_depth = scope_content_depth(reader, base_depth)
+    width = count_leaf_fields(header.fields)
+    seen_keys = new_seen_keys(reader)
+    object = JsonObject()
+    first_entry_line = nothing
+    last_entry_line = header_line
+
+    # A keyed scope ends only by dedent or end of input, so every line at entry depth
+    # carrying an unquoted colon is an entry row.
+    while (line = peek_line(reader)) !== nothing && line.depth > base_depth
+        if line.depth != entry_depth
+            skip_over_indented_line(reader, line, entry_depth)
+            continue
+        end
+        read_line!(reader)
+        if !is_key_value_content(line.content)
+            reader.strict && decode_error(line, "Expected entry row inside keyed tabular object")
+            continue
+        end
+
+        first_entry_line = something(first_entry_line, line)
+        last_entry_line = line
+
+        key, cells_start = with_line(() -> parse_key_token(line.content), line)
+        claim_key!(seen_keys, key, line)
+        cells = with_line(() -> parse_cells(SubString(line.content, cells_start), header.delimiter), line)
+        assert_expected_count(reader, length(cells), width, "keyed entry cells", line)
+        object[key] = object_from_fields(header.fields, cells)
+    end
+
+    assert_expected_count(reader, length(object), header.length, "keyed entries", last_entry_line)
+    if reader.strict && first_entry_line !== nothing
+        assert_no_blank_lines(reader, first_entry_line.number, last_entry_line.number, "keyed tabular object")
+    end
+    return object
 end
 
 # A row line has no unquoted colon, or its first unquoted delimiter precedes the colon.
@@ -274,9 +321,7 @@ function decode_tabular_array(
         first_row_line = something(first_row_line, line)
         last_row_line = line
 
-        cells = with_line(line) do
-            parse_primitive_token.(parse_delimited_values(line.content, header.delimiter))
-        end
+        cells = with_line(() -> parse_cells(line.content, header.delimiter), line)
         assert_expected_count(reader, length(cells), width, "tabular row values", line)
         push!(rows, object_from_fields(header.fields, cells))
     end
@@ -349,11 +394,15 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     item_line = ParsedLine(content, line.depth, line.number)
     header = with_line(() -> parse_array_header(content, reader.strict), item_line)
     if header !== nothing && header.key === nothing
-        # There is no keyless fields-bearing list-item form.
-        if header.fields === nothing
+        # There is no keyless keyed or fields-bearing list-item form.
+        if !header.keyed && header.fields === nothing
             return decode_header_value(header, reader, base_depth, item_line)
         elseif reader.strict
-            decode_error(item_line, "Keyless header with a field list is only valid at the document root")
+            decode_error(
+                item_line,
+                header.keyed ? "Keyless keyed header is only valid at the document root" :
+                "Keyless header with a field list is only valid at the document root",
+            )
         end
     end
 
@@ -377,7 +426,11 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     return object
 end
 
-function object_from_fields(fields::Vector{FieldNode}, cells::Vector)::JsonObject
+# Not a broadcast, which would return a `BitVector` for a row of booleans.
+parse_cells(content::AbstractString, delimiter::Char) =
+    JsonArray([parse_primitive_token(value) for value in parse_delimited_values(trim_spaces(content), delimiter)])
+
+function object_from_fields(fields::Vector{FieldNode}, cells::JsonArray)::JsonObject
     cell_index = 0
     function walk(nodes)
         object = JsonObject()

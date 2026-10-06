@@ -60,6 +60,12 @@ function decode_document(reader::LineReader)::JsonValue
 
     first_line === nothing && return JsonObject()
 
+    if first_line.content == "[]"
+        read_line!(reader)
+        assert_fully_consumed(reader)
+        return JsonArray()
+    end
+
     if is_array_header_content(first_line.content)
         header = with_line(() -> parse_array_header(first_line.content, reader.strict), first_line)
         if header !== nothing
@@ -168,7 +174,7 @@ function decode_key_value!(
     rest = trim_spaces(SubString(line.content, value_start))
 
     object[key] = if !isempty(rest)
-        with_line(() -> parse_primitive_token(rest), line)
+        rest == "[]" ? JsonArray() : with_line(() -> parse_primitive_token(rest), line)
     else
         next_line = peek_line(reader)
         if next_line !== nothing && next_line.depth > base_depth
@@ -324,7 +330,7 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     line.content == "-" && return JsonObject()
 
     content = SubString(line.content, 3)
-    isempty(trim_spaces(content)) && return JsonObject()
+    trim_spaces(content) == "[]" && return JsonArray()
 
     item_line = ParsedLine(content, line.depth, line.number)
     header = with_line(() -> parse_array_header(content, reader.strict), item_line)

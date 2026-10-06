@@ -425,20 +425,20 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     return object
 end
 
-function object_from_fields(fields::Vector{FieldNode}, cells::JsonArray)::JsonObject
-    cell_index = 0
-    function walk(nodes)
-        object = JsonObject()
-        for node in nodes
-            if node.children !== nothing
-                object[node.name] = walk(node.children)
-            elseif cell_index < length(cells)
-                # A non-strict width mismatch leaves trailing leaf fields absent.
-                cell_index += 1
-                object[node.name] = cells[cell_index]
-            end
+object_from_fields(fields::Vector{FieldNode}, cells::JsonArray)::JsonObject =
+    first(object_from_fields(fields, cells, 0))
+
+# Returns the object with the index of the last cell it consumed.
+function object_from_fields(fields::Vector{FieldNode}, cells::JsonArray, cell_index::Int)
+    object = JsonObject()
+    for field in fields
+        if field.children !== nothing
+            object[field.name], cell_index = object_from_fields(field.children, cells, cell_index)
+        elseif cell_index < length(cells)
+            # A non-strict width mismatch leaves trailing leaf fields absent.
+            cell_index += 1
+            object[field.name] = cells[cell_index]
         end
-        return object
     end
-    return walk(fields)
+    return object, cell_index
 end

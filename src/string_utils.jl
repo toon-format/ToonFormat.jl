@@ -57,14 +57,6 @@ function unescape_unicode(s::String, i::Int)::Char
     return Char(code)
 end
 
-function is_numeric_literal(s::AbstractString)::Bool
-    return !isnothing(match(NUMERIC_PATTERN, String(s)))
-end
-
-function has_leading_zeros(s::AbstractString)::Bool
-    return !isnothing(match(LEADING_ZERO_PATTERN, String(s)))
-end
-
 function is_boolean_or_null_literal(s::AbstractString)::Bool
     return s == TRUE_LITERAL || s == FALSE_LITERAL || s == NULL_LITERAL
 end
@@ -82,7 +74,7 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
         return true
     end
 
-    if is_numeric_literal(s) || has_leading_zeros(s)
+    if occursin(NUMERIC_LIKE_PATTERN, s)
         return true
     end
 

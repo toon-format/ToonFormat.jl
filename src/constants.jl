@@ -34,5 +34,4 @@ const CHARS_TO_ESCAPE =
 
 # Validation patterns
 const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*$"
-const NUMERIC_PATTERN = r"^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$"
-const LEADING_ZERO_PATTERN = r"^-?0\d+$"
+const NUMERIC_LIKE_PATTERN = r"^[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$"

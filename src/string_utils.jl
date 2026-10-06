@@ -66,7 +66,8 @@ function needs_quoting(s::String, delimiter::Delimiter)::Bool
         return true
     end
 
-    if s != strip(s)
+    # Only space and tab force quoting; `strip` would also count other Unicode whitespace.
+    if first(s) in " \t" || last(s) in " \t"
         return true
     end
 

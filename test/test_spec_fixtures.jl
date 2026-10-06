@@ -1,8 +1,6 @@
 using JSON
 using LazyArtifacts
 
-include("spec_fixtures_known_failures.jl")
-
 # GitHub release tarballs extract to a `spec-<version>` subdirectory.
 const ARTIFACT_ROOT = artifact"toon_spec"
 const FIXTURES_DIR = joinpath(
@@ -57,15 +55,6 @@ end
 expected_result(test, category) =
     category == "encode" ? test.expected : normalize_json(test.expected)
 
-function case_passes(test, category)
-    should_error = get(test, :shouldError, false)
-    try
-        return !should_error && json_equal(run_case(test, category), expected_result(test, category))
-    catch
-        return should_error
-    end
-end
-
 @testset "Spec Fixtures" begin
     for category in ("encode", "decode"),
         path in sort(readdir(joinpath(FIXTURES_DIR, category); join = true))
@@ -74,10 +63,8 @@ end
         fixture_id = "$category/$(basename(path))"
         @testset "$fixture_id" begin
             for (index, test) in enumerate(JSON.parse(read(path, String)).tests)
-                @testset "$(test.name)" begin
-                    if "$fixture_id#$(index - 1)" in KNOWN_FAILURES
-                        @test_broken case_passes(test, category)
-                    elseif get(test, :shouldError, false)
+                @testset "#$(index - 1) $(test.name)" begin
+                    if get(test, :shouldError, false)
                         @test_throws Exception run_case(test, category)
                     else
                         @test json_equal(run_case(test, category), expected_result(test, category))

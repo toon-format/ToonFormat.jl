@@ -1,7 +1,8 @@
 const ESCAPES = Dict('\\' => "\\\\", '"' => "\\\"", '\n' => "\\n", '\r' => "\\r", '\t' => "\\t")
 const UNESCAPES = Dict('\\' => '\\', '"' => '"', 'n' => '\n', 'r' => '\r', 't' => '\t')
 
-const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*$"
+# `\z` because `$` also matches before a trailing newline, which would leave a key like "a\n" unquoted.
+const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*\z"
 const NUMERIC_LIKE_PATTERN = r"^[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$"
 
 function escape_string(s::AbstractString)::String

@@ -43,7 +43,7 @@ end
             for (index, test) in enumerate(JSON.parse(read(path, String)).tests)
                 @testset "#$(index - 1) $(test.name)" begin
                     if get(test, :shouldError, false)
-                        @test_throws Exception run_case(test, category)
+                        @test_throws ErrorException run_case(test, category)
                     else
                         @test json_equal(run_case(test, category), test.expected)
                     end

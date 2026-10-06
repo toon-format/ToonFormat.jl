@@ -1,4 +1,4 @@
-# Host-type mapping of spec §3, which the fixtures can't express.
+# Host-type mapping, which the fixtures can't express.
 @testset "Host Types" begin
     @testset "encode($(repr(value)))" for (value, expected) in [
         (b = 1, a = 2) => "b: 1\na: 2",

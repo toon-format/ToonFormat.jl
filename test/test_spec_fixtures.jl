@@ -19,8 +19,8 @@ normalize_json(value) = value
 options_kwargs(options) =
     isnothing(options) ? (;) : (; (Symbol(k) => v for (k, v) in pairs(options))...)
 
-# JSON-model equality per spec §2: ordered keys, and no `Bool`/`Number` coercion
-# (`true == 1` holds in Julia, so plain `==` is too lenient).
+# JSON-model equality: ordered keys, and no `Bool`/`Number` coercion, since
+# `true == 1` holds in Julia.
 json_equal(a::AbstractDict, b::AbstractDict) =
     collect(keys(a)) == collect(keys(b)) && all(json_equal(a[k], b[k]) for k in keys(a))
 json_equal(a::AbstractVector, b::AbstractVector) =

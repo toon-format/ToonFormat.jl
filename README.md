@@ -41,6 +41,7 @@ Targets [TOON spec v4.3](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md
 
 - **Integers decode to `Int`, or `BigInt` beyond its range, and other numbers to `Float64`** – a token beyond the `Float64` range (e.g. `1e999`) decodes as a string; on encode, integers print in full, other numbers with the shortest digits of their `Float64` value, and finite reals beyond the `Float64` range (e.g. `big"1e400"`) as a quoted string of their `BigFloat` value in exponent form ([§4](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#4-decoding-interpretation-reference-decoder))
 - **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays (a matrix in column-major order), tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, strings that are not valid Unicode throw an `ArgumentError`, and anything else (`Symbol`, `Date`, `missing`) encodes as its `string` form ([§3](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#3-encoding-normalization-reference-encoder))
+- **Tabs in indentation are a strict-mode error** – in non-strict mode each leading tab counts as one indentation level, on top of the leading spaces divided by `indentSize` ([§12](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#12-indentation-and-whitespace))
 
 ## Resources
 

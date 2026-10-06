@@ -54,11 +54,8 @@ function encode_array(
     depth::Int,
     options::EncodeOptions,
 )
-    arr_length = length(arr)
-
-    if arr_length == 0
-        header = format_header(key, 0, options.delimiter)
-        push!(writer, depth, header)
+    if isempty(arr)
+        push!(writer, depth, key === nothing ? "[]" : "$(encode_key(key)): []")
         return
     end
 
@@ -198,7 +195,9 @@ function encode_list_item(
                 encoded_val = encode_primitive(first_value, options.delimiter)
                 push!(writer, depth, "$(LIST_ITEM_MARKER)$(encoded_key): $(encoded_val)")
             elseif is_json_array(first_value)
-                if is_array_of_primitives(first_value)
+                if isempty(first_value)
+                    push!(writer, depth, "$(LIST_ITEM_MARKER)$(encoded_key): []")
+                elseif is_array_of_primitives(first_value)
                     header =
                         format_header(first_key, length(first_value), options.delimiter)
                     encoded_values =

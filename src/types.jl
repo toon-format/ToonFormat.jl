@@ -9,6 +9,9 @@ const COMMA = ","
 const TAB = "\t"
 const PIPE = "|"
 
+check_indent_size(indentSize) =
+    indentSize >= 1 || throw(ArgumentError("indentSize must be at least 1, got $indentSize"))
+
 """
     EncodeOptions(; indentSize = 2, delimiter = COMMA)
 
@@ -20,6 +23,7 @@ Base.@kwdef struct EncodeOptions
     delimiter::String = COMMA
 
     function EncodeOptions(indentSize, delimiter)
+        check_indent_size(indentSize)
         delimiter in (COMMA, TAB, PIPE) ||
             throw(ArgumentError("Invalid delimiter $(repr(delimiter)); use COMMA, TAB, or PIPE"))
         return new(indentSize, delimiter)
@@ -35,6 +39,11 @@ every strict-mode error of the spec instead of applying its non-strict leniencie
 Base.@kwdef struct DecodeOptions
     indentSize::Int = 2
     strict::Bool = true
+
+    function DecodeOptions(indentSize, strict)
+        check_indent_size(indentSize)
+        return new(indentSize, strict)
+    end
 end
 
 # A tabular field; `children` holds the fields of a nested field group.

@@ -1,13 +1,12 @@
-"""
-    encode_number(n::Number) -> String
+encode_number(n::Integer) = string(n)
 
-Prints `n` with the fewest digits that decode back to it: in plain decimal from `1e-6`
+"""
+    encode_number(x::Float64) -> String
+
+Prints `x` with the fewest digits that decode back to it: in plain decimal from `1e-6`
 up to `1e21`, in exponent form beyond that range.
 """
-function encode_number(n::Number)::String
-    n isa Integer && return string(n)
-
-    x = Float64(n)
+function encode_number(x::Float64)::String
     x == 0 && return "0"
 
     # Julia prints the shortest round-trip digits, e.g. `0.1` or `1.2345e-7`.

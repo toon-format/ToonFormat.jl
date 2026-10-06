@@ -26,10 +26,11 @@ function normalize_string(s::AbstractString)::String
     return String(s)
 end
 
-function normalize_number(n::Real)::Union{Real,Nothing}
-    n isa AbstractFloat || return n
-    isfinite(n) || return nothing
-    return n == 0 ? zero(n) : n
+function normalize_number(n::Real)::Union{Integer,Float64,Nothing}
+    n isa Integer && return n
+    x = Float64(n)
+    isfinite(x) || return nothing
+    return x == 0 ? 0.0 : x
 end
 
 is_json_primitive(v) = v === nothing || v isa Bool || v isa Number || v isa AbstractString

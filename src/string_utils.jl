@@ -31,6 +31,9 @@ function unescape_string(s::AbstractString)::String
             if haskey(ESCAPE_CHARS, next_char)
                 write(result, ESCAPE_CHARS[next_char])
                 i = nextind(s_str, next_i)
+            elseif next_char == 'u'
+                write(result, unescape_unicode(s_str, i))
+                i += 6
             else
                 throw(ArgumentError("Invalid escape sequence: \\$(next_char)"))
             end
@@ -40,6 +43,18 @@ function unescape_string(s::AbstractString)::String
         end
     end
     return String(take!(result))
+end
+
+function unescape_unicode(s::String, i::Int)::Char
+    hex = codeunits(s)[(i+2):min(i + 5, end)]
+    if length(hex) != 4 || !all(b -> isxdigit(Char(b)), hex)
+        throw(ArgumentError("Invalid escape sequence: \\u must be followed by 4 hex digits"))
+    end
+    code = parse(UInt16, String(hex); base = 16)
+    if 0xd800 <= code <= 0xdfff
+        throw(ArgumentError("Invalid escape sequence: \\u$(String(hex)) is a lone surrogate"))
+    end
+    return Char(code)
 end
 
 function is_numeric_literal(s::AbstractString)::Bool

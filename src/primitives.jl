@@ -52,11 +52,10 @@ function format_header(
     return header * ":"
 end
 
-format_fields(fields::Vector{FieldNode}, delimiter::Delimiter) = join(
-    (
-        encode_key(field.name) *
-        (field.children === nothing ? "" : "{$(format_fields(field.children, delimiter))}") for
-        field in fields
-    ),
-    delimiter,
-)
+function format_fields(fields::Vector{FieldNode}, delimiter::Delimiter)::String
+    entries = map(fields) do field
+        key = encode_key(field.name)
+        field.children === nothing ? key : "$key{$(format_fields(field.children, delimiter))}"
+    end
+    return join(entries, delimiter)
+end

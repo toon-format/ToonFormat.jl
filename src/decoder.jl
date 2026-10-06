@@ -255,6 +255,7 @@ function decode_tabular_array(
     header_line::ParsedLine,
 )::JsonArray
     row_depth = scope_content_depth(reader, base_depth)
+    width = count_leaf_fields(header.fields)
     rows = JsonArray()
     first_row_line = nothing
     last_row_line = header_line
@@ -276,7 +277,7 @@ function decode_tabular_array(
         cells = with_line(line) do
             parse_primitive_token.(parse_delimited_values(line.content, header.delimiter))
         end
-        assert_expected_count(reader, length(cells), length(header.fields), "tabular row values", line)
+        assert_expected_count(reader, length(cells), width, "tabular row values", line)
         push!(rows, object_from_fields(header.fields, cells))
     end
 
@@ -376,5 +377,20 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     return object
 end
 
-# A non-strict width mismatch leaves trailing fields absent.
-object_from_fields(fields::Vector{String}, cells::Vector) = JsonObject(zip(fields, cells))
+function object_from_fields(fields::Vector{FieldNode}, cells::Vector)::JsonObject
+    cell_index = 0
+    function walk(nodes)
+        object = JsonObject()
+        for node in nodes
+            if node.children !== nothing
+                object[node.name] = walk(node.children)
+            elseif cell_index < length(cells)
+                # A non-strict width mismatch leaves trailing leaf fields absent.
+                cell_index += 1
+                object[node.name] = cells[cell_index]
+            end
+        end
+        return object
+    end
+    return walk(fields)
+end

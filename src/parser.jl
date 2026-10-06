@@ -1,8 +1,13 @@
+struct FieldNode
+    name::String
+    children::Union{Vector{FieldNode},Nothing}
+end
+
 struct ArrayHeader
     key::Union{String,Nothing}
     length::Int
     delimiter::Char
-    fields::Union{Vector{String},Nothing}
+    fields::Union{Vector{FieldNode},Nothing}
     inline_values::Union{SubString{String},Nothing}
 end
 
@@ -50,10 +55,11 @@ end
 # Token trimming removes U+0020 only; any other whitespace belongs to the token.
 trim_spaces(s::AbstractString) = strip(==(' '), s)
 
-# Splits on `delimiter` outside quotes.
-function split_unquoted(s::AbstractString, delimiter::Char)
+# Splits on `delimiter` outside quotes and, with `nested`, outside braces.
+function split_unquoted(s::AbstractString, delimiter::Char; nested::Bool = false)
     segments = SubString{String}[]
     in_quotes = false
+    brace_depth = 0
     segment_start = 1
     i = 1
     while i <= ncodeunits(s)
@@ -64,7 +70,11 @@ function split_unquoted(s::AbstractString, delimiter::Char)
         end
         if byte == UInt8('"')
             in_quotes = !in_quotes
-        elseif !in_quotes && byte == UInt8(delimiter)
+        elseif !in_quotes && nested && byte == UInt8('{')
+            brace_depth += 1
+        elseif !in_quotes && nested && byte == UInt8('}')
+            brace_depth -= 1
+        elseif !in_quotes && brace_depth == 0 && byte == UInt8(delimiter)
             push!(segments, slice(s, segment_start, i))
             segment_start = i + 1
         end
@@ -223,22 +233,42 @@ function parse_bracket_segment(segment::AbstractString)
     return something(tryparse(Int, segment), typemax(Int)), delimiter
 end
 
-function parse_field_entries(content::AbstractString, delimiter::Char)::Vector{String}
-    return map(split_unquoted(content, delimiter)) do entry
+function parse_field_entries(content::AbstractString, delimiter::Char)::Vector{FieldNode}
+    return map(split_unquoted(content, delimiter; nested = true)) do entry
         entry = trim_spaces(entry)
         isempty(entry) && error("Empty field name in field list")
-        return parse_string_literal(entry)
+
+        group_start = find_unquoted(entry, '{')
+        group_start === nothing && return FieldNode(parse_string_literal(entry), nothing)
+
+        name = slice(entry, 1, group_start)
+        isempty(name) && error("Missing field name before nested field group")
+        name == rstrip(name) || error("Unexpected whitespace before nested field group")
+
+        group_end = find_matching_brace(entry, group_start)
+        group_end === nothing && error("Unmatched brace in field list")
+        group_end == ncodeunits(entry) || error("Unexpected content after nested field group")
+
+        children = parse_field_entries(slice(entry, group_start + 1, group_end), delimiter)
+        return FieldNode(parse_string_literal(name), children)
     end
 end
 
-function find_duplicate_field_name(fields::Vector{String})::Union{String,Nothing}
+function find_duplicate_field_name(fields::Vector{FieldNode})::Union{String,Nothing}
     seen = Set{String}()
-    for name in fields
-        name in seen && return name
-        push!(seen, name)
+    for field in fields
+        field.name in seen && return field.name
+        push!(seen, field.name)
+        if field.children !== nothing
+            duplicate = find_duplicate_field_name(field.children)
+            duplicate === nothing || return duplicate
+        end
     end
     return nothing
 end
+
+count_leaf_fields(fields::Vector{FieldNode}) =
+    sum(field -> field.children === nothing ? 1 : count_leaf_fields(field.children), fields; init = 0)
 
 function parse_primitive_token(token::AbstractString)::JsonPrimitive
     token = trim_spaces(token)

@@ -69,34 +69,8 @@ function format_header(
     delimiter::Delimiter,
     fields::Union{Vector{String},Nothing} = nothing,
 )::String
-    result = ""
-
-    if key !== nothing
-        result *= encode_key(key)
-    end
-
-    result *= OPEN_BRACKET * string(length)
-
-    if delimiter == TAB
-        result *= TAB
-    elseif delimiter == PIPE
-        result *= PIPE
-    end
-
-    result *= CLOSE_BRACKET
-
-    if fields !== nothing && !isempty(fields)
-        result *= OPEN_BRACE
-        encoded_fields = [encode_key(f) for f in fields]
-        result *= join(encoded_fields, delimiter)
-        result *= CLOSE_BRACE
-    end
-
-    result *= COLON
-
-    return result
-end
-
-function join_encoded_values(values::Vector{String}, delimiter::Delimiter)::String
-    return join(values, delimiter)
+    header = key === nothing ? "" : encode_key(key)
+    header *= "[$length$(delimiter == COMMA ? "" : delimiter)]"
+    fields === nothing || (header *= "{$(join(encode_key.(fields), delimiter))}")
+    return header * ":"
 end

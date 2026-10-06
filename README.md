@@ -33,10 +33,7 @@ Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `op
 | ------ | ------- | ----------- |
 | `indent` | `2` | Spaces per indentation level (encode and decode) |
 | `delimiter` | `COMMA` | Array delimiter: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `keyFolding` | `"off"` | `"safe"` folds chains of single-key objects into dotted keys (encode) |
-| `flattenDepth` | `typemax(Int)` | Maximum segments in a folded key (encode) |
 | `strict` | `true` | Raise the strict-mode errors of spec §14 (decode) |
-| `expandPaths` | `"off"` | `"safe"` expands dotted keys into nested objects (decode) |
 
 ## Specification
 

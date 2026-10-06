@@ -152,68 +152,6 @@ function decode_value_from_lines(cursor::LineCursor, options::DecodeOptions)::Js
     return decode_object(cursor, -1, options)
 end
 
-"""
-    expand_dotted_key(result::JsonObject, key::String, value::JsonValue, options::DecodeOptions, was_quoted::Bool=false)
-
-Expand a dotted key into nested objects if expandPaths is enabled.
-For example, "a.b.c" with value "x" becomes {"a": {"b": {"c": "x"}}}
-If was_quoted is true, the key will not be expanded even if it contains dots.
-"""
-function expand_dotted_key(
-    result::JsonObject,
-    key::String,
-    value::JsonValue,
-    options::DecodeOptions,
-    was_quoted::Bool = false,
-)
-    should_expand =
-        options.expandPaths == "safe" &&
-        !was_quoted &&
-        occursin('.', key) &&
-        all(is_safe_identifier, split(key, '.'))
-
-    if !should_expand
-        if options.strict &&
-           haskey(result, key) &&
-           isa(result[key], JsonObject) &&
-           !isa(value, JsonObject)
-            error("Cannot set key '$key': key already exists as object")
-        end
-        result[key] = value
-        return
-    end
-
-    segments = split(key, '.')
-
-    current = result
-    for (i, segment) in enumerate(segments[1:(end-1)])
-        segment_str = String(segment)
-        if !haskey(current, segment_str)
-            current[segment_str] = JsonObject()
-        elseif !isa(current[segment_str], JsonObject)
-            if options.strict
-                error(
-                    "Cannot expand path '$key': segment '$segment_str' already exists as non-object",
-                )
-            end
-            current[segment_str] = JsonObject()
-        end
-        current = current[segment_str]
-    end
-
-    final_key = String(segments[end])
-    if haskey(current, final_key) &&
-       isa(current[final_key], JsonObject) &&
-       !isa(value, JsonObject)
-        if options.strict
-            error(
-                "Cannot expand path '$key': segment '$final_key' already exists as object",
-            )
-        end
-    end
-    current[final_key] = value
-end
-
 function decode_object(
     cursor::LineCursor,
     parent_depth::Int,
@@ -263,8 +201,6 @@ function decode_object(
             nothing
         end
 
-        was_quoted = startswith(strip(key_str), DOUBLE_QUOTE)
-
         if array_header !== nothing && array_header.key !== nothing
             key = array_header.key
             advance_line!(cursor)
@@ -291,7 +227,13 @@ function decode_object(
             end
         end
 
-        expand_dotted_key(result, key, value, options, was_quoted)
+        if options.strict &&
+           haskey(result, key) &&
+           isa(result[key], JsonObject) &&
+           !isa(value, JsonObject)
+            error("Cannot set key '$key': key already exists as object")
+        end
+        result[key] = value
     end
 
     return result

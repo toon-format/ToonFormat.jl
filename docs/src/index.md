@@ -23,7 +23,7 @@ decode(toon)
 # OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])
 ```
 
-A `Dict` iterates in hash order, so encode a `NamedTuple` or an `OrderedDict` from OrderedCollections.jl when the field order matters. `decode` throws an `ErrorException` on invalid input, e.g. `Array length mismatch: expected 3, got 2`. [Options](options.md) covers delimiters, key folding, and strict mode.
+A `Dict` iterates in hash order, so encode a `NamedTuple` or an `OrderedDict` from OrderedCollections.jl when the field order matters. `decode` throws an `ErrorException` on invalid input, e.g. `Array length mismatch: expected 3, got 2`. [Options](options.md) covers delimiters and strict mode.
 
 ## Specification
 

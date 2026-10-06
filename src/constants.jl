@@ -13,7 +13,6 @@ const BACKSLASH = "\\"
 const NEWLINE = "\n"
 const CARRIAGE_RETURN = "\r"
 const HTAB = "\t"
-const DOT = "."
 
 # Array and object markers
 const OPEN_BRACKET = "["
@@ -35,6 +34,5 @@ const CHARS_TO_ESCAPE =
 
 # Validation patterns
 const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*$"
-const IDENTIFIER_SEGMENT_PATTERN = r"^[A-Za-z_][A-Za-z0-9_]*$"
 const NUMERIC_PATTERN = r"^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$"
 const LEADING_ZERO_PATTERN = r"^-?0\d+$"

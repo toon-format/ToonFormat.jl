@@ -14,34 +14,6 @@ function encode_value(
     end
 end
 
-function would_collide_with_sibling(obj::JsonObject, key::String, folded_path::String)::Bool
-    for sibling_key in keys(obj)
-        if sibling_key != key && sibling_key == folded_path
-            return true
-        end
-    end
-    return false
-end
-
-function collect_all_folded_paths(
-    key::String,
-    value::JsonValue,
-    prefix::String = "",
-)::Vector{String}
-    paths = String[]
-    current_path = isempty(prefix) ? key : "$(prefix).$(key)"
-
-    if is_json_object(value) && length(value) == 1
-        push!(paths, current_path)
-        child_key, child_value = first(value)
-        append!(paths, collect_all_folded_paths(child_key, child_value, current_path))
-    else
-        push!(paths, current_path)
-    end
-
-    return paths
-end
-
 function encode_object(
     obj::JsonObject,
     writer::LineWriter,
@@ -49,7 +21,7 @@ function encode_object(
     options::EncodeOptions,
 )
     for (key, value) in obj
-        encode_key_value_pair(key, value, writer, depth, options, parent_obj = obj)
+        encode_key_value_pair(key, value, writer, depth, options)
     end
 end
 
@@ -58,103 +30,19 @@ function encode_key_value_pair(
     value::JsonValue,
     writer::LineWriter,
     depth::Int,
-    options::EncodeOptions;
-    prefix::String = "",
-    parent_obj::Union{JsonObject,Nothing} = nothing,
+    options::EncodeOptions,
 )
-    full_key = isempty(prefix) ? key : "$(prefix).$(key)"
-
-    num_segments = count('.', full_key) + 1
-
-    can_fold =
-        options.keyFolding == "safe" &&
-        is_safe_identifier(key) &&
-        is_valid_unquoted_key(key) &&
-        (isempty(prefix) || all(is_safe_identifier, split(prefix, '.')))
-
-    # `flattenDepth = 2` allows `a.b`, so folding stops once the key has that many segments.
-    should_fold =
-        can_fold &&
-        is_json_object(value) &&
-        length(value) == 1 &&
-        num_segments < options.flattenDepth
-
-    encoded_key = encode_key(isempty(prefix) ? key : full_key)
+    encoded_key = encode_key(key)
 
     if is_json_primitive(value)
         encoded_value = encode_primitive(value, options.delimiter)
         push!(writer, depth, "$(encoded_key): $(encoded_value)")
     elseif is_json_array(value)
-        # A folded prefix stays on the array key, e.g. `data.users[2]:`.
-        array_key = isempty(prefix) ? key : full_key
-        encode_array(array_key, value, writer, depth, options)
+        encode_array(key, value, writer, depth, options)
     elseif is_json_object(value)
-        if should_fold && !is_empty_object(value)
-            if length(value) == 1
-                # Safe mode can't fold into a child key that needs quoting.
-                child_key = collect(keys(value))[1]
-                child_can_fold =
-                    is_safe_identifier(child_key) && is_valid_unquoted_key(child_key)
-
-                # At the root, safe mode doesn't fold a path that collides with a sibling key.
-                has_collision = false
-                if options.keyFolding == "safe" &&
-                   depth == 0 &&
-                   parent_obj !== nothing &&
-                   isempty(prefix)
-                    all_paths = collect_all_folded_paths(key, value)
-                    for path in all_paths
-                        if would_collide_with_sibling(parent_obj, key, path)
-                            has_collision = true
-                            break
-                        end
-                    end
-                end
-
-                if !has_collision && (child_can_fold || options.keyFolding != "safe")
-                    for (child_key, child_value) in value
-                        encode_key_value_pair(
-                            child_key,
-                            child_value,
-                            writer,
-                            depth,
-                            options,
-                            prefix = full_key,
-                            parent_obj = nothing,
-                        )
-                    end
-                else
-                    push!(writer, depth, "$(encoded_key):")
-                    nested_opts = EncodeOptions(
-                        indent = options.indent,
-                        delimiter = options.delimiter,
-                        keyFolding = "off",
-                        flattenDepth = options.flattenDepth,
-                    )
-                    encode_object(value, writer, depth + 1, nested_opts)
-                end
-            else
-                push!(writer, depth, "$(encoded_key):")
-                nested_opts = EncodeOptions(
-                    indent = options.indent,
-                    delimiter = options.delimiter,
-                    keyFolding = "off",
-                    flattenDepth = options.flattenDepth,
-                )
-                encode_object(value, writer, depth + 1, nested_opts)
-            end
-        else
-            push!(writer, depth, "$(encoded_key):")
-            if !is_empty_object(value)
-                # Folding is off for the nested object so it isn't folded again.
-                nested_opts = EncodeOptions(
-                    indent = options.indent,
-                    delimiter = options.delimiter,
-                    keyFolding = "off",
-                    flattenDepth = options.flattenDepth,
-                )
-                encode_object(value, writer, depth + 1, nested_opts)
-            end
+        push!(writer, depth, "$(encoded_key):")
+        if !is_empty_object(value)
+            encode_object(value, writer, depth + 1, options)
         end
     end
 end

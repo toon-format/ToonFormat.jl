@@ -11,14 +11,11 @@ const Delimiter = String     # actual delimiter character
 Base.@kwdef struct EncodeOptions
     indent::Int = 2
     delimiter::Delimiter = DEFAULT_DELIMITER
-    keyFolding::String = "off"  # "off" or "safe"
-    flattenDepth::Int = typemax(Int)
 end
 
 Base.@kwdef struct DecodeOptions
     indent::Int = 2
     strict::Bool = true
-    expandPaths::String = "off"  # "off" or "safe"
 end
 
 struct ArrayHeaderInfo

@@ -103,17 +103,6 @@ function is_valid_unquoted_key(s::String)::Bool
     return !isnothing(match(UNQUOTED_KEY_PATTERN, s))
 end
 
-function is_identifier_segment(s::String)::Bool
-    return !isnothing(match(IDENTIFIER_SEGMENT_PATTERN, s))
-end
-
-function is_safe_identifier(s::AbstractString)::Bool
-    if occursin('.', s)
-        return false
-    end
-    return is_identifier_segment(String(s))
-end
-
 function find_first_unquoted(s::String, target::Char)::Union{Int,Nothing}
     in_quotes = false
     skip_next = false

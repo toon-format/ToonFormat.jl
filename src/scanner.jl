@@ -7,8 +7,8 @@ end
 """
     scan_lines(input, indent_size, strict) -> (lines, blank_line_numbers)
 
-Splits `input` into content lines with their depth. Blank lines only leave their line
-numbers behind for the strict blank-line checks.
+Splits `input` into content lines with their depth. Comment lines are dropped, and
+blank lines only leave their line numbers behind for the strict blank-line checks.
 """
 function scan_lines(input::AbstractString, indent_size::Int, strict::Bool)
     lines = ParsedLine[]
@@ -33,6 +33,8 @@ function scan_lines(input::AbstractString, indent_size::Int, strict::Bool)
         depth = (indent - tab_indent) ÷ indent_size + tab_indent
 
         content = rstrip(==(' '), SubString(raw, indent + 1))
+        # Only spaces may precede the comment marker, so a tab in the indentation rules the line out.
+        first_tab === nothing && startswith(content, '#') && continue
 
         if isempty(content)
             push!(blank_line_numbers, number)

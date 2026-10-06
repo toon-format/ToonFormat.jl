@@ -5,8 +5,8 @@ Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `op
 | Option | Default | Description |
 | ------ | ------- | ----------- |
 | `indentSize` | `2` | Spaces per indentation level (encode and decode) |
-| `delimiter` | `COMMA` | Array delimiter: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `strict` | `true` | Raise the strict-mode errors of spec §14 (decode) |
+| `delimiter` | `COMMA` | Delimiter for inline arrays and tabular rows: `COMMA`, `TAB`, or `PIPE` (encode) |
+| `strict` | `true` | Throws on the spec's strict-mode errors instead of applying its non-strict leniencies (decode) |
 
 ## Delimiters
 
@@ -24,7 +24,7 @@ encode((users = users,); options = EncodeOptions(delimiter = PIPE))
 
 ## Strict Mode
 
-Strict mode throws on every error listed in [§14](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#14-strict-mode-errors-and-diagnostics-authoritative-checklist). `strict = false` accepts what it can instead – here the rows that are present:
+Strict mode throws on every [strict-mode error](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#14-strict-mode-errors-and-diagnostics-authoritative-checklist) the spec lists. `strict = false` applies the spec's non-strict leniencies instead – here it keeps the rows that are present:
 
 ```julia
 toon = """
@@ -33,7 +33,7 @@ users[3]{id,name,role}:
   2,Bob,user"""
 
 decode(toon)
-# ERROR: Array length mismatch: expected 3, got 2
+# ERROR: Line 3: Expected 3 tabular rows, but got 2
 
 decode(toon; options = DecodeOptions(strict = false))
 # OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])

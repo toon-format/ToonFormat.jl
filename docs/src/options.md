@@ -4,7 +4,7 @@ Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `op
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
-| `indent` | `2` | Spaces per indentation level (encode and decode) |
+| `indentSize` | `2` | Spaces per indentation level (encode and decode) |
 | `delimiter` | `COMMA` | Array delimiter: `COMMA`, `TAB`, or `PIPE` (encode) |
 | `strict` | `true` | Raise the strict-mode errors of spec §14 (decode) |
 

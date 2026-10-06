@@ -15,21 +15,9 @@ normalize_json(value::AbstractDict) =
 normalize_json(value::AbstractVector) = [normalize_json(v) for v in value]
 normalize_json(value) = value
 
-function encode_options(options)
-    isnothing(options) && return EncodeOptions()
-    kwargs = Dict{Symbol,Any}()
-    haskey(options, :delimiter) && (kwargs[:delimiter] = options.delimiter)
-    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
-    return EncodeOptions(; kwargs...)
-end
-
-function decode_options(options)
-    isnothing(options) && return DecodeOptions()
-    kwargs = Dict{Symbol,Any}()
-    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
-    haskey(options, :strict) && (kwargs[:strict] = options.strict)
-    return DecodeOptions(; kwargs...)
-end
+# Fixture options use the field names of `EncodeOptions` and `DecodeOptions`.
+options_kwargs(options) =
+    isnothing(options) ? (;) : (; (Symbol(k) => v for (k, v) in pairs(options))...)
 
 # JSON-model equality per spec §2: ordered keys, and no `Bool`/`Number` coercion
 # (`true == 1` holds in Julia, so plain `==` is too lenient).
@@ -46,10 +34,10 @@ json_equal(::Nothing, ::Nothing) = true
 json_equal(::Any, ::Any) = false
 
 function run_case(test, category)
-    options = get(test, :options, nothing)
+    kwargs = options_kwargs(get(test, :options, nothing))
     category == "encode" &&
-        return ToonFormat.encode(normalize_json(test.input); options = encode_options(options))
-    return ToonFormat.decode(test.input; options = decode_options(options))
+        return encode(normalize_json(test.input); options = EncodeOptions(; kwargs...))
+    return decode(test.input; options = DecodeOptions(; kwargs...))
 end
 
 expected_result(test, category) =

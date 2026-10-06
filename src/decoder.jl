@@ -889,7 +889,7 @@ Main decoding function. Converts a TOON format string to a Julia value.
 
 # Arguments
 - `input`: TOON formatted string
-- `options`: Decoding options (indent, strict, etc.)
+- `options`: Decoding options (indentSize, strict)
 
 # Returns
 - Parsed Julia value (Dict, Array, or primitive)
@@ -904,7 +904,7 @@ decode("[2]: 1,2")
 ```
 """
 function decode(input::String; options::DecodeOptions = DecodeOptions())::JsonValue
-    scan_result = to_parsed_lines(input, options.indent, options.strict)
+    scan_result = to_parsed_lines(input, options.indentSize, options.strict)
 
     if isempty(scan_result.lines)
         return JsonObject()

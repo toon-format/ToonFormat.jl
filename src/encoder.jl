@@ -260,7 +260,7 @@ Main encoding function. Converts a Julia value to TOON format string.
 
 # Arguments
 - `value`: The value to encode (will be normalized to JSON model)
-- `options`: Encoding options (indent, delimiter, etc.)
+- `options`: Encoding options (indentSize, delimiter)
 
 # Returns
 - TOON formatted string
@@ -279,7 +279,7 @@ encode([Dict("id" => 1), Dict("id" => 2)])
 """
 function encode(value; options::EncodeOptions = EncodeOptions())::String
     normalized = normalize_value(value)
-    writer = LineWriter(options.indent)
+    writer = LineWriter(options.indentSize)
 
     if is_json_primitive(normalized)
         return encode_primitive(normalized, options.delimiter)

@@ -9,12 +9,12 @@ const DelimiterKey = String  # "comma", "tab", or "pipe"
 const Delimiter = String     # actual delimiter character
 
 Base.@kwdef struct EncodeOptions
-    indent::Int = 2
+    indentSize::Int = 2
     delimiter::Delimiter = DEFAULT_DELIMITER
 end
 
 Base.@kwdef struct DecodeOptions
-    indent::Int = 2
+    indentSize::Int = 2
     strict::Bool = true
 end
 

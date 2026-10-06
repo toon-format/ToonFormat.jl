@@ -26,10 +26,13 @@ function normalize_string(s::AbstractString)::String
     return String(s)
 end
 
-function normalize_number(n::Real)::Union{Integer,Float64,Nothing}
+# A finite real beyond the `Float64` range keeps its digits as an exponent-form string;
+# going through `BigFloat` gives a `Rational` a decimal form too.
+function normalize_number(n::Real)::Union{Integer,Float64,String,Nothing}
     n isa Integer && return n
+    isfinite(n) || return nothing
     x = Float64(n)
-    isfinite(x) || return nothing
+    isfinite(x) || return string(BigFloat(n))
     return x == 0 ? 0.0 : x
 end
 

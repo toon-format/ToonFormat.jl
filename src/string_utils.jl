@@ -3,6 +3,8 @@ function escape_string(s::String)::String
     for char in s
         if haskey(CHARS_TO_ESCAPE, char)
             write(result, CHARS_TO_ESCAPE[char])
+        elseif char < ' '
+            write(result, "\\u", string(UInt16(char); base = 16, pad = 4))
         else
             write(result, char)
         end

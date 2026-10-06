@@ -29,7 +29,10 @@ function find_closing_quote(s::AbstractString, start::Int)::Union{Int,Nothing}
     return nothing
 end
 
-function find_unquoted(s::AbstractString, char::Char, start::Int = 1)::Union{Int,Nothing}
+# Returns the first index outside quoted spans whose byte satisfies `predicate(index, byte)`.
+# Callers keep the state their predicate updates in a `Ref`: Julia boxes a reassigned captured
+# variable, which makes the scan type-unstable.
+function find_unquoted(predicate, s::AbstractString, start::Int = 1)::Union{Int,Nothing}
     in_quotes = false
     i = start
     while i <= ncodeunits(s)
@@ -40,7 +43,7 @@ function find_unquoted(s::AbstractString, char::Char, start::Int = 1)::Union{Int
         end
         if byte == UInt8('"')
             in_quotes = !in_quotes
-        elseif byte == UInt8(char) && !in_quotes
+        elseif !in_quotes && predicate(i, byte)
             return i
         end
         i += 1
@@ -48,63 +51,41 @@ function find_unquoted(s::AbstractString, char::Char, start::Int = 1)::Union{Int
     return nothing
 end
 
-# Token trimming removes U+0020 only; any other whitespace belongs to the token.
-trim_spaces(s::AbstractString) = strip(==(' '), s)
+find_unquoted(s::AbstractString, char::Char, start::Int = 1) =
+    find_unquoted((_, byte) -> byte == UInt8(char), s, start)
+
+function find_matching_brace(s::AbstractString, start::Int)::Union{Int,Nothing}
+    depth = Ref(0)
+    return find_unquoted(s, start) do _, byte
+        depth[] += (byte == UInt8('{')) - (byte == UInt8('}'))
+        return byte == UInt8('}') && depth[] == 0
+    end
+end
 
 # Splits on `delimiter` outside quotes and, with `nested`, outside braces.
 function split_unquoted(s::AbstractString, delimiter::Char; nested::Bool = false)
     segments = SubString{String}[]
-    in_quotes = false
-    brace_depth = 0
-    segment_start = 1
-    i = 1
-    while i <= ncodeunits(s)
-        byte = codeunit(s, i)
-        if byte == UInt8('\\') && in_quotes
-            i += 2
-            continue
+    brace_depth = Ref(0)
+    segment_start = Ref(1)
+    find_unquoted(s) do i, byte
+        if nested
+            brace_depth[] += (byte == UInt8('{')) - (byte == UInt8('}'))
         end
-        if byte == UInt8('"')
-            in_quotes = !in_quotes
-        elseif !in_quotes && nested && byte == UInt8('{')
-            brace_depth += 1
-        elseif !in_quotes && nested && byte == UInt8('}')
-            brace_depth -= 1
-        elseif !in_quotes && brace_depth == 0 && byte == UInt8(delimiter)
-            push!(segments, slice(s, segment_start, i))
-            segment_start = i + 1
+        if brace_depth[] == 0 && byte == UInt8(delimiter)
+            push!(segments, slice(s, segment_start[], i))
+            segment_start[] = i + 1
         end
-        i += 1
+        return false
     end
-    push!(segments, SubString(s, segment_start))
+    push!(segments, SubString(s, segment_start[]))
     return segments
 end
 
+# Token trimming removes U+0020 only; any other whitespace belongs to the token.
+trim_spaces(s::AbstractString) = strip(==(' '), s)
+
 parse_delimited_values(s::AbstractString, delimiter::Char) =
     isempty(s) ? SubString{String}[] : trim_spaces.(split_unquoted(s, delimiter))
-
-function find_matching_brace(s::AbstractString, start::Int)::Union{Int,Nothing}
-    in_quotes = false
-    depth = 0
-    i = start
-    while i <= ncodeunits(s)
-        byte = codeunit(s, i)
-        if byte == UInt8('\\') && in_quotes
-            i += 2
-            continue
-        end
-        if byte == UInt8('"')
-            in_quotes = !in_quotes
-        elseif !in_quotes && byte == UInt8('{')
-            depth += 1
-        elseif !in_quotes && byte == UInt8('}')
-            depth -= 1
-            depth == 0 && return i
-        end
-        i += 1
-    end
-    return nothing
-end
 
 """
     parse_array_header(content, strict) -> Union{ArrayHeader,Nothing}
@@ -195,19 +176,16 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     end
 
     duplicate = fields === nothing ? nothing : find_duplicate_field_name(fields)
-    duplicate_reason = "Duplicate field name \"$duplicate\" in field list"
+    duplicate_reason = duplicate === nothing ? nothing : "Duplicate field name \"$duplicate\" in field list"
     keyed && fields === nothing && return invalid("Keyed header requires a field list")
 
     inline_values = trim_spaces(SubString(content, colon + 1))
     # A fields-bearing header carries no inline content; decoding it as an inline array would drop the fields.
     if fields !== nothing && !isempty(inline_values)
-        return invalid(
-            duplicate === nothing ? "Unexpected content after fields-bearing header colon" :
-            duplicate_reason,
-        )
+        return invalid(something(duplicate_reason, "Unexpected content after fields-bearing header colon"))
     end
     # Non-strict mode resolves duplicate field names by last-write-wins.
-    strict && duplicate !== nothing && error(duplicate_reason)
+    strict && duplicate_reason !== nothing && error(duplicate_reason)
 
     return ArrayHeader(
         key,

@@ -10,14 +10,8 @@ const FIXTURES_DIR = joinpath(
     "fixtures",
 )
 
-normalize_json(value::AbstractDict) =
-    ToonFormat.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(value))
-normalize_json(value::AbstractVector) = [normalize_json(v) for v in value]
-normalize_json(value) = value
-
 # Fixture options use the field names of `EncodeOptions` and `DecodeOptions`.
-options_kwargs(options) =
-    isnothing(options) ? (;) : (; (Symbol(k) => v for (k, v) in pairs(options))...)
+options_kwargs(test) = (Symbol(k) => v for (k, v) in get(test, :options, Dict()))
 
 # JSON-model equality: ordered keys, and no `Bool`/`Number` coercion, since
 # `true == 1` holds in Julia.
@@ -34,14 +28,10 @@ json_equal(::Nothing, ::Nothing) = true
 json_equal(::Any, ::Any) = false
 
 function run_case(test, category)
-    kwargs = options_kwargs(get(test, :options, nothing))
     category == "encode" &&
-        return encode(normalize_json(test.input); options = EncodeOptions(; kwargs...))
-    return decode(test.input; options = DecodeOptions(; kwargs...))
+        return encode(test.input; options = EncodeOptions(; options_kwargs(test)...))
+    return decode(test.input; options = DecodeOptions(; options_kwargs(test)...))
 end
-
-expected_result(test, category) =
-    category == "encode" ? test.expected : normalize_json(test.expected)
 
 @testset "Spec Fixtures" begin
     for category in ("encode", "decode"),
@@ -55,7 +45,7 @@ expected_result(test, category) =
                     if get(test, :shouldError, false)
                         @test_throws Exception run_case(test, category)
                     else
-                        @test json_equal(run_case(test, category), expected_result(test, category))
+                        @test json_equal(run_case(test, category), test.expected)
                     end
                 end
             end

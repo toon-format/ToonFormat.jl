@@ -281,6 +281,10 @@ function encode(value; options::EncodeOptions = EncodeOptions())::String
     writer = LineWriter(options.indentSize)
 
     if is_json_primitive(normalized)
+        # Unquoted, a leading U+FEFF would read as the byte-order mark that decoders strip.
+        if normalized isa String && startswith(normalized, '\ufeff')
+            return "$(DOUBLE_QUOTE)$(escape_string(normalized))$(DOUBLE_QUOTE)"
+        end
         return encode_primitive(normalized, options.delimiter)
     end
 

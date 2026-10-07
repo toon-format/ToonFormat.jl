@@ -341,8 +341,8 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     line = read_line!(reader)
     line.content == "-" && return JsonObject()
 
-    content = SubString(line.content, 3)
-    trim_spaces(content) == "[]" && return JsonArray()
+    content = lstrip(==(' '), SubString(line.content, 2))
+    content == "[]" && return JsonArray()
 
     item_line = ParsedLine(content, line.depth, line.number)
     header = with_line(() -> parse_array_header(content, reader.strict), item_line)

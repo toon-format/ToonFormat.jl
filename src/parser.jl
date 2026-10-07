@@ -98,9 +98,8 @@ Returns `nothing` for a line that is no array header, and throws for one that br
 header grammar.
 """
 function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayHeader,Nothing}
-    leading = ncodeunits(content) - ncodeunits(lstrip(content))
-    if byte_at(content, leading + 1) == UInt8('"')
-        closing_quote = find_closing_quote(content, leading + 1)
+    if startswith(content, '"')
+        closing_quote = find_closing_quote(content, 1)
         if closing_quote === nothing || byte_at(content, closing_quote + 1) != UInt8('[')
             return nothing
         end

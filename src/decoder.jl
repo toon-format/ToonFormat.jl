@@ -62,12 +62,10 @@ function decode_document(reader::LineReader)::JsonValue
 
     if is_array_header_content(first_line.content)
         header = with_line(() -> parse_array_header(first_line.content, reader.strict), first_line)
-        if header !== nothing
-            read_line!(reader)
-            value = decode_header_value(header, reader, 0, first_line)
-            assert_fully_consumed(reader)
-            return value
-        end
+        read_line!(reader)
+        value = decode_header_value(header, reader, 0, first_line)
+        assert_fully_consumed(reader)
+        return value
     end
 
     read_line!(reader)

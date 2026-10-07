@@ -45,6 +45,8 @@ decode("[2]: 1,2")
 ```
 """
 function decode(input::AbstractString; options::DecodeOptions = DecodeOptions())::JsonValue
+    # A Julia string may hold ill-formed UTF-8, which the spec treats as byte input.
+    isvalid(input) || error("Input is not valid UTF-8")
     lines, blank_line_numbers = scan_lines(input, options.indentSize, options.strict)
     return decode_document(LineReader(lines, blank_line_numbers, 1, options.strict))
 end

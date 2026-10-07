@@ -33,7 +33,7 @@ decode(toon)
 | ------ | ------- | ----------- |
 | `indentSize` | `2` | Spaces per indentation level (encode and decode) |
 | `delimiter` | `COMMA` | Delimiter for inline arrays and tabular rows: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `strict` | `true` | Throws on the spec's strict-mode errors instead of applying its non-strict leniencies (decode) |
+| `strict` | `true` | Throws on every decode error of the spec; `false` applies its five non-strict recoveries instead (decode) |
 
 ## Specification
 

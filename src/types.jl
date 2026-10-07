@@ -34,7 +34,11 @@ end
     DecodeOptions(; indentSize = 2, strict = true)
 
 Options for [`decode`](@ref): the spaces per indentation level, and whether to throw on
-every strict-mode error of the spec instead of applying its non-strict leniencies.
+every decode error of the spec. `strict = false` applies the spec's five non-strict
+recoveries instead – a declared length is advisory, duplicate keys keep the last value, tabs
+and uneven spaces count as indentation, blank lines inside an array or keyed object are
+skipped, and a block indented too deep reads at its own depth – and throws on every other
+error.
 """
 Base.@kwdef struct DecodeOptions
     indentSize::Int = 2

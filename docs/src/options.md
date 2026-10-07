@@ -6,7 +6,7 @@ Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `op
 | ------ | ------- | ----------- |
 | `indentSize` | `2` | Spaces per indentation level (encode and decode) |
 | `delimiter` | `COMMA` | Delimiter for inline arrays and tabular rows: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `strict` | `true` | Throws on the spec's strict-mode errors instead of applying its non-strict leniencies (decode) |
+| `strict` | `true` | Throws on every decode error of the spec; `false` applies its five non-strict recoveries instead (decode) |
 
 ## Delimiters
 
@@ -24,7 +24,15 @@ encode((users = users,); options = EncodeOptions(delimiter = PIPE))
 
 ## Strict Mode
 
-Strict mode throws on every [strict-mode error](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#14-strict-mode-errors-and-diagnostics-authoritative-checklist) the spec lists. `strict = false` applies the spec's non-strict leniencies instead – here it keeps the rows that are present:
+Strict mode throws on every [decode error](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#14-decode-errors-and-non-strict-recoveries-authoritative-checklist) the spec lists. `strict = false` recovers from five of them and throws on the rest:
+
+- A declared length is advisory: every value, row, item, and entry present is decoded, though each row still needs one cell per field
+- Duplicate keys and repeated field names keep the last value
+- Each tab in the indentation counts as one level, and the spaces count in whole levels, rounded down
+- Blank lines between the rows, items, or entries of a header are skipped
+- A block whose first line is indented more than one level deeper reads at that depth
+
+Here it keeps the rows that are present:
 
 ```julia
 toon = """

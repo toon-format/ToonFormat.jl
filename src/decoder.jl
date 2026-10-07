@@ -51,14 +51,8 @@ end
 
 function decode_document(reader::LineReader)::JsonValue
     first_line = peek_line(reader)
-    skipped_leading = false
-    while first_line !== nothing && first_line.depth != 0
-        skip_over_indented_line(reader, first_line, 0)
-        skipped_leading = true
-        first_line = peek_line(reader)
-    end
-
     first_line === nothing && return JsonObject()
+    first_line.depth == 0 || over_indented_error(first_line, 0)
 
     if first_line.content == "[]"
         read_line!(reader)
@@ -78,8 +72,7 @@ function decode_document(reader::LineReader)::JsonValue
 
     read_line!(reader)
     following = peek_line(reader)
-    # A skipped leading line makes the document multi-line, so no root primitive.
-    if following === nothing && !skipped_leading && !is_key_value_content(first_line.content)
+    if following === nothing && !is_key_value_content(first_line.content)
         return with_line(() -> parse_primitive_token(first_line.content), first_line)
     end
 
@@ -91,10 +84,7 @@ function decode_document(reader::LineReader)::JsonValue
     seen_keys = new_seen_keys(reader)
     decode_key_value!(object, first_line, reader, 0, seen_keys)
     while (line = peek_line(reader)) !== nothing
-        if line.depth != 0
-            skip_over_indented_line(reader, line, 0)
-            continue
-        end
+        line.depth == 0 || over_indented_error(line, 0)
         read_line!(reader)
         decode_key_value!(object, line, reader, 0, seen_keys)
     end
@@ -110,30 +100,13 @@ function assert_no_depth_jump(reader::LineReader, line::ParsedLine, parent_depth
     end
 end
 
-function skip_over_indented_line(reader::LineReader, line::ParsedLine, content_depth::Int)
-    if reader.strict
-        decode_error(line, "Over-indented line: expected depth $content_depth, but found $(line.depth)")
-    end
-    assert_not_scalar_line(line)
-    read_line!(reader)
-end
+over_indented_error(line::ParsedLine, content_depth::Int) =
+    decode_error(line, "Over-indented line: expected depth $content_depth, but found $(line.depth)")
 
-# A bare token errors in both modes outside root primitive position, so the non-strict
-# paths that drop a line must not swallow it.
-function assert_not_scalar_line(line::ParsedLine)
-    if !is_key_value_content(line.content)
-        decode_error(line, "Unexpected bare token line outside root primitive position")
-    end
-end
-
-# Strict decoding never silently discards input, so a line after the root form is an error.
+# Decoding never silently discards input, so a line after the root form is an error.
 function assert_fully_consumed(reader::LineReader)
     line = peek_line(reader)
-    line === nothing && return
-    reader.strict && decode_error(line, "Unexpected content after the document root")
-    while (line = read_line!(reader)) !== nothing
-        assert_not_scalar_line(line)
-    end
+    line === nothing || decode_error(line, "Unexpected content after the document root")
 end
 
 new_seen_keys(reader::LineReader) = reader.strict ? Set{String}() : nothing
@@ -144,16 +117,8 @@ function claim_key!(seen_keys::Union{Set{String},Nothing}, key::String, line::Pa
     push!(seen_keys, key)
 end
 
-function assert_expected_count(
-    reader::LineReader,
-    actual::Int,
-    expected::Int,
-    what::String,
-    line::ParsedLine,
-)
-    if reader.strict && actual != expected
-        decode_error(line, "Expected $expected $what, but got $actual")
-    end
+function assert_expected_count(actual::Int, expected::Int, what::String, line::ParsedLine)
+    actual == expected || decode_error(line, "Expected $expected $what, but got $actual")
 end
 
 function assert_no_blank_lines(reader::LineReader, from::Int, to::Int, what::String)
@@ -177,7 +142,7 @@ function decode_key_value!(
         object[header.key] = decode_header_value(header, reader, base_depth, line)
         return
     end
-    if header !== nothing && reader.strict
+    if header !== nothing
         decode_error(
             line,
             header.keyed ? "Keyless keyed header is only valid at the document root" :
@@ -209,12 +174,9 @@ function decode_object_fields(reader::LineReader, base_depth::Int)::JsonObject
     field_depth = nothing
     while (line = peek_line(reader)) !== nothing && line.depth >= base_depth
         field_depth = something(field_depth, line.depth)
-        if line.depth == field_depth
-            read_line!(reader)
-            decode_key_value!(object, line, reader, field_depth, seen_keys)
-        else
-            skip_over_indented_line(reader, line, field_depth)
-        end
+        line.depth == field_depth || over_indented_error(line, field_depth)
+        read_line!(reader)
+        decode_key_value!(object, line, reader, field_depth, seen_keys)
     end
     return object
 end
@@ -236,7 +198,8 @@ function decode_header_value(
 
     if header.inline_values !== nothing
         values = with_line(() -> parse_cells(header.inline_values, header.delimiter), header_line)
-        assert_expected_count(reader, length(values), header.length, "inline-form values", header_line)
+        reader.strict &&
+            assert_expected_count(length(values), header.length, "inline-form values", header_line)
         return values
     end
 
@@ -260,15 +223,10 @@ function decode_keyed_object(
     # A keyed scope ends only by dedent or end of input, so every line at entry depth
     # carrying an unquoted colon is an entry row.
     while (line = peek_line(reader)) !== nothing && line.depth > base_depth
-        if line.depth != entry_depth
-            skip_over_indented_line(reader, line, entry_depth)
-            continue
-        end
+        line.depth == entry_depth || over_indented_error(line, entry_depth)
+        is_key_value_content(line.content) ||
+            decode_error(line, "Expected entry row inside keyed tabular object")
         read_line!(reader)
-        if !is_key_value_content(line.content)
-            reader.strict && decode_error(line, "Expected entry row inside keyed tabular object")
-            continue
-        end
 
         first_entry_line = something(first_entry_line, line)
         last_entry_line = line
@@ -276,13 +234,15 @@ function decode_keyed_object(
         key, cells_start = with_line(() -> parse_key_token(line.content), line)
         claim_key!(seen_keys, key, line)
         cells = with_line(() -> parse_cells(SubString(line.content, cells_start), header.delimiter), line)
-        assert_expected_count(reader, length(cells), width, "keyed entry cells", line)
+        assert_expected_count(length(cells), width, "keyed entry cells", line)
         object[key] = object_from_fields(header.fields, cells)
     end
 
-    assert_expected_count(reader, length(object), header.length, "keyed entries", last_entry_line)
-    if reader.strict && first_entry_line !== nothing
-        assert_no_blank_lines(reader, first_entry_line.number, last_entry_line.number, "keyed tabular object")
+    if reader.strict
+        assert_expected_count(length(object), header.length, "keyed entries", last_entry_line)
+        if first_entry_line !== nothing
+            assert_no_blank_lines(reader, first_entry_line.number, last_entry_line.number, "keyed tabular object")
+        end
     end
     return object
 end
@@ -310,10 +270,7 @@ function decode_tabular_array(
     while !reader.strict || length(rows) < header.length
         line = peek_line(reader)
         (line === nothing || line.depth <= base_depth) && break
-        if line.depth != row_depth
-            skip_over_indented_line(reader, line, row_depth)
-            continue
-        end
+        line.depth == row_depth || over_indented_error(line, row_depth)
         is_data_row(line.content, header.delimiter) || break
 
         read_line!(reader)
@@ -321,12 +278,12 @@ function decode_tabular_array(
         last_row_line = line
 
         cells = with_line(() -> parse_cells(line.content, header.delimiter), line)
-        assert_expected_count(reader, length(cells), width, "tabular row values", line)
+        assert_expected_count(length(cells), width, "tabular row values", line)
         push!(rows, object_from_fields(header.fields, cells))
     end
 
-    assert_expected_count(reader, length(rows), header.length, "tabular rows", last_row_line)
     if reader.strict
+        assert_expected_count(length(rows), header.length, "tabular rows", last_row_line)
         if first_row_line !== nothing
             assert_no_blank_lines(reader, first_row_line.number, last_row_line.number, "tabular array")
         end
@@ -358,10 +315,7 @@ function decode_list_array(
     while !reader.strict || length(items) < header.length
         line = peek_line(reader)
         (line === nothing || line.depth <= base_depth) && break
-        if line.depth != item_depth
-            skip_over_indented_line(reader, line, item_depth)
-            continue
-        end
+        line.depth == item_depth || over_indented_error(line, item_depth)
         is_list_item(line.content) || break
 
         first_item_line = something(first_item_line, line)
@@ -370,8 +324,8 @@ function decode_list_array(
         last_item_line = last_read_line(reader)
     end
 
-    assert_expected_count(reader, length(items), header.length, "list-form items", last_item_line)
     if reader.strict
+        assert_expected_count(length(items), header.length, "list-form items", last_item_line)
         if first_item_line !== nothing
             assert_no_blank_lines(reader, first_item_line.number, last_item_line.number, "list-form array")
         end
@@ -394,15 +348,14 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     header = with_line(() -> parse_array_header(content, reader.strict), item_line)
     if header !== nothing && header.key === nothing
         # There is no keyless keyed or fields-bearing list-item form.
-        if !header.keyed && header.fields === nothing
-            return decode_header_value(header, reader, base_depth, item_line)
-        elseif reader.strict
+        if header.keyed || header.fields !== nothing
             decode_error(
                 item_line,
                 header.keyed ? "Keyless keyed header is only valid at the document root" :
                 "Keyless header with a field list is only valid at the document root",
             )
         end
+        return decode_header_value(header, reader, base_depth, item_line)
     end
 
     is_key_value_content(content) ||
@@ -414,13 +367,10 @@ function decode_list_item(reader::LineReader, base_depth::Int)::JsonValue
     field_depth = base_depth + 1
     decode_key_value!(object, item_line, reader, field_depth, seen_keys)
     while (line = peek_line(reader)) !== nothing && line.depth >= field_depth
-        if line.depth == field_depth
-            # A hyphen marks a list item only at item depth, so a `- ` line here is a further field.
-            read_line!(reader)
-            decode_key_value!(object, line, reader, field_depth, seen_keys)
-        else
-            skip_over_indented_line(reader, line, field_depth)
-        end
+        line.depth == field_depth || over_indented_error(line, field_depth)
+        # A hyphen marks a list item only at item depth, so a `- ` line here is a further field.
+        read_line!(reader)
+        decode_key_value!(object, line, reader, field_depth, seen_keys)
     end
     return object
 end
@@ -434,8 +384,7 @@ function object_from_fields(fields::Vector{FieldNode}, cells::JsonArray, cell_in
     for field in fields
         if field.children !== nothing
             object[field.name], cell_index = object_from_fields(field.children, cells, cell_index)
-        elseif cell_index < length(cells)
-            # A non-strict width mismatch leaves trailing leaf fields absent.
+        else
             cell_index += 1
             object[field.name] = cells[cell_index]
         end

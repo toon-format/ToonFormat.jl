@@ -94,13 +94,10 @@ end
 """
     parse_array_header(content, strict) -> Union{ArrayHeader,Nothing}
 
-Returns `nothing` for a line that is no array header. A line that is one but breaks the
-header grammar throws in strict mode and returns `nothing` otherwise, so non-strict
-decoding reads it as a key-value line.
+Returns `nothing` for a line that is no array header, and throws for one that breaks the
+header grammar.
 """
 function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayHeader,Nothing}
-    invalid(reason) = strict ? error(reason) : nothing
-
     leading = ncodeunits(content) - ncodeunits(lstrip(content))
     if byte_at(content, leading + 1) == UInt8('"')
         closing_quote = find_closing_quote(content, leading + 1)
@@ -119,7 +116,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     (first_colon === nothing || first_colon < bracket_start) && return nothing
 
     bracket_end = find_unquoted(content, ']', bracket_start)
-    bracket_end === nothing && return invalid("Unterminated bracket segment")
+    bracket_end === nothing && error("Unterminated bracket segment")
 
     fields_end = bracket_end + 1
     brace_start = find_unquoted(content, '{', bracket_end)
@@ -128,7 +125,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
         brace_start !== nothing && colon_after_bracket !== nothing && brace_start < colon_after_bracket
     if has_field_list && brace_start > bracket_end + 1
         gap = strip(slice(content, bracket_end + 1, brace_start))
-        return invalid(
+        error(
             isempty(gap) ? "Unexpected whitespace between bracket segment and field list" :
             "Unexpected content \"$gap\" between bracket segment and field list",
         )
@@ -137,10 +134,10 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     brace_end === nothing || (fields_end = brace_end + 1)
 
     colon = find_unquoted(content, ':', max(bracket_end, fields_end))
-    colon === nothing && return invalid("Missing colon after array header")
+    colon === nothing && error("Missing colon after array header")
     if colon > max(bracket_end + 1, fields_end)
         gap = strip(slice(content, max(bracket_end + 1, fields_end), colon))
-        return invalid(
+        error(
             isempty(gap) ? "Unexpected whitespace between bracket segment and colon" :
             "Unexpected content \"$gap\" between bracket segment and colon",
         )
@@ -151,12 +148,12 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
         raw_key = slice(content, 1, bracket_start)
         # Trimming here would silently turn `foo [2]:` into a header with key `foo`.
         raw_key == rstrip(raw_key) ||
-            return invalid("Unexpected whitespace between key and bracket segment")
+            error("Unexpected whitespace between key and bracket segment")
         key = startswith(raw_key, '"') ? parse_string_literal(raw_key) : String(raw_key)
     end
 
     bracket = parse_bracket_segment(slice(content, bracket_start + 1, bracket_end))
-    bracket === nothing && return invalid(
+    bracket === nothing && error(
         "Invalid array length in \"$(slice(content, bracket_start, bracket_end + 1))\" (expected a non-negative integer with no leading zeros)",
     )
     declared_length, delimiter, keyed = bracket
@@ -166,30 +163,26 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
         fields_content = slice(content, brace_start + 1, brace_end)
         for other in (',', '\t', '|')
             if other != delimiter && find_unquoted(fields_content, other) !== nothing
-                return invalid(
+                error(
                     "Header delimiter mismatch: the bracket declares $(repr(delimiter)) but the field list contains an unquoted $(repr(other))",
                 )
             end
         end
-        fields = try
-            parse_field_entries(fields_content, delimiter)
-        catch e
-            e isa ErrorException || rethrow()
-            return invalid(e.msg)
-        end
+        fields = parse_field_entries(fields_content, delimiter)
     end
 
-    duplicate = fields === nothing ? nothing : find_duplicate_field_name(fields)
-    duplicate_reason = duplicate === nothing ? nothing : "Duplicate field name \"$duplicate\" in field list"
-    keyed && fields === nothing && return invalid("Keyed header requires a field list")
+    keyed && fields === nothing && error("Keyed header requires a field list")
 
     inline_values = trim_spaces(SubString(content, colon + 1))
     # A fields-bearing header carries no inline content; decoding it as an inline array would drop the fields.
     if fields !== nothing && !isempty(inline_values)
-        return invalid(something(duplicate_reason, "Unexpected content after fields-bearing header colon"))
+        error("Unexpected content after fields-bearing header colon")
     end
     # Non-strict mode resolves duplicate field names by last-write-wins.
-    strict && duplicate_reason !== nothing && error(duplicate_reason)
+    if strict && fields !== nothing
+        duplicate = find_duplicate_field_name(fields)
+        duplicate === nothing || error("Duplicate field name \"$duplicate\" in field list")
+    end
 
     return ArrayHeader(
         key,

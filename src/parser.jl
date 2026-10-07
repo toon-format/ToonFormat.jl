@@ -123,7 +123,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     has_field_list =
         brace_start !== nothing && colon_after_bracket !== nothing && brace_start < colon_after_bracket
     if has_field_list && brace_start > bracket_end + 1
-        gap = strip(slice(content, bracket_end + 1, brace_start))
+        gap = strip(in(" \t"), slice(content, bracket_end + 1, brace_start))
         error(
             isempty(gap) ? "Unexpected whitespace between bracket segment and field list" :
             "Unexpected content \"$gap\" between bracket segment and field list",
@@ -135,7 +135,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     colon = find_unquoted(content, ':', max(bracket_end, fields_end))
     colon === nothing && error("Missing colon after array header")
     if colon > max(bracket_end + 1, fields_end)
-        gap = strip(slice(content, max(bracket_end + 1, fields_end), colon))
+        gap = strip(in(" \t"), slice(content, max(bracket_end + 1, fields_end), colon))
         error(
             isempty(gap) ? "Unexpected whitespace between bracket segment and colon" :
             "Unexpected content \"$gap\" between bracket segment and colon",
@@ -146,8 +146,7 @@ function parse_array_header(content::AbstractString, strict::Bool)::Union{ArrayH
     if bracket_start > 1
         raw_key = slice(content, 1, bracket_start)
         # Trimming here would silently turn `foo [2]:` into a header with key `foo`.
-        raw_key == rstrip(raw_key) ||
-            error("Unexpected whitespace between key and bracket segment")
+        last(raw_key) in " \t" && error("Unexpected whitespace between key and bracket segment")
         key = startswith(raw_key, '"') ? parse_string_literal(raw_key) : String(raw_key)
     end
 
@@ -219,7 +218,7 @@ function parse_field_entries(content::AbstractString, delimiter::Char)::Vector{F
 
         name = slice(entry, 1, group_start)
         isempty(name) && error("Missing field name before nested field group")
-        name == rstrip(name) || error("Unexpected whitespace before nested field group")
+        last(name) in " \t" && error("Unexpected whitespace before nested field group")
 
         group_end = find_matching_brace(entry, group_start)
         group_end === nothing && error("Unmatched brace in field list")
@@ -306,4 +305,4 @@ end
 is_key_value_content(content::AbstractString) = find_unquoted(content, ':') !== nothing
 
 is_array_header_content(content::AbstractString) =
-    startswith(lstrip(content), '[') && is_key_value_content(content)
+    startswith(content, '[') && is_key_value_content(content)

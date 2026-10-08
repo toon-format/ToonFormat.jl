@@ -24,7 +24,7 @@ encode((users = users,); options = EncodeOptions(delimiter = PIPE))
 
 ## Strict Mode
 
-Strict mode throws on every [decode error](https://github.com/toon-format/spec/blob/v4.3.0/SPEC.md#14-decode-errors-and-non-strict-recoveries-authoritative-checklist) the spec lists. `strict = false` recovers from five of them and throws on the rest:
+Strict mode throws on every [decode error](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#14-decode-errors-and-non-strict-recoveries-authoritative-checklist) the spec lists. `strict = false` recovers from five of them and throws on the rest:
 
 - A declared length is advisory: every value, row, item, and entry present is decoded, though each row still needs one cell per field
 - Duplicate keys and repeated field names keep the last value

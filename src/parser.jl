@@ -264,7 +264,7 @@ function parse_number(token::AbstractString)::Union{Int,BigInt,Float64,String}
         return number === nothing ? parse(BigInt, token) : number
     end
     number = tryparse(Float64, token)
-    (number === nothing || !isfinite(number)) && return String(token)
+    number === nothing && return String(token)
     return number == 0 ? 0.0 : number
 end
 

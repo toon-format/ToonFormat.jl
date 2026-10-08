@@ -101,7 +101,7 @@ function assert_no_depth_jump(reader::LineReader, line::ParsedLine, parent_depth
 end
 
 over_indented_error(line::ParsedLine, content_depth::Int) =
-    decode_error(line, "Over-indented line: expected depth $content_depth, but found $(line.depth)")
+    decode_error(line, "Unexpected indentation: expected depth $content_depth, but found $(line.depth)")
 
 # Decoding never silently discards input, so a line after the root form is an error.
 function assert_fully_consumed(reader::LineReader)

@@ -23,11 +23,11 @@ decode(toon)
 # OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])
 ```
 
-A `Dict` iterates in hash order, so encode a `NamedTuple` or an `OrderedDict` from OrderedCollections.jl when the field order matters. `decode` throws an `ErrorException` on invalid input, e.g. `Array length mismatch: expected 3, got 2`. [Options](options.md) covers delimiters, key folding, and strict mode.
+A `Dict` iterates in hash order, so encode a `NamedTuple` or an `OrderedDict` from OrderedCollections.jl when the field order matters. `decode` throws an `ErrorException` naming the line on invalid input, e.g. `Line 3: Expected 3 tabular rows, but got 2`. [Options](options.md) covers delimiters and strict mode.
 
 ## Specification
 
-Targets [TOON spec v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md), and the test suite runs the spec's conformance fixtures.
+Targets [TOON spec v4.4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md), and the test suite runs the spec's conformance fixtures.
 
-- **Integers decode to `Int64` and other numbers to `Float64`** – tokens outside that domain (e.g. `99999999999999999999`, `1e999`) decode as strings ([§2](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#2-data-model))
-- **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays, tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, and anything else (`Symbol`, `Date`, `missing`) as its `string` form ([§3](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#3-encoding-normalization-reference-encoder))
+- **Integers decode to `Int`, or `BigInt` beyond its range, and other numbers to `Float64`** – a token `Float64` can't represent (e.g. `1e999` or `1e-400`) decodes as a string; on encode, integers print in full, other numbers with the shortest digits of their `Float64` value, and finite reals beyond the `Float64` range (e.g. `big"1e400"`) as a quoted string of their `BigFloat` value in exponent form ([§4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#4-decoding-interpretation-reference-decoder))
+- **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays (a matrix in column-major order), tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, strings that are not valid Unicode throw an `ArgumentError`, and anything else (`Symbol`, `Date`, `missing`) encodes as its `string` form ([§3](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#3-encoding-normalization-reference-encoder))

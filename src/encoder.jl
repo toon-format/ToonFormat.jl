@@ -1,389 +1,15 @@
-function encode_value(
-    value::JsonValue,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    if is_json_primitive(value)
-        encoded = encode_primitive(value, options.delimiter)
-        push!(writer, depth, encoded)
-    elseif is_json_array(value)
-        encode_array(nothing, value, writer, depth, options)
-    elseif is_json_object(value)
-        encode_object(value, writer, depth, options)
-    end
-end
-
-function would_collide_with_sibling(obj::JsonObject, key::String, folded_path::String)::Bool
-    for sibling_key in keys(obj)
-        if sibling_key != key && sibling_key == folded_path
-            return true
-        end
-    end
-    return false
-end
-
-function collect_all_folded_paths(
-    key::String,
-    value::JsonValue,
-    prefix::String = "",
-)::Vector{String}
-    paths = String[]
-    current_path = isempty(prefix) ? key : "$(prefix).$(key)"
-
-    if is_json_object(value) && length(value) == 1
-        push!(paths, current_path)
-        child_key, child_value = first(value)
-        append!(paths, collect_all_folded_paths(child_key, child_value, current_path))
-    else
-        push!(paths, current_path)
-    end
-
-    return paths
-end
-
-function encode_object(
-    obj::JsonObject,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    for (key, value) in obj
-        encode_key_value_pair(key, value, writer, depth, options, parent_obj = obj)
-    end
-end
-
-function encode_key_value_pair(
-    key::String,
-    value::JsonValue,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions;
-    prefix::String = "",
-    parent_obj::Union{JsonObject,Nothing} = nothing,
-)
-    full_key = isempty(prefix) ? key : "$(prefix).$(key)"
-
-    num_segments = count('.', full_key) + 1
-
-    can_fold =
-        options.keyFolding == "safe" &&
-        is_safe_identifier(key) &&
-        is_valid_unquoted_key(key) &&
-        (isempty(prefix) || all(is_safe_identifier, split(prefix, '.')))
-
-    # `flattenDepth = 2` allows `a.b`, so folding stops once the key has that many segments.
-    should_fold =
-        can_fold &&
-        is_json_object(value) &&
-        length(value) == 1 &&
-        num_segments < options.flattenDepth
-
-    encoded_key = encode_key(isempty(prefix) ? key : full_key)
-
-    if is_json_primitive(value)
-        encoded_value = encode_primitive(value, options.delimiter)
-        push!(writer, depth, "$(encoded_key): $(encoded_value)")
-    elseif is_json_array(value)
-        # A folded prefix stays on the array key, e.g. `data.users[2]:`.
-        array_key = isempty(prefix) ? key : full_key
-        encode_array(array_key, value, writer, depth, options)
-    elseif is_json_object(value)
-        if should_fold && !is_empty_object(value)
-            if length(value) == 1
-                # Safe mode can't fold into a child key that needs quoting.
-                child_key = collect(keys(value))[1]
-                child_can_fold =
-                    is_safe_identifier(child_key) && is_valid_unquoted_key(child_key)
-
-                # At the root, safe mode doesn't fold a path that collides with a sibling key.
-                has_collision = false
-                if options.keyFolding == "safe" &&
-                   depth == 0 &&
-                   parent_obj !== nothing &&
-                   isempty(prefix)
-                    all_paths = collect_all_folded_paths(key, value)
-                    for path in all_paths
-                        if would_collide_with_sibling(parent_obj, key, path)
-                            has_collision = true
-                            break
-                        end
-                    end
-                end
-
-                if !has_collision && (child_can_fold || options.keyFolding != "safe")
-                    for (child_key, child_value) in value
-                        encode_key_value_pair(
-                            child_key,
-                            child_value,
-                            writer,
-                            depth,
-                            options,
-                            prefix = full_key,
-                            parent_obj = nothing,
-                        )
-                    end
-                else
-                    push!(writer, depth, "$(encoded_key):")
-                    nested_opts = EncodeOptions(
-                        indent = options.indent,
-                        delimiter = options.delimiter,
-                        keyFolding = "off",
-                        flattenDepth = options.flattenDepth,
-                    )
-                    encode_object(value, writer, depth + 1, nested_opts)
-                end
-            else
-                push!(writer, depth, "$(encoded_key):")
-                nested_opts = EncodeOptions(
-                    indent = options.indent,
-                    delimiter = options.delimiter,
-                    keyFolding = "off",
-                    flattenDepth = options.flattenDepth,
-                )
-                encode_object(value, writer, depth + 1, nested_opts)
-            end
-        else
-            push!(writer, depth, "$(encoded_key):")
-            if !is_empty_object(value)
-                # Folding is off for the nested object so it isn't folded again.
-                nested_opts = EncodeOptions(
-                    indent = options.indent,
-                    delimiter = options.delimiter,
-                    keyFolding = "off",
-                    flattenDepth = options.flattenDepth,
-                )
-                encode_object(value, writer, depth + 1, nested_opts)
-            end
-        end
-    end
-end
-
-function encode_array(
-    key::Union{String,Nothing},
-    arr::JsonArray,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    arr_length = length(arr)
-
-    if arr_length == 0
-        header = format_header(key, 0, options.delimiter)
-        push!(writer, depth, header)
-        return
-    end
-
-    if is_array_of_primitives(arr)
-        encode_primitive_array(key, arr, writer, depth, options)
-        return
-    end
-
-    if is_tabular_array(arr)
-        encode_tabular_array(key, arr, writer, depth, options)
-        return
-    end
-
-    if is_array_of_arrays(arr) && all(is_array_of_primitives, arr)
-        encode_array_of_arrays(key, arr, writer, depth, options)
-        return
-    end
-
-    encode_mixed_array(key, arr, writer, depth, options)
-end
-
-function encode_primitive_array(
-    key::Union{String,Nothing},
-    arr::JsonArray,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    header = format_header(key, length(arr), options.delimiter)
-    encoded_values = [encode_primitive(v, options.delimiter) for v in arr]
-    values_str = join_encoded_values(encoded_values, options.delimiter)
-    if isempty(values_str)
-        push!(writer, depth, header)
-    else
-        push!(writer, depth, "$(header) $(values_str)")
-    end
-end
-
-function encode_tabular_array(
-    key::Union{String,Nothing},
-    arr::JsonArray,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    first_obj = arr[1]
-    fields = collect(keys(first_obj))
-
-    header = format_header(key, length(arr), options.delimiter, fields)
-    push!(writer, depth, header)
-
-    for obj in arr
-        row_values = [encode_primitive(obj[field], options.delimiter) for field in fields]
-        row_str = join_encoded_values(row_values, options.delimiter)
-        push!(writer, depth + 1, row_str)
-    end
-end
-
-function encode_array_of_arrays(
-    key::Union{String,Nothing},
-    arr::JsonArray,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    header = format_header(key, length(arr), options.delimiter)
-    push!(writer, depth, header)
-
-    for inner_arr in arr
-        inner_header = format_header(nothing, length(inner_arr), options.delimiter)
-        encoded_values = [encode_primitive(v, options.delimiter) for v in inner_arr]
-        values_str = join_encoded_values(encoded_values, options.delimiter)
-        if isempty(values_str)
-            push!(writer, depth + 1, "$(LIST_ITEM_MARKER)$(inner_header)")
-        else
-            push!(writer, depth + 1, "$(LIST_ITEM_MARKER)$(inner_header) $(values_str)")
-        end
-    end
-end
-
-function encode_mixed_array(
-    key::Union{String,Nothing},
-    arr::JsonArray,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    header = format_header(key, length(arr), options.delimiter)
-    push!(writer, depth, header)
-
-    for item in arr
-        encode_list_item(item, writer, depth + 1, options)
-    end
-end
-
-function encode_list_item(
-    value::JsonValue,
-    writer::LineWriter,
-    depth::Int,
-    options::EncodeOptions,
-)
-    if is_json_primitive(value)
-        encoded = encode_primitive(value, options.delimiter)
-        push!(writer, depth, "$(LIST_ITEM_MARKER)$(encoded)")
-    elseif is_json_array(value)
-        if is_array_of_primitives(value)
-            header = format_header(nothing, length(value), options.delimiter)
-            encoded_values = [encode_primitive(v, options.delimiter) for v in value]
-            values_str = join_encoded_values(encoded_values, options.delimiter)
-            if isempty(values_str)
-                push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
-            else
-                push!(writer, depth, "$(LIST_ITEM_MARKER)$(header) $(values_str)")
-            end
-        else
-            header = format_header(nothing, length(value), options.delimiter)
-            push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
-            for item in value
-                encode_list_item(item, writer, depth + 1, options)
-            end
-        end
-    elseif is_json_object(value)
-        if is_empty_object(value)
-            push!(writer, depth, LIST_ITEM_MARKER[1:(end-1)])
-            return
-        end
-
-        # The first field goes on the hyphen line.
-        obj_keys = collect(keys(value))
-        if !isempty(obj_keys)
-            first_key = obj_keys[1]
-            first_value = value[first_key]
-
-            encoded_key = encode_key(first_key)
-
-            if is_json_primitive(first_value)
-                encoded_val = encode_primitive(first_value, options.delimiter)
-                push!(writer, depth, "$(LIST_ITEM_MARKER)$(encoded_key): $(encoded_val)")
-            elseif is_json_array(first_value)
-                if is_array_of_primitives(first_value)
-                    header =
-                        format_header(first_key, length(first_value), options.delimiter)
-                    encoded_values =
-                        [encode_primitive(v, options.delimiter) for v in first_value]
-                    values_str = join_encoded_values(encoded_values, options.delimiter)
-                    if isempty(values_str)
-                        push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
-                    else
-                        push!(writer, depth, "$(LIST_ITEM_MARKER)$(header) $(values_str)")
-                    end
-                else
-                    if is_tabular_array(first_value)
-                        first_obj = first_value[1]
-                        fields = collect(keys(first_obj))
-                        header = format_header(
-                            first_key,
-                            length(first_value),
-                            options.delimiter,
-                            fields,
-                        )
-                        push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
-                        # Rows sit at depth + 2 (spec §10: tabular rows inside list-item objects).
-                        for obj in first_value
-                            row_values = [
-                                encode_primitive(obj[field], options.delimiter) for
-                                field in fields
-                            ]
-                            row_str = join_encoded_values(row_values, options.delimiter)
-                            push!(writer, depth + 2, row_str)
-                        end
-                    else
-                        header =
-                            format_header(first_key, length(first_value), options.delimiter)
-                        push!(writer, depth, "$(LIST_ITEM_MARKER)$(header)")
-                        # Items sit at depth + 2 (spec §10: list items inside list-item objects).
-                        for item in first_value
-                            encode_list_item(item, writer, depth + 2, options)
-                        end
-                    end
-                end
-            elseif is_json_object(first_value)
-                push!(writer, depth, "$(LIST_ITEM_MARKER)$(encoded_key):")
-                if !is_empty_object(first_value)
-                    encode_object(first_value, writer, depth + 2, options)
-                end
-            end
-
-            for key in obj_keys[2:end]
-                encode_key_value_pair(key, value[key], writer, depth + 1, options)
-            end
-        end
-    end
-end
-
 """
-    encode(value; options::EncodeOptions=EncodeOptions()) -> String
+    encode(value; options::EncodeOptions = EncodeOptions()) -> String
 
-Main encoding function. Converts a Julia value to TOON format string.
-
-# Arguments
-- `value`: The value to encode (will be normalized to JSON model)
-- `options`: Encoding options (indent, delimiter, etc.)
-
-# Returns
-- TOON formatted string
+Encodes `value` as a TOON document after normalizing it to the JSON data model.
 
 # Examples
 ```julia
-encode(Dict("name" => "Alice", "age" => 30))
-# name: Alice
+encode((name = "Ada", age = 30))
+# name: Ada
 # age: 30
 
-encode([Dict("id" => 1), Dict("id" => 2)])
+encode([(id = 1,), (id = 2,)])
 # [2]{id}:
 #   1
 #   2
@@ -391,17 +17,171 @@ encode([Dict("id" => 1), Dict("id" => 2)])
 """
 function encode(value; options::EncodeOptions = EncodeOptions())::String
     normalized = normalize_value(value)
-    writer = LineWriter(options.indent)
 
     if is_json_primitive(normalized)
+        # Unquoted, a leading U+FEFF would read as the byte-order mark that decoders strip.
+        if normalized isa String && startswith(normalized, '\ufeff')
+            return quote_string(normalized)
+        end
         return encode_primitive(normalized, options.delimiter)
     end
 
+    writer = LineWriter(options.indentSize)
     if is_json_array(normalized)
-        encode_array(nothing, normalized, writer, 0, options)
-    elseif is_json_object(normalized)
-        encode_object(normalized, writer, 0, options)
+        encode_array!(writer, nothing, normalized, 0, options)
+    else
+        fields = keyed_tabular_fields(normalized)
+        if fields === nothing
+            encode_object!(writer, normalized, 0, options)
+        else
+            encode_keyed_object!(writer, nothing, normalized, fields, 0, options)
+        end
+    end
+    return string(writer)
+end
+
+function encode_object!(writer::LineWriter, object::AbstractDict, depth::Int, options::EncodeOptions)
+    for (key, value) in object
+        encode_key_value!(writer, key, value, depth, options)
+    end
+end
+
+function encode_key_value!(writer::LineWriter, key::String, value, depth::Int, options::EncodeOptions)
+    if is_json_primitive(value)
+        push!(writer, depth, "$(encode_key(key)): $(encode_primitive(value, options.delimiter))")
+    elseif is_json_array(value)
+        encode_array!(writer, key, value, depth, options)
+    else
+        fields = keyed_tabular_fields(value)
+        if fields === nothing
+            push!(writer, depth, "$(encode_key(key)):")
+            encode_object!(writer, value, depth + 1, options)
+        else
+            encode_keyed_object!(writer, key, value, fields, depth, options)
+        end
+    end
+end
+
+function encode_keyed_object!(
+    writer::LineWriter,
+    key::Union{String,Nothing},
+    object::AbstractDict,
+    fields::Vector{FieldNode},
+    depth::Int,
+    options::EncodeOptions,
+)
+    push!(writer, depth, format_header(key, length(object), options.delimiter, fields; keyed = true))
+    for (entry_key, entry) in object
+        push!(writer, depth + 1, "$(encode_key(entry_key)): $(encode_row(entry, fields, options.delimiter))")
+    end
+end
+
+function encode_array!(
+    writer::LineWriter,
+    key::Union{String,Nothing},
+    array::AbstractVector,
+    depth::Int,
+    options::EncodeOptions,
+)
+    if isempty(array)
+        push!(writer, depth, key === nothing ? "[]" : "$(encode_key(key)): []")
+        return
     end
 
-    return string(writer)
+    if is_array_of_primitives(array)
+        push!(writer, depth, inline_array_line(key, array, options.delimiter))
+        return
+    end
+
+    fields = is_array_of_objects(array) ? tabular_fields(array) : nothing
+    push!(writer, depth, format_header(key, length(array), options.delimiter, fields))
+    for item in array
+        if fields !== nothing
+            push!(writer, depth + 1, encode_row(item, fields, options.delimiter))
+        else
+            encode_list_item!(writer, item, depth + 1, options)
+        end
+    end
+end
+
+function inline_array_line(key::Union{String,Nothing}, values::AbstractVector, delimiter::String)
+    header = format_header(key, length(values), delimiter)
+    isempty(values) && return header
+    return "$header $(join((encode_primitive(value, delimiter) for value in values), delimiter))"
+end
+
+function encode_list_item!(writer::LineWriter, value, depth::Int, options::EncodeOptions)
+    if is_json_primitive(value)
+        push!(writer, depth, "- " * encode_primitive(value, options.delimiter))
+    elseif is_json_array(value) && is_array_of_primitives(value)
+        push!(writer, depth, "- " * inline_array_line(nothing, value, options.delimiter))
+    elseif is_json_array(value)
+        push!(writer, depth, "- " * format_header(nothing, length(value), options.delimiter))
+        for item in value
+            encode_list_item!(writer, item, depth + 1, options)
+        end
+    elseif isempty(value)
+        push!(writer, depth, "-")
+    else
+        # The object's fields sit one level deeper, except the first, which moves onto the hyphen line.
+        first_line = length(writer.lines) + 1
+        encode_object!(writer, value, depth + 1, options)
+        writer.lines[first_line] =
+            " "^(depth * writer.indent) * "- " * lstrip(writer.lines[first_line])
+    end
+end
+
+function encode_row(row::AbstractDict, fields::Vector{FieldNode}, delimiter::String)
+    return join((encode_primitive(value, delimiter) for value in row_leaves(row, fields)), delimiter)
+end
+
+# Leaf cells in the depth-first order of the field list.
+function row_leaves(row::AbstractDict, fields::Vector{FieldNode}, leaves = Any[])
+    for field in fields
+        if field.children === nothing
+            push!(leaves, row[field.name])
+        else
+            row_leaves(row[field.name], field.children, leaves)
+        end
+    end
+    return leaves
+end
+
+is_non_empty_object(value) = is_json_object(value) && !isempty(value)
+
+"""
+    tabular_fields(rows) -> Union{Vector{FieldNode},Nothing}
+
+Returns the field list of objects that share one key set, with a nested field group for
+every column of non-empty objects that are tabular themselves, or `nothing` when another
+column holds anything but primitives.
+"""
+function tabular_fields(rows::AbstractVector)::Union{Vector{FieldNode},Nothing}
+    first_keys = collect(keys(first(rows)))
+    isempty(first_keys) && return nothing
+    for row in rows
+        (length(row) == length(first_keys) && all(haskey(row, key) for key in first_keys)) ||
+            return nothing
+    end
+
+    fields = FieldNode[]
+    for key in first_keys
+        column = [row[key] for row in rows]
+        if all(is_json_primitive, column)
+            push!(fields, FieldNode(key, nothing))
+        elseif all(is_non_empty_object, column)
+            children = tabular_fields(column)
+            children === nothing && return nothing
+            push!(fields, FieldNode(key, children))
+        else
+            return nothing
+        end
+    end
+    return fields
+end
+
+function keyed_tabular_fields(object::AbstractDict)::Union{Vector{FieldNode},Nothing}
+    entries = collect(values(object))
+    (length(entries) >= 2 && all(is_non_empty_object, entries)) || return nothing
+    return tabular_fields(entries)
 end

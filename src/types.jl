@@ -5,76 +5,62 @@ const JsonObject = OrderedDict{String,Any}
 const JsonArray = Vector{Any}
 const JsonValue = Union{JsonPrimitive,JsonObject,JsonArray}
 
-const DelimiterKey = String  # "comma", "tab", or "pipe"
-const Delimiter = String     # actual delimiter character
+const COMMA = ","
+const TAB = "\t"
+const PIPE = "|"
 
+check_indent_size(indentSize) =
+    indentSize >= 1 || throw(ArgumentError("indentSize must be at least 1, got $indentSize"))
+
+"""
+    EncodeOptions(; indentSize = 2, delimiter = COMMA)
+
+Options for [`encode`](@ref): the spaces per indentation level, and the delimiter of
+inline arrays and tabular rows – `COMMA`, `TAB`, or `PIPE`.
+"""
 Base.@kwdef struct EncodeOptions
-    indent::Int = 2
-    delimiter::Delimiter = DEFAULT_DELIMITER
-    keyFolding::String = "off"  # "off" or "safe"
-    flattenDepth::Int = typemax(Int)
+    indentSize::Int = 2
+    delimiter::String = COMMA
+
+    function EncodeOptions(indentSize, delimiter)
+        check_indent_size(indentSize)
+        delimiter in (COMMA, TAB, PIPE) ||
+            throw(ArgumentError("Invalid delimiter $(repr(delimiter)); use COMMA, TAB, or PIPE"))
+        return new(indentSize, delimiter)
+    end
 end
 
+"""
+    DecodeOptions(; indentSize = 2, strict = true)
+
+Options for [`decode`](@ref): the spaces per indentation level, and whether to throw on
+every decode error of the spec. `strict = false` applies the spec's five non-strict
+recoveries instead and throws on every other error.
+"""
 Base.@kwdef struct DecodeOptions
-    indent::Int = 2
+    indentSize::Int = 2
     strict::Bool = true
-    expandPaths::String = "off"  # "off" or "safe"
+
+    function DecodeOptions(indentSize, strict)
+        check_indent_size(indentSize)
+        return new(indentSize, strict)
+    end
 end
 
-struct ArrayHeaderInfo
-    key::Union{String,Nothing}
-    length::Int
-    delimiter::Delimiter
-    fields::Union{Vector{String},Nothing}
+# A tabular field; `children` holds the fields of a nested field group.
+struct FieldNode
+    name::String
+    children::Union{Vector{FieldNode},Nothing}
 end
 
-struct ParsedLine
-    raw::String
-    depth::Int
-    indent::Int
-    content::String
-    lineNumber::Int
-end
-
-struct BlankLineInfo
-    lineNumber::Int
-    indent::Int
-    depth::Int
-end
-
-struct ScanResult
-    lines::Vector{ParsedLine}
-    blankLines::Vector{BlankLineInfo}
-end
-
-mutable struct LineWriter
+struct LineWriter
     lines::Vector{String}
     indent::Int
-
-    LineWriter(indent::Int) = new(String[], indent)
 end
 
-function Base.push!(writer::LineWriter, depth::Int, content::String)
-    indentation = " " ^ (depth * writer.indent)
-    push!(writer.lines, indentation * content)
-end
+LineWriter(indent::Int) = LineWriter(String[], indent)
 
-function Base.string(writer::LineWriter)::String
-    return join(writer.lines, "\n")
-end
+Base.push!(writer::LineWriter, depth::Int, content::AbstractString) =
+    push!(writer.lines, " "^(depth * writer.indent) * content)
 
-mutable struct LineCursor
-    lines::Vector{ParsedLine}
-    blankLines::Vector{BlankLineInfo}
-    position::Int
-
-    LineCursor(lines::Vector{ParsedLine}, blankLines::Vector{BlankLineInfo}) =
-        new(lines, blankLines, 1)
-end
-
-peek_line(cursor::LineCursor)::Union{ParsedLine,Nothing} =
-    cursor.position <= length(cursor.lines) ? cursor.lines[cursor.position] : nothing
-
-advance_line!(cursor::LineCursor) = (cursor.position += 1)
-
-has_more_lines(cursor::LineCursor)::Bool = cursor.position <= length(cursor.lines)
+Base.string(writer::LineWriter) = join(writer.lines, '\n')

@@ -19,7 +19,7 @@ julia --project=docs docs/make.jl
 
 ## Pull Requests
 
-Spec behavior is tested through the spec fixtures – a missing case goes to toon-format/spec as a fixture. Julia-specific behavior, such as host type normalization, gets a test under `test/`. Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages. Changes to the format itself belong in [toon-format/spec](https://github.com/toon-format/spec). Maintainers find CI, documentation deployment, and release setup in [`.github/MAINTAINER_GUIDE.md`](.github/MAINTAINER_GUIDE.md).
+Spec behavior is tested through the spec fixtures – a missing case goes to [toon-format/spec](https://github.com/toon-format/spec) as a fixture. Changes to the format itself belong there too. A test under `test/` is only for API the spec does not describe, such as host type normalization. Use [Conventional Commits](https://www.conventionalcommits.org/) for commit messages. Maintainers find the release flow and the documentation deploy key in [`.github/MAINTAINER_GUIDE.md`](.github/MAINTAINER_GUIDE.md).
 
 ## Maintainers
 

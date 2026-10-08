@@ -1,4 +1,4 @@
-# Host-type mapping of spec §3, which the fixtures can't express.
+# Host-type mapping, which the fixtures can't express.
 @testset "Host Types" begin
     @testset "encode($(repr(value)))" for (value, expected) in [
         (b = 1, a = 2) => "b: 1\na: 2",
@@ -20,9 +20,10 @@
     @testset "decode($(repr(input)))" for (input, expected) in [
         "42" => 42,
         "3.5" => 3.5,
-        "99999999999999999999" => "99999999999999999999",
+        "99999999999999999999" => big"99999999999999999999",
         "1e999" => "1e999",
     ]
-        @test decode(input) === expected
+        decoded = decode(input)
+        @test isequal(decoded, expected) && typeof(decoded) == typeof(expected)
     end
 end

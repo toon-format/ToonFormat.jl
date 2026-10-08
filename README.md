@@ -1,7 +1,7 @@
 # TOON for Julia
 
 [![Docs](https://img.shields.io/badge/docs-stable-blue.svg)](https://toon-format.github.io/ToonFormat.jl/stable/)
-[![SPEC v3.0](https://img.shields.io/badge/spec-v3.0-lightgrey)](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md)
+[![SPEC v4.4](https://img.shields.io/badge/spec-v4.4-lightgrey)](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Encodes Julia values to [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) and decodes TOON back. TOON is a compact, indentation-based encoding of the JSON data model for LLM input.
@@ -27,23 +27,20 @@ decode(toon)
 # OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])
 ```
 
-Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `options` keyword, e.g. `encode(data; options = EncodeOptions(delimiter = TAB))`:
+`decode` returns `OrderedDict{String,Any}` objects and `Vector{Any}` arrays, and throws an `ErrorException` naming the line on invalid input. Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `options` keyword, e.g. `encode(data; options = EncodeOptions(delimiter = TAB))`:
 
 | Option | Default | Description |
 | ------ | ------- | ----------- |
-| `indent` | `2` | Spaces per indentation level (encode and decode) |
-| `delimiter` | `COMMA` | Array delimiter: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `keyFolding` | `"off"` | `"safe"` folds chains of single-key objects into dotted keys (encode) |
-| `flattenDepth` | `typemax(Int)` | Maximum segments in a folded key (encode) |
-| `strict` | `true` | Raise the strict-mode errors of spec §14 (decode) |
-| `expandPaths` | `"off"` | `"safe"` expands dotted keys into nested objects (decode) |
+| `indentSize` | `2` | Spaces per indentation level (encode and decode) |
+| `delimiter` | `COMMA` | Delimiter for inline arrays and tabular rows: `COMMA`, `TAB`, or `PIPE` (encode) |
+| `strict` | `true` | Throws on every decode error of the spec; `false` applies its five non-strict recoveries instead (decode) |
 
 ## Specification
 
-Targets [TOON spec v3.0](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md), and the test suite runs the spec's conformance fixtures.
+Targets [TOON spec v4.4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md), and the test suite runs the spec's conformance fixtures.
 
-- **Integers decode to `Int64` and other numbers to `Float64`** – tokens outside that domain (e.g. `99999999999999999999`, `1e999`) decode as strings ([§2](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#2-data-model))
-- **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays, tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, and anything else (`Symbol`, `Date`, `missing`) as its `string` form ([§3](https://github.com/toon-format/spec/blob/v3.0.1/SPEC.md#3-encoding-normalization-reference-encoder))
+- **Integers decode to `Int`, or `BigInt` beyond its range, and other numbers to `Float64`** – a token `Float64` can't represent (e.g. `1e999` or `1e-400`) decodes as a string; on encode, integers print in full, other numbers with the shortest digits of their `Float64` value, and finite reals beyond the `Float64` range (e.g. `big"1e400"`) as a quoted string of their `BigFloat` value in exponent form ([§4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#4-decoding-interpretation-reference-decoder))
+- **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays (a matrix in column-major order), tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, strings that are not valid Unicode throw an `ArgumentError`, and anything else (`Symbol`, `Date`, `missing`) encodes as its `string` form ([§3](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#3-encoding-normalization-reference-encoder))
 
 ## Resources
 

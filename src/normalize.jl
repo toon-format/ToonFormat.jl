@@ -1,151 +1,44 @@
 function normalize_value(v)::JsonValue
-    if v === nothing
-        return nothing
-    end
-
-    if isa(v, Bool)
-        return v
-    end
-
-    if isa(v, Number)
-        return normalize_number(v)
-    end
-
-    if isa(v, AbstractString)
-        return String(v)
-    end
+    v === nothing && return nothing
+    v isa Bool && return v
+    v isa Real && return normalize_number(v)
+    v isa AbstractString && return normalize_string(v)
 
     # Checked before `AbstractArray`, which would encode the pairs as strings.
-    if isa(v, AbstractVector) && eltype(v) <: Pair
-        result = JsonObject()
-        for (k, val) in v
-            key_str = string(k)
-            result[key_str] = normalize_value(val)
-        end
-        return result
-    end
+    v isa AbstractVector && eltype(v) <: Pair && return normalize_pairs(v)
+    v isa NamedTuple && return normalize_pairs(pairs(v))
+    # Only a non-empty tuple of `Pair`s is an object; other tuples are arrays.
+    v isa Tuple && !isempty(v) && all(x -> x isa Pair, v) && return normalize_pairs(v)
+    v isa AbstractDict && return normalize_pairs(v)
 
-    if isa(v, NamedTuple)
-        result = JsonObject()
-        for (k, val) in pairs(v)
-            key_str = string(k)
-            result[key_str] = normalize_value(val)
-        end
-        return result
+    if v isa AbstractArray || v isa Tuple || v isa AbstractSet
+        return JsonArray(vec([normalize_value(item) for item in v]))
     end
-
-    # Checked before the general `Tuple` branch – only a non-empty tuple of `Pair`s is an object.
-    if isa(v, Tuple) && !isempty(v) && all(x -> isa(x, Pair), v)
-        result = JsonObject()
-        for (k, val) in v
-            key_str = string(k)
-            result[key_str] = normalize_value(val)
-        end
-        return result
-    end
-
-    if isa(v, AbstractArray)
-        return JsonArray([normalize_value(item) for item in v])
-    end
-
-    if isa(v, AbstractDict)
-        result = JsonObject()
-        for (k, val) in v
-            key_str = string(k)
-            result[key_str] = normalize_value(val)
-        end
-        return result
-    end
-
-    if isa(v, Tuple)
-        return JsonArray([normalize_value(item) for item in v])
-    end
-
-    if isa(v, AbstractSet)
-        return JsonArray([normalize_value(item) for item in v])
-    end
-
-    return string(v)
+    return normalize_string(string(v))
 end
 
-function normalize_number(n::Number)::Union{Number,Nothing}
-    if isa(n, AbstractFloat)
-        if isnan(n) || isinf(n)
-            return nothing
-        end
-        if n == 0.0 && signbit(n)
-            return 0.0
-        end
-    end
-    return n
+normalize_pairs(pairs) =
+    JsonObject(normalize_string(string(key)) => normalize_value(value) for (key, value) in pairs)
+
+# Invalid UTF-8, such as an unpaired surrogate, has no TOON form; encoding it would corrupt the document.
+function normalize_string(s::AbstractString)::String
+    isvalid(s) || throw(ArgumentError("Cannot encode $(repr(s)), which is not valid Unicode"))
+    return String(s)
 end
 
-function is_json_primitive(v)::Bool
-    return v === nothing || isa(v, Bool) || isa(v, Number) || isa(v, AbstractString)
+# A finite real beyond the `Float64` range keeps its digits as an exponent-form string;
+# going through `BigFloat` gives a `Rational` a decimal form too.
+function normalize_number(n::Real)::Union{Integer,Float64,String,Nothing}
+    n isa Integer && return n
+    isfinite(n) || return nothing
+    x = Float64(n)
+    isfinite(x) || return string(BigFloat(n))
+    return x == 0 ? 0.0 : x
 end
 
-function is_json_object(v)::Bool
-    return isa(v, AbstractDict)
-end
+is_json_primitive(v) = v === nothing || v isa Bool || v isa Number || v isa AbstractString
+is_json_object(v) = v isa AbstractDict
+is_json_array(v) = v isa AbstractArray
 
-function is_json_array(v)::Bool
-    return isa(v, AbstractArray)
-end
-
-function is_empty_object(v)::Bool
-    return isa(v, AbstractDict) && isempty(v)
-end
-
-function is_array_of_primitives(arr::AbstractArray)::Bool
-    return all(is_json_primitive, arr)
-end
-
-function is_array_of_objects(arr::AbstractArray)::Bool
-    return all(is_json_object, arr)
-end
-
-function is_array_of_arrays(arr::AbstractArray)::Bool
-    return all(is_json_array, arr)
-end
-
-"""
-    is_tabular_array(arr::AbstractArray) -> Bool
-
-Check if an array qualifies for tabular format:
-- All elements are objects
-- All objects have the same keys
-- All values are primitives
-- Objects are not empty (empty objects use expanded list format)
-"""
-function is_tabular_array(arr::AbstractArray)::Bool
-    if isempty(arr) || !is_array_of_objects(arr)
-        return false
-    end
-
-    first_obj = arr[1]
-    if !isa(first_obj, AbstractDict)
-        return false
-    end
-
-    first_keys = Set(keys(first_obj))
-
-    if isempty(first_keys)
-        return false
-    end
-
-    for obj in arr
-        if !isa(obj, AbstractDict)
-            return false
-        end
-
-        if Set(keys(obj)) != first_keys
-            return false
-        end
-
-        if !all(is_json_primitive, values(obj))
-            return false
-        end
-    end
-
-    return true
-end
+is_array_of_primitives(array::AbstractArray) = all(is_json_primitive, array)
+is_array_of_objects(array::AbstractArray) = all(is_json_object, array)

@@ -1,8 +1,6 @@
 using JSON
 using LazyArtifacts
 
-include("spec_fixtures_known_failures.jl")
-
 # GitHub release tarballs extract to a `spec-<version>` subdirectory.
 const ARTIFACT_ROOT = artifact"toon_spec"
 const FIXTURES_DIR = joinpath(
@@ -12,29 +10,11 @@ const FIXTURES_DIR = joinpath(
     "fixtures",
 )
 
-normalize_json(value::AbstractDict) =
-    ToonFormat.JsonObject(string(k) => normalize_json(v) for (k, v) in pairs(value))
-normalize_json(value::AbstractVector) = [normalize_json(v) for v in value]
-normalize_json(value) = value
+# Fixture options use the field names of `EncodeOptions` and `DecodeOptions`.
+options_kwargs(test) = (Symbol(k) => v for (k, v) in get(test, :options, Dict()))
 
-function encode_options(options)
-    isnothing(options) && return EncodeOptions()
-    kwargs = Dict{Symbol,Any}()
-    haskey(options, :delimiter) && (kwargs[:delimiter] = options.delimiter)
-    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
-    return EncodeOptions(; kwargs...)
-end
-
-function decode_options(options)
-    isnothing(options) && return DecodeOptions()
-    kwargs = Dict{Symbol,Any}()
-    haskey(options, :indentSize) && (kwargs[:indent] = options.indentSize)
-    haskey(options, :strict) && (kwargs[:strict] = options.strict)
-    return DecodeOptions(; kwargs...)
-end
-
-# JSON-model equality per spec §2: ordered keys, and no `Bool`/`Number` coercion
-# (`true == 1` holds in Julia, so plain `==` is too lenient).
+# JSON-model equality: ordered keys, and no `Bool`/`Number` coercion, since
+# `true == 1` holds in Julia.
 json_equal(a::AbstractDict, b::AbstractDict) =
     collect(keys(a)) == collect(keys(b)) && all(json_equal(a[k], b[k]) for k in keys(a))
 json_equal(a::AbstractVector, b::AbstractVector) =
@@ -48,22 +28,9 @@ json_equal(::Nothing, ::Nothing) = true
 json_equal(::Any, ::Any) = false
 
 function run_case(test, category)
-    options = get(test, :options, nothing)
     category == "encode" &&
-        return ToonFormat.encode(normalize_json(test.input); options = encode_options(options))
-    return ToonFormat.decode(test.input; options = decode_options(options))
-end
-
-expected_result(test, category) =
-    category == "encode" ? test.expected : normalize_json(test.expected)
-
-function case_passes(test, category)
-    should_error = get(test, :shouldError, false)
-    try
-        return !should_error && json_equal(run_case(test, category), expected_result(test, category))
-    catch
-        return should_error
-    end
+        return encode(test.input; options = EncodeOptions(; options_kwargs(test)...))
+    return decode(test.input; options = DecodeOptions(; options_kwargs(test)...))
 end
 
 @testset "Spec Fixtures" begin
@@ -74,13 +41,11 @@ end
         fixture_id = "$category/$(basename(path))"
         @testset "$fixture_id" begin
             for (index, test) in enumerate(JSON.parse(read(path, String)).tests)
-                @testset "$(test.name)" begin
-                    if "$fixture_id#$(index - 1)" in KNOWN_FAILURES
-                        @test_broken case_passes(test, category)
-                    elseif get(test, :shouldError, false)
-                        @test_throws Exception run_case(test, category)
+                @testset "#$(index - 1) $(test.name)" begin
+                    if get(test, :shouldError, false)
+                        @test_throws ErrorException run_case(test, category)
                     else
-                        @test json_equal(run_case(test, category), expected_result(test, category))
+                        @test json_equal(run_case(test, category), test.expected)
                     end
                 end
             end

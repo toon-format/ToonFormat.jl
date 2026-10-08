@@ -1,138 +1,71 @@
-function escape_string(s::String)::String
-    result = IOBuffer()
+const ESCAPES = Dict('\\' => "\\\\", '"' => "\\\"", '\n' => "\\n", '\r' => "\\r", '\t' => "\\t")
+const UNESCAPES = Dict('\\' => '\\', '"' => '"', 'n' => '\n', 'r' => '\r', 't' => '\t')
+
+# `\z` because `$` also matches before a trailing newline, which would leave a key like "a\n" unquoted.
+const UNQUOTED_KEY_PATTERN = r"^[A-Za-z_][A-Za-z0-9_.]*\z"
+const NUMERIC_LIKE_PATTERN = r"^[+-]?[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?$"
+
+function escape_string(s::AbstractString)::String
+    out = IOBuffer()
     for char in s
-        if haskey(CHARS_TO_ESCAPE, char)
-            write(result, CHARS_TO_ESCAPE[char])
+        if haskey(ESCAPES, char)
+            write(out, ESCAPES[char])
+        elseif char < ' '
+            write(out, "\\u", string(UInt16(char); base = 16, pad = 4))
         else
-            write(result, char)
+            write(out, char)
         end
     end
-    return String(take!(result))
+    return String(take!(out))
 end
 
-"""
-    unescape_string(s::AbstractString) -> String
+quote_string(s::AbstractString) = "\"$(escape_string(s))\""
 
-Unescape a TOON string. Throws an error if invalid escape sequences are found.
-"""
 function unescape_string(s::AbstractString)::String
-    s_str = String(s)
-    result = IOBuffer()
-    i = firstindex(s_str)
-    while i <= lastindex(s_str)
-        c = s_str[i]
-        if c == '\\'
-            if i == lastindex(s_str)
-                throw(ArgumentError("Unterminated escape sequence at end of string"))
-            end
+    out = IOBuffer()
+    i = 1
+    while i <= ncodeunits(s)
+        char = s[i]
+        if char != '\\'
+            write(out, char)
+            i = nextind(s, i)
+            continue
+        end
 
-            next_i = nextind(s_str, i)
-            next_char = s_str[next_i]
-            if haskey(ESCAPE_CHARS, next_char)
-                write(result, ESCAPE_CHARS[next_char])
-                i = nextind(s_str, next_i)
-            else
-                throw(ArgumentError("Invalid escape sequence: \\$(next_char)"))
-            end
+        escaped = s[i+1]
+        if haskey(UNESCAPES, escaped)
+            write(out, UNESCAPES[escaped])
+            i += 2
+        elseif escaped == 'u'
+            write(out, unescape_unicode(s, i))
+            i += 6
         else
-            write(result, c)
-            i = nextind(s_str, i)
+            error("Invalid escape sequence: \\$escaped")
         end
     end
-    return String(take!(result))
+    return String(take!(out))
 end
 
-function is_numeric_literal(s::AbstractString)::Bool
-    return !isnothing(match(NUMERIC_PATTERN, String(s)))
+function unescape_unicode(s::AbstractString, i::Int)::Char
+    hex = codeunits(s)[(i+2):min(i + 5, end)]
+    if length(hex) != 4 || !all(byte -> isxdigit(Char(byte)), hex)
+        error("Invalid escape sequence: \\u must be followed by 4 hex digits")
+    end
+    code = parse(UInt16, String(hex); base = 16)
+    0xd800 <= code <= 0xdfff &&
+        error("Invalid escape sequence: \\u$(String(hex)) is a lone surrogate")
+    return Char(code)
 end
 
-function has_leading_zeros(s::AbstractString)::Bool
-    return !isnothing(match(LEADING_ZERO_PATTERN, String(s)))
+function needs_quoting(s::AbstractString, delimiter::String)::Bool
+    isempty(s) && return true
+    # Only space and tab force quoting; `strip` would also count other Unicode whitespace.
+    (first(s) in " \t" || last(s) in " \t") && return true
+    s in ("true", "false", "null") && return true
+    occursin(NUMERIC_LIKE_PATTERN, s) && return true
+    any(char -> char in ":\"\\[]{}" || char < ' ', s) && return true
+    occursin(delimiter, s) && return true
+    return startswith(s, '-') || startswith(s, '#')
 end
 
-function is_boolean_or_null_literal(s::AbstractString)::Bool
-    return s == TRUE_LITERAL || s == FALSE_LITERAL || s == NULL_LITERAL
-end
-
-function needs_quoting(s::String, delimiter::Delimiter)::Bool
-    if isempty(s)
-        return true
-    end
-
-    if s != strip(s)
-        return true
-    end
-
-    if is_boolean_or_null_literal(s)
-        return true
-    end
-
-    if is_numeric_literal(s) || has_leading_zeros(s)
-        return true
-    end
-
-    if occursin(COLON, s) || occursin(DOUBLE_QUOTE, s) || occursin(BACKSLASH, s)
-        return true
-    end
-
-    if occursin(OPEN_BRACKET, s) ||
-       occursin(CLOSE_BRACKET, s) ||
-       occursin(OPEN_BRACE, s) ||
-       occursin(CLOSE_BRACE, s)
-        return true
-    end
-
-    for char in s
-        if Int(char) < 32 || Int(char) == 127
-            return true
-        end
-    end
-
-    if occursin(delimiter, s)
-        return true
-    end
-
-    if s == "-" || startswith(s, "-")
-        return true
-    end
-
-    return false
-end
-
-function is_valid_unquoted_key(s::String)::Bool
-    return !isnothing(match(UNQUOTED_KEY_PATTERN, s))
-end
-
-function is_identifier_segment(s::String)::Bool
-    return !isnothing(match(IDENTIFIER_SEGMENT_PATTERN, s))
-end
-
-function is_safe_identifier(s::AbstractString)::Bool
-    if occursin('.', s)
-        return false
-    end
-    return is_identifier_segment(String(s))
-end
-
-function find_first_unquoted(s::String, target::Char)::Union{Int,Nothing}
-    in_quotes = false
-    skip_next = false
-
-    for (idx, char) in pairs(s)
-        if skip_next
-            skip_next = false
-            continue
-        end
-
-        if char == '\\'
-            skip_next = true
-            continue
-        elseif char == '"'
-            in_quotes = !in_quotes
-        elseif char == target && !in_quotes
-            return idx
-        end
-    end
-
-    return nothing
-end
+is_valid_unquoted_key(s::AbstractString) = occursin(UNQUOTED_KEY_PATTERN, s)

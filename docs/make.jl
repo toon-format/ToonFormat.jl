@@ -6,10 +6,9 @@ makedocs(
     format = Documenter.HTML(
         prettyurls = get(ENV, "CI", nothing) == "true",
         canonical = "https://toon-format.github.io/ToonFormat.jl",
-        assets = String[],
     ),
     modules = [ToonFormat],
-    checkdocs = :none,  # Don't require all functions to be documented
+    checkdocs = :none,
     pages = [
         "Home" => "index.md",
         "Options" => "options.md",

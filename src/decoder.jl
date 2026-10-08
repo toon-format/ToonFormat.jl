@@ -76,7 +76,7 @@ function decode_document(reader::LineReader)::JsonValue
         return with_line(() -> parse_primitive_token(first_line.content), first_line)
     end
 
-    if !is_key_value_content(first_line.content) && following !== nothing && following.depth == 0
+    if !is_key_value_content(first_line.content) && following.depth == 0
         decode_error(first_line, "Top-level document must start with a key-value or array-header line")
     end
 

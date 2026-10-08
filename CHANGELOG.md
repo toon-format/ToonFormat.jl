@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Targets TOON spec v4.3.
+Targets TOON spec v4.4.
 
 ### Added
 

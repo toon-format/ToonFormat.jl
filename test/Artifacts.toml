@@ -2,9 +2,9 @@
 # https://github.com/toon-format/spec
 
 [toon_spec]
-git-tree-sha1 = "401a8e201a8a86fb5ec4545569939fde0902b3d4"
+git-tree-sha1 = "1b03a40dc6603cdd8465044412ad7c7ac549d501"
 lazy = true
 
     [[toon_spec.download]]
-    sha256 = "645f90cf20f7ee93d8f6d9879441a42102e8618767240fc8e1e142c1084ddc3b"
-    url = "https://github.com/toon-format/spec/archive/refs/tags/v4.3.0.tar.gz"
+    sha256 = "0ad526cce6c85627720da54f19b103e945ca9067fc4195e8b11618774a02f2c8"
+    url = "https://github.com/toon-format/spec/archive/refs/tags/v4.4.0.tar.gz"

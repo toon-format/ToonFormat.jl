@@ -256,8 +256,8 @@ function parse_primitive_token(token::AbstractString)::JsonPrimitive
     return String(token)
 end
 
-# Integers beyond `Int64` decode as `BigInt` and other numbers beyond the finite `Float64` range
-# as strings, so no token loses digits.
+# Integers beyond `Int64` decode as `BigInt` and other numbers `Float64` can't represent as
+# strings, so no token loses digits.
 function parse_number(token::AbstractString)::Union{Int,BigInt,Float64,String}
     if !any(in(".eE"), token)
         number = tryparse(Int, token)

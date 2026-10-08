@@ -28,6 +28,7 @@ Targets TOON spec v4.4.
 - Finite reals beyond the `Float64` range, such as `big"1e400"`, encode as a quoted string of their `BigFloat` value, and `1//0` as `null` – both encoded as a bare `Inf` before
 - Integers beyond `Int64` decode as `BigInt` instead of strings
 - The decoder follows the spec's line classification, header grammar, and depth rules, and strict mode rejects duplicate sibling keys; every decode error is an `ErrorException` naming the line
+- `strict = false` applies only the spec's five non-strict recoveries and throws on every other decode error
 
 ### Removed
 

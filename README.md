@@ -42,6 +42,8 @@ Targets [TOON spec v4.4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md
 - **Integers decode to `Int`, or `BigInt` beyond its range, and other numbers to `Float64`** – a token `Float64` can't represent (e.g. `1e999` or `1e-400`) decodes as a string; on encode, integers print in full, other numbers with the shortest digits of their `Float64` value, and finite reals beyond the `Float64` range (e.g. `big"1e400"`) as a quoted string of their `BigFloat` value in exponent form ([§4](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#4-decoding-interpretation-reference-decoder))
 - **Dicts, `NamedTuple`s, and vectors or tuples of `Pair`s encode as objects** – other arrays (a matrix in column-major order), tuples, and sets encode as arrays, `NaN` and `±Inf` as `null`, strings that are not valid Unicode throw an `ArgumentError`, and anything else (`Symbol`, `Date`, `missing`) encodes as its `string` form ([§3](https://github.com/toon-format/spec/blob/v4.4.0/SPEC.md#3-encoding-normalization-reference-encoder))
 
+Releases follow [SemVer](https://semver.org/): a new spec MINOR version ships as a MINOR release, even when it changes how hand-written input decodes, and a MAJOR release means an API break or a new spec MAJOR version.
+
 ## Resources
 
 - **Specification:** [SPEC.md](https://github.com/toon-format/spec/blob/main/SPEC.md) – Normative rules and conformance checklists

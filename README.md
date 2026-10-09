@@ -27,13 +27,7 @@ decode(toon)
 # OrderedDict("users" => [OrderedDict("id" => 1, "name" => "Ada", "role" => "admin"), OrderedDict("id" => 2, "name" => "Bob", "role" => "user")])
 ```
 
-`decode` returns `OrderedDict{String,Any}` objects and `Vector{Any}` arrays, and throws an `ErrorException` naming the line on invalid input. Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `options` keyword, e.g. `encode(data; options = EncodeOptions(delimiter = TAB))`:
-
-| Option | Default | Description |
-| ------ | ------- | ----------- |
-| `indentSize` | `2` | Spaces per indentation level (encode and decode) |
-| `delimiter` | `COMMA` | Delimiter for inline arrays and tabular rows: `COMMA`, `TAB`, or `PIPE` (encode) |
-| `strict` | `true` | Throws on every decode error of the spec; `false` applies its five non-strict recoveries instead (decode) |
+`decode` returns `OrderedDict{String,Any}` objects and `Vector{Any}` arrays, and throws an `ErrorException` naming the line on invalid input. Pass `EncodeOptions` to `encode` and `DecodeOptions` to `decode` through the `options` keyword, e.g. `encode(data; options = EncodeOptions(delimiter = TAB))` – [Options](https://toon-format.github.io/ToonFormat.jl/stable/options/) lists them.
 
 ## Specification
 
